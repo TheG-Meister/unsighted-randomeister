@@ -1,0 +1,40 @@
+﻿using System.Runtime.CompilerServices;
+using UnityEngine;
+
+namespace ItemRandomizer;
+
+internal class HarmonyHooks
+{
+    private static List<ItemObject>? originalItems;
+
+    [HarmonyPatch(typeof(Helpers), nameof(Helpers.GetChestReward)), HarmonyPostfix]
+    private static void Helpers_GetChestReward_Post(ref string __result)
+    {
+        Debug.Log($"Helpers.GetChestReward() postfix, called by {BepinexEntryPoint.GUID}");
+        //Any weapon and shuriken, along with single hookshot, double hookshot and jump boots can be used to escape the chest room in the lab
+
+        if (originalItems == null)
+        {
+            Lists lists = PseudoSingleton<Lists>.instance;
+
+            originalItems = new List<ItemObject> ();
+            originalItems.AddRange(lists.itemDatabase.itemList);
+            originalItems.AddRange(lists.weaponDatabase.weaponList);
+            originalItems.AddRange(lists.chipDatabase.chipList);
+            originalItems.AddRange(lists.cogsDatabase.cogList);
+            originalItems.AddRange(lists.armorDatabase.armorList);
+        }
+
+        string newResult = originalItems[UnityEngine.Random.Range(0, originalItems.Count)].itemName;
+
+        Debug.Log(__result + " replaced with " + newResult);
+
+        __result = newResult;
+    }
+
+    [HarmonyPatch(typeof(Lists), nameof(Lists.Start)), HarmonyPostfix]
+    private static void Lists_Start_Post(Lists __instance)
+    {
+        __instance.AnalyzeChestList();
+    }
+}
