@@ -90,13 +90,11 @@ internal class HarmonyHooks
         List<string> items = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
         System.Random random = new System.Random(seed);
         items = items.OrderBy(item => random.NextDouble()).ToList();
-        foreach (string item in items) { Debug.Log(item); }
 
         randomChestList = originalChestList;
         ReplaceChestItems(randomChestList, items);
 
         __instance.chestList = randomChestList;
-        __instance.AnalyzeChestList();
     }
 
     [HarmonyPatch(typeof(SplashScreenScene), nameof(SplashScreenScene.Start)), HarmonyPrefix]
