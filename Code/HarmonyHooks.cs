@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ItemRandomizer;
 
@@ -96,5 +97,15 @@ internal class HarmonyHooks
 
         __instance.chestList = randomChestList;
         __instance.AnalyzeChestList();
+    }
+
+    [HarmonyPatch(typeof(SplashScreenScene), nameof(SplashScreenScene.Start)), HarmonyPrefix]
+    private static bool SplashScreenScene_Start_Pre(SplashScreenScene __instance)
+    {
+        Debug.Log("Attempting to skip intro...");
+        Time.timeScale = 1f;
+        __instance.CheckBestResolution();
+        SceneManager.LoadScene("TitleScreen");
+        return false;
     }
 }
