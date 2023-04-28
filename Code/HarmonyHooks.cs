@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using BepInEx.Configuration;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,7 +9,6 @@ internal class HarmonyHooks
 {
     private static List<ItemObject>? originalItems;
 
-    private static readonly int seed = 0;
     private static ChestList? originalChestList;
     private static ChestList? randomChestList;
 
@@ -59,7 +59,7 @@ internal class HarmonyHooks
 
     private static ChestList CloneChestList(ChestList other)
     {
-        ChestList chestList = new ChestList();
+        ChestList chestList = ScriptableObject.CreateInstance<ChestList>();
         chestList.areas = new List<AreaChestList>();
         chestList.chestList = new List<ChestObject>();
 
@@ -85,16 +85,8 @@ internal class HarmonyHooks
     [HarmonyPatch(typeof(Lists), nameof(Lists.Start)), HarmonyPostfix]
     private static void Lists_Start_Post(Lists __instance)
     {
-        if (originalChestList == null) originalChestList = __instance.chestList;
-
-        List<string> items = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
-        System.Random random = new System.Random(seed);
-        items = items.OrderBy(item => random.NextDouble()).ToList();
-
-        randomChestList = originalChestList;
-        ReplaceChestItems(randomChestList, items);
-
-        __instance.chestList = randomChestList;
+        if (originalChestList == null) originalChestList = PseudoSingleton<Lists>.instance.chestList;
+        ShuffleChests();
     }
 
     [HarmonyPatch(typeof(SplashScreenScene), nameof(SplashScreenScene.Start)), HarmonyPrefix]
@@ -105,5 +97,18 @@ internal class HarmonyHooks
         __instance.CheckBestResolution();
         SceneManager.LoadScene("TitleScreen");
         return false;
+    }
+
+    public static void ShuffleChests()
+    {
+        List<string> items = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
+
+        System.Random random = new System.Random(BepinexEntryPoint.seed.Value);
+        items = items.OrderBy(item => random.NextDouble()).ToList();
+
+        randomChestList = CloneChestList(originalChestList);
+        ReplaceChestItems(randomChestList, items);
+
+        PseudoSingleton<Lists>.instance.chestList = randomChestList;
     }
 }
