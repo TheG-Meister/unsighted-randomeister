@@ -116,7 +116,8 @@ public class Plugin : BaseUnityPlugin
         foreach (string item in items) Logger.LogInfo(item);
 
         System.Random random = new System.Random(seed);
-        items = items.OrderBy(item => random.NextDouble()).ToList();
+        List<string> shuffledItems = items.OrderBy(item => random.NextDouble()).ToList();
+        for (int i = 0; i < items.Count; i++) Logger.LogInfo(items[i] + " is now " + shuffledItems[i]);
 
         randomChestList = CloneChestList(originalChestList);
         ReplaceChestItems(randomChestList, items);
@@ -140,6 +141,10 @@ public class Plugin : BaseUnityPlugin
     public void UpdateCurrentSlot()
     {
         if (CurrentSlot == null || !CurrentSlot.RandomiseChests.Value) UnshuffleChests();
-        else ShuffleChests(CurrentSlot.Seed.Value);
+        else
+        {
+            if (CurrentSlot.UseRandomSeed.Value) CurrentSlot.Seed.Value = new System.Random().Next();
+            ShuffleChests(CurrentSlot.Seed.Value);
+        }
     }
 }
