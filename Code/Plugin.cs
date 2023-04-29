@@ -135,16 +135,17 @@ public class Plugin : BaseUnityPlugin
     {
         if (GameSlotIsStory(gameSlot)) CurrentSlot = Slots[gameSlot % 9 + 3 * (int) Math.Floor((double) gameSlot / 9)];
         else CurrentSlot = null;
-        UpdateCurrentSlot();
+        ShuffleChestsToCurrentSlot();
     }
 
-    public void UpdateCurrentSlot()
+    public void ShuffleChestsToCurrentSlot()
     {
         if (CurrentSlot == null || !CurrentSlot.RandomiseChests.Value) UnshuffleChests();
-        else
-        {
-            if (CurrentSlot.UseRandomSeed.Value) CurrentSlot.Seed.Value = new System.Random().Next();
-            ShuffleChests(CurrentSlot.Seed.Value);
-        }
+        else ShuffleChests(CurrentSlot.Seed.Value);
+    }
+
+    public void RandomiseCurrentSeed()
+    {
+        if (CurrentSlot != null && CurrentSlot.RandomiseChests.Value && CurrentSlot.UseRandomSeed.Value) CurrentSlot.Seed.Value = new System.Random().Next();
     }
 }
