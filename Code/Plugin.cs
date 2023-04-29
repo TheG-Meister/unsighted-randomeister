@@ -131,11 +131,13 @@ public class Plugin : BaseUnityPlugin
         return slotValue >= 0 && slotValue < 2 && slotValue % 3 == 0;
     }
 
-    public void SetCurrentSlot(int gameSlot)
+    public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)
     {
         if (GameSlotIsStory(gameSlot)) CurrentSlot = Slots[gameSlot % 9 + 3 * (int) Math.Floor((double) gameSlot / 9)];
         else CurrentSlot = null;
-        ShuffleChestsToCurrentSlot();
+
+        if (newGame) Plugin.Instance.RandomiseCurrentSeed();
+        Plugin.Instance.ShuffleChestsToCurrentSlot();
     }
 
     public void ShuffleChestsToCurrentSlot()
