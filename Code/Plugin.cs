@@ -113,7 +113,6 @@ public class Plugin : BaseUnityPlugin
     public void ShuffleChests(int seed)
     {
         List<string> items = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
-        foreach (string item in items) Logger.LogInfo(item);
 
         System.Random random = new System.Random(seed);
         List<string> shuffledItems = items.OrderBy(item => random.NextDouble()).ToList();
