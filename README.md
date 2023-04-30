@@ -1,12 +1,11 @@
 # Unsighted Randomeister
 
-Unsighted Randomeister is a randomiser mod for UNSIGHTED. Currently very early in development, this plugin only contains a basic "live" item randomiser in which a random item is picked from an item pool at the time a chest is opened. Currently it is possible, albeit unlikely for the player to get stuck, and the game occasionally locks up when obtaining some items.
+Unsighted Randomeister is a randomiser mod for UNSIGHTED. Currently very early in development, this plugin only contains a seed-based item randomiser for the game's chests. It is uncommon to be able to complete a seed without extensive game knowledge, and many seeds would be impossible if crafting without a blueprint was disabled.
 
 We have lots of ideas for future development, including but not limited to:
-* Seeds
 * Preventing crafting without a blueprint
 * Preset and customisable item pools
-* Softlock prevention
+* Reducing the number of (and eventually eradicating) impossible seeds
 * More random item locations
 * Difficulty settings
 * Randomising exits, blueprints and enemies
