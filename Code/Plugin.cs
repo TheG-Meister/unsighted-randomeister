@@ -11,14 +11,12 @@ public class Plugin : BaseUnityPlugin
     public const string VERSION = "0.2.0";
 
     public ConfigSlot? CurrentSlot;
-    public List<ConfigSlot> Slots;
-
-    private static List<ItemObject>? originalItems;
+    public List<ConfigSlot>? Slots;
 
     private ChestList? originalChestList;
     private ChestList? randomChestList;
 
-    public static Plugin Instance { get; private set; }
+    public static Plugin? Instance { get; private set; }
 
     private void Awake()
     {
@@ -113,16 +111,19 @@ public class Plugin : BaseUnityPlugin
 
     public void ShuffleChests(int seed)
     {
-        List<string> items = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
+        if (originalChestList != null)
+        {
+            List<string> items = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
 
-        System.Random random = new System.Random(seed);
-        List<string> shuffledItems = items.OrderBy(item => random.NextDouble()).ToList();
-        for (int i = 0; i < items.Count; i++) Logger.LogInfo(items[i] + " is now " + shuffledItems[i]);
+            System.Random random = new System.Random(seed);
+            List<string> shuffledItems = items.OrderBy(item => random.NextDouble()).ToList();
+            for (int i = 0; i < items.Count; i++) Logger.LogInfo(items[i] + " is now " + shuffledItems[i]);
 
-        randomChestList = CloneChestList(originalChestList);
-        ReplaceChestItems(randomChestList, shuffledItems);
+            randomChestList = CloneChestList(originalChestList);
+            ReplaceChestItems(randomChestList, shuffledItems);
 
-        PseudoSingleton<Lists>.instance.chestList = randomChestList;
+            PseudoSingleton<Lists>.instance.chestList = randomChestList;
+        }
     }
 
     public bool GameSlotIsStory(int gameSlot)
@@ -133,21 +134,24 @@ public class Plugin : BaseUnityPlugin
 
     public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)
     {
-        if (GameSlotIsStory(gameSlot))
+        if (Slots != null)
         {
-            CurrentSlot = Slots[gameSlot % 9 + 3 * (int)Math.Floor((double)gameSlot / 9)];
-
-            if (CurrentSlot.RandomiseChests.Value)
+            if (GameSlotIsStory(gameSlot))
             {
-                if (newGame && CurrentSlot.UseRandomSeed.Value) CurrentSlot.Seed.Value = new System.Random().Next();
-                ShuffleChests(CurrentSlot.Seed.Value);
+                CurrentSlot = Slots[gameSlot % 9 + 3 * (int)Math.Floor((double)gameSlot / 9)];
+
+                if (CurrentSlot.RandomiseChests.Value)
+                {
+                    if (newGame && CurrentSlot.UseRandomSeed.Value) CurrentSlot.Seed.Value = new System.Random().Next();
+                    ShuffleChests(CurrentSlot.Seed.Value);
+                }
+                else UnshuffleChests();
             }
-            else UnshuffleChests();
-        }
-        else
-        {
-            CurrentSlot = null;
-            UnshuffleChests();
+            else
+            {
+                CurrentSlot = null;
+                UnshuffleChests();
+            }
         }
     }
 }
