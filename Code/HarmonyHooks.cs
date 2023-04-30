@@ -1,16 +1,12 @@
-﻿using System.Runtime.CompilerServices;
+﻿using BepInEx.Configuration;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace ItemRandomizer;
+namespace dev.gmeister.unsighted.randomeister;
 
 internal class HarmonyHooks
 {
-    private static List<ItemObject>? originalItems;
-
-    private static readonly int seed = 0;
-    private static ChestList? originalChestList;
-    private static ChestList? randomChestList;
 
     [HarmonyPatch(typeof(Helpers), nameof(Helpers.GetChestReward)), HarmonyPostfix]
     private static void Helpers_GetChestReward_Post(ref string __result)
@@ -37,73 +33,25 @@ internal class HarmonyHooks
         __result = newResult;*/
     }
 
-    private static ChestObject CloneChest(ChestObject other)
-    {
-        ChestObject chest = new ChestObject();
-        chest.reward = other.reward;
-        chest.chestName = other.chestName;
-        chest.roomName = other.roomName;
-        chest.abilitiesNeeded = (Abilities[]) other.abilitiesNeeded;
-        chest.dontCountToTotal = other.dontCountToTotal;
-
-        return chest;
-    }
-
-    private static AreaChestList CloneAreaChestList(AreaChestList other)
-    {
-        AreaChestList areaChestList = new AreaChestList(other.areaName);
-        foreach (ChestObject chest in other.chestList) areaChestList.chestList.Add(CloneChest(chest));
-
-        return areaChestList;
-    }
-
-    private static ChestList CloneChestList(ChestList other)
-    {
-        ChestList chestList = new ChestList();
-        chestList.areas = new List<AreaChestList>();
-        chestList.chestList = new List<ChestObject>();
-
-        foreach (AreaChestList areaChestList in other.areas)
-        {
-            AreaChestList newAreaChestList = CloneAreaChestList(areaChestList);
-            chestList.areas.Add(newAreaChestList);
-            chestList.chestList.AddRange(newAreaChestList.chestList);
-        }
-
-        return chestList;
-    }
-
-    private static void ReplaceChestItems(ChestList chestList, List<string> items)
-    {
-        int i = 0;
-        foreach (AreaChestList areaChestList in chestList.areas) foreach (ChestObject chestObject in areaChestList.chestList)
-        {
-            chestObject.reward = items[i++];
-        }
-    }
-
     [HarmonyPatch(typeof(Lists), nameof(Lists.Start)), HarmonyPostfix]
     private static void Lists_Start_Post(Lists __instance)
     {
-        if (originalChestList == null) originalChestList = __instance.chestList;
-
-        List<string> items = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
-        System.Random random = new System.Random(seed);
-        items = items.OrderBy(item => random.NextDouble()).ToList();
-
-        randomChestList = originalChestList;
-        ReplaceChestItems(randomChestList, items);
-
-        __instance.chestList = randomChestList;
+        Plugin.Instance.SetOriginalChestList(__instance);
     }
 
     [HarmonyPatch(typeof(SplashScreenScene), nameof(SplashScreenScene.Start)), HarmonyPrefix]
     private static bool SplashScreenScene_Start_Pre(SplashScreenScene __instance)
     {
-        Debug.Log("Attempting to skip intro...");
+        Plugin.Instance.GetLogger().LogInfo("Attempting to skip intro...");
         Time.timeScale = 1f;
         __instance.CheckBestResolution();
         SceneManager.LoadScene("TitleScreen");
         return false;
+    }
+
+    [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.OnClick)), HarmonyPostfix]
+    public static void SaveSlotButton_OnClick_Post(SaveSlotButton __instance)
+    {
+        Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, !__instance.SaveExist());
     }
 }
