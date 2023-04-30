@@ -107,6 +107,7 @@ public class Plugin : BaseUnityPlugin
 
     public void UnshuffleChests()
     {
+        Logger.LogInfo("Unshuffling chests...");
         PseudoSingleton<Lists>.instance.chestList = originalChestList;
     }
 
@@ -119,7 +120,7 @@ public class Plugin : BaseUnityPlugin
         for (int i = 0; i < items.Count; i++) Logger.LogInfo(items[i] + " is now " + shuffledItems[i]);
 
         randomChestList = CloneChestList(originalChestList);
-        ReplaceChestItems(randomChestList, items);
+        ReplaceChestItems(randomChestList, shuffledItems);
 
         PseudoSingleton<Lists>.instance.chestList = randomChestList;
     }
@@ -132,21 +133,21 @@ public class Plugin : BaseUnityPlugin
 
     public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)
     {
-        if (GameSlotIsStory(gameSlot)) CurrentSlot = Slots[gameSlot % 9 + 3 * (int) Math.Floor((double) gameSlot / 9)];
-        else CurrentSlot = null;
+        if (GameSlotIsStory(gameSlot))
+        {
+            CurrentSlot = Slots[gameSlot % 9 + 3 * (int)Math.Floor((double)gameSlot / 9)];
 
-        if (newGame) Plugin.Instance.RandomiseCurrentSeed();
-        Plugin.Instance.ShuffleChestsToCurrentSlot();
-    }
-
-    public void ShuffleChestsToCurrentSlot()
-    {
-        if (CurrentSlot == null || !CurrentSlot.RandomiseChests.Value) UnshuffleChests();
-        else ShuffleChests(CurrentSlot.Seed.Value);
-    }
-
-    public void RandomiseCurrentSeed()
-    {
-        if (CurrentSlot != null && CurrentSlot.RandomiseChests.Value && CurrentSlot.UseRandomSeed.Value) CurrentSlot.Seed.Value = new System.Random().Next();
+            if (CurrentSlot.RandomiseChests.Value)
+            {
+                if (newGame && CurrentSlot.UseRandomSeed.Value) CurrentSlot.Seed.Value = new System.Random().Next();
+                ShuffleChests(CurrentSlot.Seed.Value);
+            }
+            else UnshuffleChests();
+        }
+        else
+        {
+            CurrentSlot = null;
+            UnshuffleChests();
+        }
     }
 }
