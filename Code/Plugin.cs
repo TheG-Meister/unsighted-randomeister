@@ -18,7 +18,9 @@ public class Plugin : BaseUnityPlugin
 
     public static Plugin? Instance { get; private set; }
 
+#pragma warning disable IDE0051 // Remove unused private members
     private void Awake()
+#pragma warning restore IDE0051 // Remove unused private members
     {
         if (Instance == null)
         {
@@ -38,7 +40,7 @@ public class Plugin : BaseUnityPlugin
                 ConfigEntry<bool> useRandomSeed = Config.Bind(slotCategory, slotName + " - Use random seed", true, "If \"Randomise Chests\" is enabled for this file, generate a random seed for randomisation when starting a new game. Turn this setting off to set the seed yourself.");
                 ConfigEntry<int> seed = Config.Bind(slotCategory, slotName + " - Seed", 0, "If any randomisation options are enabled for this file, use this value to seed the randomisation. If \"Use Random Seed\" is enabled for this file, this number will be randomised when starting a new game.");
 
-                ConfigSlot slot = new ConfigSlot(randomiseChests, useRandomSeed, seed);
+                ConfigSlot slot = new(randomiseChests, useRandomSeed, seed);
 
                 randomiseChests.SettingChanged += (o, e) => { if (CurrentSlot != null && CurrentSlot.Equals(slot)) this.UnshuffleChests(); };
                 seed.SettingChanged += (o, e) =>
@@ -60,19 +62,21 @@ public class Plugin : BaseUnityPlugin
 
     private ChestObject CloneChest(ChestObject other)
     {
-        ChestObject chest = new ChestObject();
-        chest.reward = other.reward;
-        chest.chestName = other.chestName;
-        chest.roomName = other.roomName;
-        chest.abilitiesNeeded = (Abilities[])other.abilitiesNeeded;
-        chest.dontCountToTotal = other.dontCountToTotal;
+        ChestObject chest = new()
+        {
+            reward = other.reward,
+            chestName = other.chestName,
+            roomName = other.roomName,
+            abilitiesNeeded = (Abilities[])other.abilitiesNeeded,
+            dontCountToTotal = other.dontCountToTotal
+        };
 
         return chest;
     }
 
     private AreaChestList CloneAreaChestList(AreaChestList other)
     {
-        AreaChestList areaChestList = new AreaChestList(other.areaName);
+        AreaChestList areaChestList = new(other.areaName);
         foreach (ChestObject chest in other.chestList) areaChestList.chestList.Add(CloneChest(chest));
 
         return areaChestList;
@@ -115,7 +119,7 @@ public class Plugin : BaseUnityPlugin
         {
             List<string> items = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
 
-            System.Random random = new System.Random(seed);
+            System.Random random = new(seed);
             List<string> shuffledItems = items.OrderBy(item => random.NextDouble()).ToList();
             for (int i = 0; i < items.Count; i++) Logger.LogInfo(items[i] + " is now " + shuffledItems[i]);
 
