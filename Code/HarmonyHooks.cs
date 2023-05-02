@@ -49,9 +49,9 @@ internal class HarmonyHooks
         return false;
     }
 
-    [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.OnClick)), HarmonyPostfix]
+    [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.OnClick)), HarmonyPrefix]
     public static void SaveSlotButton_OnClick_Post(SaveSlotButton __instance)
     {
-        Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, !__instance.SaveExist());
+        Plugin.Instance.SetCurrentSlotAndRandomise(__instance.saveSlot, !__instance.SaveExist());
     }
 }
