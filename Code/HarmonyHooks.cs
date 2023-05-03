@@ -49,9 +49,17 @@ internal class HarmonyHooks
         return false;
     }
 
-    [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.OnClick)), HarmonyPrefix]
-    public static void SaveSlotButton_OnClick_Post(SaveSlotButton __instance)
+    [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
+    public static void LoadedGame()
     {
-        Plugin.Instance.SetCurrentSlotAndRandomise(__instance.saveSlot, !__instance.SaveExist());
+        Plugin.Instance.GetLogger().LogInfo("Game loaded");
+        Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, false);
+    }
+
+    [HarmonyPatch(typeof(NewGamePopup), nameof(NewGamePopup.NewGameCoroutine)), HarmonyPrefix]
+    public static void NewGame()
+    {
+        Plugin.Instance.GetLogger().LogInfo("New Game");
+        Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, true);
     }
 }

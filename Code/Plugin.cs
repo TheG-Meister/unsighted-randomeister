@@ -109,7 +109,8 @@ public class Plugin : BaseUnityPlugin
 
     public void UnshuffleChests()
     {
-        Logger.LogInfo("Unshuffling chests...");
+        Logger.LogInfo("Unshuffling chests");
+        randomChestList = null;
         PseudoSingleton<Lists>.instance.chestList = originalChestList;
     }
 
@@ -121,19 +122,35 @@ public class Plugin : BaseUnityPlugin
 
             System.Random random = new(seed);
             List<string> shuffledItems = items.OrderBy(item => random.NextDouble()).ToList();
-            for (int i = 0; i < items.Count; i++) Logger.LogInfo(items[i] + " is now " + shuffledItems[i]);
 
             randomChestList = CloneChestList(originalChestList);
             ReplaceChestItems(randomChestList, shuffledItems);
 
+            Logger.LogInfo("Randomising chests");
             PseudoSingleton<Lists>.instance.chestList = randomChestList;
+        }
+    }
+
+    public void LogChestRandomisation()
+    {
+        if (originalChestList != null && randomChestList != null)
+        {
+            Logger.LogInfo("Writing log data");
+            List<string> logLines = new();
+            List<string> originalItems = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
+            List<string> shuffledItems = randomChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
+            for (int i = 0; i < originalItems.Count; i++) logLines.Add(originalItems[i] + " is now " + shuffledItems[i]);
+            string logDir = "unsighted-randomeister/logs/randomisation/";
+            if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
+            File.WriteAllLines(logDir + DateTime.Now.ToString("yy-MM-dd-HH-mm-ss-fff") + ".txt", logLines);
         }
     }
 
     public bool GameSlotIsStory(int gameSlot)
     {
-        int slotValue = (int) Math.Floor((double)gameSlot / 3);
-        return slotValue >= 0 && slotValue < 2 && slotValue % 3 == 0;
+        int page = (int)Math.Floor(gameSlot / 9d);
+        int mode = (int)Math.Floor(gameSlot / 3d) % 3;
+        return page >= 0 && page < 2 && mode == 0;
     }
 
     public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)
@@ -146,8 +163,14 @@ public class Plugin : BaseUnityPlugin
 
                 if (CurrentSlot.RandomiseChests.Value)
                 {
-                    if (newGame && CurrentSlot.UseRandomSeed.Value) CurrentSlot.Seed.Value = new System.Random().Next();
-                    ShuffleChests(CurrentSlot.Seed.Value);
+                    if (newGame && CurrentSlot.UseRandomSeed.Value)
+                    {
+                        Logger.LogInfo("Generating new seed");
+                        CurrentSlot.Seed.Value = new System.Random().Next();
+                        //Randomisation is performed by event handler... though if you can find a way to change this please do
+                        LogChestRandomisation();
+                    }
+                    else ShuffleChests(CurrentSlot.Seed.Value);
                 }
                 else UnshuffleChests();
             }
