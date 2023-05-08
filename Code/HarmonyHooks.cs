@@ -54,6 +54,7 @@ internal class HarmonyHooks
     {
         Plugin.Instance.GetLogger().LogInfo("Game loaded");
         Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, false);
+        Plugin.Instance.LogDataStrings(PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings, PseudoSingleton<GlobalGameData>.instance.loadedSlot);
     }
 
     [HarmonyPatch(typeof(NewGamePopup), nameof(NewGamePopup.NewGameCoroutine)), HarmonyPrefix]
@@ -62,4 +63,11 @@ internal class HarmonyHooks
         Plugin.Instance.GetLogger().LogInfo("New Game");
         Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, true);
     }
+
+    [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
+    public static void OnScreenTransition(ScreenTransition __instance)
+    {
+        Plugin.Instance.GetLogger().LogInfo(SceneManager.GetActiveScene().name + " " + __instance.myDirection + " " + __instance.triggerID);
+    }
+
 }

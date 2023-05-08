@@ -142,8 +142,15 @@ public class Plugin : BaseUnityPlugin
             for (int i = 0; i < originalItems.Count; i++) logLines.Add(originalItems[i] + " is now " + shuffledItems[i]);
             string logDir = "unsighted-randomeister/logs/randomisation/";
             if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
-            File.WriteAllLines(logDir + DateTime.Now.ToString("yy-MM-dd-HH-mm-ss-fff") + ".txt", logLines);
+            File.WriteAllLines(logDir + DateTime.Now.ToString("yy-MM-dd-HH-mm-ss") + ".txt", logLines);
         }
+    }
+
+    public void LogDataStrings(List<string> data, int slot)
+    {
+        string logDir = "unsighted-randomeister/logs/data-strings/";
+        if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
+        File.WriteAllLines(logDir + DateTime.Now.ToString("yy-MM-dd-HH-mm-ss-" + slot) + ".txt", data);
     }
 
     public bool GameSlotIsStory(int gameSlot)
@@ -181,4 +188,7 @@ public class Plugin : BaseUnityPlugin
             }
         }
     }
+
+
+
 }
