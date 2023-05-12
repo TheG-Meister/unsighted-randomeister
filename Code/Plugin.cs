@@ -16,11 +16,9 @@ public class Plugin : BaseUnityPlugin
     private ChestList? originalChestList;
     private ChestList? randomChestList;
 
-    public static Plugin? Instance { get; private set; }
+    public static Plugin Instance { get; private set; } = null!;
 
-#pragma warning disable IDE0051 // Remove unused private members
-    private void Awake()
-#pragma warning restore IDE0051 // Remove unused private members
+    public Plugin()
     {
         if (Instance == null)
         {
