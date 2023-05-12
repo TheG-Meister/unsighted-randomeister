@@ -168,9 +168,10 @@ public class Plugin : BaseUnityPlugin
                         Logger.LogInfo("Generating new seed");
                         CurrentSlot.Seed.Value = new System.Random().Next();
                         //Randomisation is performed by event handler... though if you can find a way to change this please do
-                        LogChestRandomisation();
                     }
                     else ShuffleChests(CurrentSlot.Seed.Value);
+
+                    if (newGame) LogChestRandomisation();
                 }
                 else UnshuffleChests();
             }
