@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
+using dev.gmeister.unsighted.randomeister.logging;
 
 namespace dev.gmeister.unsighted.randomeister;
 
@@ -10,13 +11,15 @@ public class Plugin : BaseUnityPlugin
     public const string NAME = "Unsighted Randomeister";
     public const string VERSION = "0.2.0";
 
+    public static Plugin Instance { get; private set; } = null!;
+
     public ConfigSlot? CurrentSlot;
     public List<ConfigSlot>? Slots;
 
     private ChestList? originalChestList;
     private ChestList? randomChestList;
 
-    public static Plugin Instance { get; private set; } = null!;
+    public MovementLogger movementLogger;
 
     public Plugin()
     {
@@ -48,6 +51,8 @@ public class Plugin : BaseUnityPlugin
 
                 Slots.Add(slot);
             }
+
+            movementLogger = new MovementLogger();
         }
     }
 
