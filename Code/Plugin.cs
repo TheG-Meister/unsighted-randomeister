@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
+using dev.gmeister.unsighted.randomeister.logging;
 
 namespace dev.gmeister.unsighted.randomeister;
 
@@ -10,17 +11,17 @@ public class Plugin : BaseUnityPlugin
     public const string NAME = "Unsighted Randomeister";
     public const string VERSION = "0.2.0";
 
+    public static Plugin Instance { get; private set; } = null!;
+
     public ConfigSlot? CurrentSlot;
     public List<ConfigSlot>? Slots;
 
     private ChestList? originalChestList;
     private ChestList? randomChestList;
 
-    public static Plugin? Instance { get; private set; }
+    public MovementLogger movementLogger;
 
-#pragma warning disable IDE0051 // Remove unused private members
-    private void Awake()
-#pragma warning restore IDE0051 // Remove unused private members
+    public Plugin()
     {
         if (Instance == null)
         {
@@ -50,6 +51,8 @@ public class Plugin : BaseUnityPlugin
 
                 Slots.Add(slot);
             }
+
+            movementLogger = new MovementLogger();
         }
     }
 
@@ -175,9 +178,10 @@ public class Plugin : BaseUnityPlugin
                         Logger.LogInfo("Generating new seed");
                         CurrentSlot.Seed.Value = new System.Random().Next();
                         //Randomisation is performed by event handler... though if you can find a way to change this please do
-                        LogChestRandomisation();
                     }
                     else ShuffleChests(CurrentSlot.Seed.Value);
+
+                    if (newGame) LogChestRandomisation();
                 }
                 else UnshuffleChests();
             }
