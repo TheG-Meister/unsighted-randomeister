@@ -68,9 +68,25 @@ internal class HarmonyHooks
     {
         string scene = SceneManager.GetActiveScene().name;
         string source = __instance.myDirection + " " + __instance.triggerID;
-        string target = 
 
-        Plugin.Instance.GetLogger().LogInfo();
+        string nextRoomName = PseudoSingleton<MapManager>.instance.GetNextRoomName(__instance.myDirection, __instance.triggerID);
+
+
+        //string target = 
+
+        Plugin.Instance.GetLogger().LogInfo("Screen transition starting");
+    }
+
+    [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.Start)), HarmonyPrefix]
+    public static void OnScreenTransitionObjectStart(ScreenTransition __instance)
+    {
+        if (ScreenTransition.playerTransitioningScreens &&
+            ScreenTransition.currentDoorName == __instance.gameObject.name &&
+            (ScreenTransition.teleportCheat ||
+            ScreenTransition.lastSceneName == PseudoSingleton<MapManager>.instance.GetNextRoomName(__instance.myDirection, __instance.triggerID)))
+        {
+            Plugin.Instance.GetLogger().LogInfo("Player spawned at screen transition " + SceneManager.GetActiveScene().name + " " + __instance.myDirection + " " + __instance.triggerID);
+        }
     }
 
 }
