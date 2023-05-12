@@ -62,4 +62,15 @@ internal class HarmonyHooks
         Plugin.Instance.GetLogger().LogInfo("New Game");
         Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, true);
     }
+
+    [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
+    public static void OnScreenTransition(ScreenTransition __instance)
+    {
+        string scene = SceneManager.GetActiveScene().name;
+        string source = __instance.myDirection + " " + __instance.triggerID;
+        string target = 
+
+        Plugin.Instance.GetLogger().LogInfo();
+    }
+
 }
