@@ -2,13 +2,16 @@
 
 namespace dev.gmeister.unsighted.randomeister.logging;
 
-public class MovementLogger
+public class MovementLogger : IDisposable
 {
+	private StreamWriter stream;
+
     private string? currentLocation;
 
-	public MovementLogger()
+	public MovementLogger(string path)
 	{
-
+		Directory.CreateDirectory(Path.GetDirectoryName(path));
+		this.stream = new StreamWriter(path, true);
 	}
 
 	private string BoolToString(bool value)
@@ -32,11 +35,16 @@ public class MovementLogger
             string items = string.Join(",", printItemNames);
 			string data = string.Join(",", PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings);
 
-
             List<string> fields = new() { currentLocation, location, BoolToString(transition), BoolToString(teleport), items, data};
-			Plugin.Instance.GetLogger().LogInfo(string.Join("\t", fields));
+			
+			this.stream.WriteLine(string.Join("\t", fields));
+			this.stream.Flush();
         }
         currentLocation = location;
     }
 
+    public void Dispose()
+    {
+		this.stream.Dispose();
+    }
 }

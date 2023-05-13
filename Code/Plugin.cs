@@ -52,8 +52,13 @@ public class Plugin : BaseUnityPlugin
                 Slots.Add(slot);
             }
 
-            movementLogger = new MovementLogger();
+            movementLogger = new MovementLogger("unsighted-randomeister/logs/movement-log.tsv");
         }
+    }
+
+    public void OnDisable()
+    {
+        this.movementLogger.Dispose();
     }
 
     public ManualLogSource GetLogger() { return Logger; }
