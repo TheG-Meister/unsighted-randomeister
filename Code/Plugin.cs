@@ -154,13 +154,6 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    public void LogDataStrings(List<string> data, int slot)
-    {
-        string logDir = "unsighted-randomeister/logs/data-strings/";
-        if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
-        File.WriteAllLines(logDir + DateTime.Now.ToString("yy-MM-dd-HH-mm-ss-" + slot) + ".txt", data);
-    }
-
     public bool GameSlotIsStory(int gameSlot)
     {
         int page = (int)Math.Floor(gameSlot / 9d);

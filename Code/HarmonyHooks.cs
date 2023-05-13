@@ -54,7 +54,6 @@ internal class HarmonyHooks
     {
         Plugin.Instance.GetLogger().LogInfo("Game loaded");
         Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, false);
-        Plugin.Instance.LogDataStrings(PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings, PseudoSingleton<GlobalGameData>.instance.loadedSlot);
     }
 
     [HarmonyPatch(typeof(NewGamePopup), nameof(NewGamePopup.NewGameCoroutine)), HarmonyPrefix]
