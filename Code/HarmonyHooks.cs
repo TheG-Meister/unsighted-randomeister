@@ -67,12 +67,31 @@ internal class HarmonyHooks
     public static bool BeforeQueenSpinarachBossRoomLoad(RotatingSpiderBossRoom __instance)
     {
         List<string> dataStrings = PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings;
-        if (!dataStrings.Contains("RotatingSpiderDefeated") && !dataStrings.Contains("ChestJumpBootsChestDowntownJumpRoom"))
+        bool bossDefeated = dataStrings.Contains("RotatingSpiderDefeated");
+        bool chestOpened = dataStrings.Contains("ChestJumpBootsChestDowntownJumpRoom");
+
+        if (chestOpened)
+        {
+            __instance.exitPlatform.gameObject.SetActive(true);
+            __instance.rotatingSpider.gameObject.SetActive(false);
+            __instance.rotatingSpiderPlatformCollider.gameObject.SetActive(false);
+            __instance.multiButtonPuzzle.gameObject.SetActive(false);
+            __instance.jumpBootsChest.transform.parent = null;
+            __instance.jumpBootsChest.gameObject.SetActive(true);
+            return false;
+        }
+        else if (!bossDefeated)
         {
             __instance.rotatingSpider.gameObject.SetActive(true);
             return false;
         }
         else return true;
+    }
+
+    [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.Start)), HarmonyPrefix]
+    public static void BeforeItemChestStart(ItemChest __instance)
+    {
+        if (SceneManager.GetActiveScene().name == "DowntownJumpRoom" && __instance.gameObject.name == "JumpBootsChest") __instance.fragileItem = false;
     }
 
 }
