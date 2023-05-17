@@ -62,4 +62,17 @@ internal class HarmonyHooks
         Plugin.Instance.GetLogger().LogInfo("New Game");
         Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, true);
     }
+
+    [HarmonyPatch(typeof(RotatingSpiderBossRoom), nameof(RotatingSpiderBossRoom.Start)), HarmonyPrefix]
+    public static bool BeforeQueenSpinarachBossRoomLoad(RotatingSpiderBossRoom __instance)
+    {
+        List<string> dataStrings = PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings;
+        if (!dataStrings.Contains("RotatingSpiderDefeated") && !dataStrings.Contains("ChestJumpBootsChestDowntownJumpRoom"))
+        {
+            __instance.rotatingSpider.gameObject.SetActive(true);
+            return false;
+        }
+        else return true;
+    }
+
 }
