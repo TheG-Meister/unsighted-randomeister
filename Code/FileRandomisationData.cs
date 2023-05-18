@@ -16,12 +16,4 @@ internal class FileRandomisationData
     public bool randomSeed;
     public int seed;
     public bool randomiseChests;
-
-    public FileRandomisationData(bool randomised, bool randomisedChests, bool randomisedSeed, int seed)
-    {
-        this.randomise = randomised;
-        this.randomiseChests = randomisedChests;
-        this.randomSeed = randomisedSeed;
-        this.seed = seed;
-    }
 }
