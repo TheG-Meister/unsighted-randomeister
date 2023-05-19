@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister;
 
-internal class RandomisationSettings : RandomisationData
+public class RandomisationSettings : RandomisationData
 {
     public bool useRandomeister;
     public bool randomSeed = true;
