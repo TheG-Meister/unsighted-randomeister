@@ -10,12 +10,12 @@ namespace dev.gmeister.unsighted.randomeister;
  * Contains data on how a save slot was randomised, and how to restore that randomisation when the file is reloaded.
 **/
 [Serializable]
-internal class FileRandomisationData
+internal class RandomisationData
 {
     public int seed;
     public List<string> items;
 
-    public FileRandomisationData(int seed, List<string> items)
+    public RandomisationData(int seed, List<string> items)
     {
         this.seed = seed;
         this.items = items;
