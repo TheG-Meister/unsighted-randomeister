@@ -12,7 +12,7 @@ internal class RandomisationSettings : RandomisationData
     public bool randomSeed = true;
     public bool randomiseChests = true;
 
-    public RandomisationSettings(bool useRandomeister, int seed, List<string> items) : base(seed, items)
+    public RandomisationSettings(bool useRandomeister, List<string> items) : base(items)
     {
         this.useRandomeister = useRandomeister;
     }

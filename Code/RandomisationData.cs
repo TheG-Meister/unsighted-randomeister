@@ -12,12 +12,11 @@ namespace dev.gmeister.unsighted.randomeister;
 [Serializable]
 internal class RandomisationData
 {
-    public int seed;
+    public int seed = 0;
     public List<string> items;
 
-    public RandomisationData(int seed, List<string> items)
+    public RandomisationData(List<string> items)
     {
-        this.seed = seed;
         this.items = items;
     }
 }
