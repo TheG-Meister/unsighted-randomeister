@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
+using System;
 
 namespace dev.gmeister.unsighted.randomeister;
 
@@ -9,6 +10,10 @@ public class Plugin : BaseUnityPlugin
     public const string GUID = "dev.gmeister.unsighted.randomeister";
     public const string NAME = "Unsighted Randomeister";
     public const string VERSION = "0.2.0";
+
+    public const int MODES = 3;
+    public const int PAGES_PER_MODE = 2;
+    public const int SLOTS_PER_PAGE = 3;
 
     public ConfigSlot? CurrentSlot;
     public List<ConfigSlot>? Slots;
@@ -21,7 +26,7 @@ public class Plugin : BaseUnityPlugin
 
     public Plugin()
     {
-        this.data = new(6);
+        this.data = new(PAGES_PER_MODE * SLOTS_PER_PAGE);
 
         if (Instance == null)
         {
@@ -33,7 +38,7 @@ public class Plugin : BaseUnityPlugin
             Slots = new List<ConfigSlot>();
             this.data = new();
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < PAGES_PER_MODE * SLOTS_PER_PAGE; i++)
             {
                 string slotName = "File " + (i + 1);
                 string slotCategory = slotName + " Settings";
@@ -172,7 +177,7 @@ public class Plugin : BaseUnityPlugin
     {
         int page = (int)Math.Floor(gameSlot / 9d);
         int mode = (int)Math.Floor(gameSlot / 3d) % 3;
-        return page >= 0 && page < 2 && mode == 0;
+        return page >= 0 && page < PAGES_PER_MODE && mode == 0;
     }
 
     public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)
@@ -181,7 +186,7 @@ public class Plugin : BaseUnityPlugin
         {
             if (GameSlotIsStory(gameSlot))
             {
-                CurrentSlot = Slots[gameSlot % 9 + 3 * (int)Math.Floor((double)gameSlot / 9)];
+                CurrentSlot = Slots[gameSlot % (MODES * SLOTS_PER_PAGE) + SLOTS_PER_PAGE * (int)Math.Floor((double) gameSlot / (MODES * SLOTS_PER_PAGE))];
 
                 if (CurrentSlot.RandomiseChests.Value)
                 {
