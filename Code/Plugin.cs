@@ -51,6 +51,26 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
+    public string GetRandomisationDataPath(int storyFile)
+    {
+        return "unsighted-randomeister/saves/file" + storyFile + ".dat";
+    }
+
+    public bool HasRandomisationData(int storyFile)
+    {
+        return File.Exists(this.GetRandomisationDataPath(storyFile));
+    }
+
+    public RandomisationData ReadRandomisationData(int storyFile)
+    {
+        return Serializer.Load<RandomisationData>(this.GetRandomisationDataPath(storyFile));
+    }
+
+    public void WriteRandomisationData(int storyFile, RandomisationData data)
+    {
+        Serializer.Save<RandomisationData>(this.GetRandomisationDataPath(storyFile), data);
+    }
+
     public ManualLogSource GetLogger() { return Logger; }
 
     public void SetOriginalChestList(Lists lists)
