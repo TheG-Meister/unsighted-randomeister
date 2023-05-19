@@ -12,6 +12,7 @@ public class Plugin : BaseUnityPlugin
 
     public ConfigSlot? CurrentSlot;
     public List<ConfigSlot>? Slots;
+    public List<RandomisationData> data;
 
     private ChestList? originalChestList;
     private ChestList? randomChestList;
@@ -20,6 +21,8 @@ public class Plugin : BaseUnityPlugin
 
     public Plugin()
     {
+        this.data = new(6);
+
         if (Instance == null)
         {
             Instance = this;
@@ -28,6 +31,7 @@ public class Plugin : BaseUnityPlugin
             Harmony.CreateAndPatchAll(typeof(HarmonyHooks));
 
             Slots = new List<ConfigSlot>();
+            this.data = new();
 
             for (int i = 0; i < 6; i++)
             {
