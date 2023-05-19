@@ -12,13 +12,12 @@ namespace dev.gmeister.unsighted.randomeister;
 [Serializable]
 internal class FileRandomisationData
 {
-    public bool randomise;
-    public bool randomSeed = true;
-    public int seed = 0;
-    public bool randomiseChests = true;
+    public int seed;
+    public List<string> items;
 
-    public FileRandomisationData(bool randomiseFile)
+    public FileRandomisationData(int seed, List<string> items)
     {
-        this.randomise = randomiseFile;
+        this.seed = seed;
+        this.items = items;
     }
 }
