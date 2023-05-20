@@ -62,7 +62,7 @@ public class Plugin : BaseUnityPlugin
 
     public string GetRandomisationDataPath(int storyFile)
     {
-        return "unsighted-randomeister/saves/file" + storyFile + ".dat";
+        return "unsighted-randomeister/saves/file" + (storyFile + 1) + ".dat";
     }
 
     public bool HasRandomisationData(int storyFile)
@@ -72,12 +72,16 @@ public class Plugin : BaseUnityPlugin
 
     public RandomisationData ReadRandomisationData(int storyFile)
     {
+        if (storyFile < 0 || storyFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(storyFile + " is not a valid story file slot index");
+        if (!this.HasRandomisationData(storyFile)) throw new ArgumentException("There is no randomisation data for story file " + storyFile);
         return Serializer.Load<RandomisationData>(this.GetRandomisationDataPath(storyFile));
     }
 
     public void WriteRandomisationData(int storyFile, RandomisationData data)
     {
-        Serializer.Save<RandomisationData>(this.GetRandomisationDataPath(storyFile), data);
+        string path = this.GetRandomisationDataPath(storyFile);
+        Directory.CreateDirectory(Path.GetDirectoryName(path));
+        Serializer.Save<RandomisationData>(path, data);
     }
 
     public ManualLogSource GetLogger() { return Logger; }
@@ -182,11 +186,12 @@ public class Plugin : BaseUnityPlugin
 
     public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)
     {
+        int storySlot = gameSlot % (MODES * SLOTS_PER_PAGE) + SLOTS_PER_PAGE * (int)Math.Floor((double)gameSlot / (MODES * SLOTS_PER_PAGE));
         if (Slots != null)
         {
             if (GameSlotIsStory(gameSlot))
             {
-                CurrentSlot = Slots[gameSlot % (MODES * SLOTS_PER_PAGE) + SLOTS_PER_PAGE * (int)Math.Floor((double) gameSlot / (MODES * SLOTS_PER_PAGE))];
+                CurrentSlot = Slots[storySlot];
 
                 if (CurrentSlot.RandomiseChests.Value)
                 {
@@ -199,6 +204,7 @@ public class Plugin : BaseUnityPlugin
                     else ShuffleChests(CurrentSlot.Seed.Value);
 
                     if (newGame) LogChestRandomisation();
+                    this.WriteRandomisationData(storySlot, new RandomisationData(randomChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList()));
                 }
                 else UnshuffleChests();
             }
