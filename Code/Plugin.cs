@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
+using System;
 
 namespace dev.gmeister.unsighted.randomeister;
 
@@ -10,8 +11,15 @@ public class Plugin : BaseUnityPlugin
     public const string NAME = "Unsighted Randomeister";
     public const string VERSION = "0.2.0";
 
+    public const int MODES = 3;
+    public const int PAGES_PER_MODE = 2;
+    public const int SLOTS_PER_PAGE = 3;
+
+    public const int STORY_MODE = 0;
+
     public ConfigSlot? CurrentSlot;
     public List<ConfigSlot>? Slots;
+    public List<RandomisationData> data;
 
     private ChestList? originalChestList;
     private ChestList? randomChestList;
@@ -20,6 +28,8 @@ public class Plugin : BaseUnityPlugin
 
     public Plugin()
     {
+        this.data = new(PAGES_PER_MODE * SLOTS_PER_PAGE);
+
         if (Instance == null)
         {
             Instance = this;
@@ -28,8 +38,9 @@ public class Plugin : BaseUnityPlugin
             Harmony.CreateAndPatchAll(typeof(HarmonyHooks));
 
             Slots = new List<ConfigSlot>();
+            this.data = new();
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < PAGES_PER_MODE * SLOTS_PER_PAGE; i++)
             {
                 string slotName = "File " + (i + 1);
                 string slotCategory = slotName + " Settings";
@@ -40,15 +51,47 @@ public class Plugin : BaseUnityPlugin
 
                 ConfigSlot slot = new(randomiseChests, useRandomSeed, seed);
 
-                randomiseChests.SettingChanged += (o, e) => { if (CurrentSlot != null && CurrentSlot.Equals(slot)) this.UnshuffleChests(); };
-                seed.SettingChanged += (o, e) =>
-                {
-                    if (CurrentSlot != null && CurrentSlot.Equals(slot) && slot.RandomiseChests.Value) this.ShuffleChests(slot.Seed.Value);
-                };
-
                 Slots.Add(slot);
             }
         }
+    }
+
+    public string GetRandomisationDataPath(int storyFile)
+    {
+        return "unsighted-randomeister/saves/file-" + (storyFile + 1) + ".dat";
+    }
+
+    public bool HasRandomisationData(int storyFile)
+    {
+        return File.Exists(this.GetRandomisationDataPath(storyFile));
+    }
+
+    public RandomisationData ReadRandomisationData(int storyFile)
+    {
+        if (storyFile < 0 || storyFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(storyFile + " is not a valid story file slot index");
+        if (!this.HasRandomisationData(storyFile)) throw new ArgumentException("There is no randomisation data for story file " + storyFile);
+        return Serializer.Load<RandomisationData>(this.GetRandomisationDataPath(storyFile));
+    }
+
+    public void CopyRandomisationData(int fromStoryFile, int toStoryFile)
+    {
+        if (fromStoryFile < 0 || fromStoryFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(fromStoryFile + " is not a valid story file slot index");
+        if (!this.HasRandomisationData(fromStoryFile)) throw new ArgumentException("There is no randomisation data for story file " + fromStoryFile);
+        if (toStoryFile < 0 || toStoryFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(toStoryFile + " is not a valid story file slot index");
+
+        File.Copy(this.GetRandomisationDataPath(fromStoryFile), this.GetRandomisationDataPath(toStoryFile), true);
+    }
+
+    public void WriteRandomisationData(int storyFile, RandomisationData data)
+    {
+        string path = this.GetRandomisationDataPath(storyFile);
+        Directory.CreateDirectory(Path.GetDirectoryName(path));
+        Serializer.Save<RandomisationData>(path, data);
+    }
+
+    public void DeleteRandomisationData(int storyFile)
+    {
+        File.Delete(this.GetRandomisationDataPath(storyFile));
     }
 
     public ManualLogSource GetLogger() { return Logger; }
@@ -96,13 +139,12 @@ public class Plugin : BaseUnityPlugin
         return chestList;
     }
 
-    private void ReplaceChestItems(ChestList chestList, List<string> items)
+    public ChestList CreateChestList(List<string> items)
     {
+        ChestList chestList = this.CloneChestList(this.originalChestList);
         int i = 0;
-        foreach (AreaChestList areaChestList in chestList.areas) foreach (ChestObject chestObject in areaChestList.chestList)
-            {
-                chestObject.reward = items[i++];
-            }
+        foreach (AreaChestList areaChestList in chestList.areas) foreach (ChestObject chestObject in areaChestList.chestList) chestObject.reward = items[i++];
+        return chestList;
     }
 
     public void UnshuffleChests()
@@ -112,72 +154,141 @@ public class Plugin : BaseUnityPlugin
         PseudoSingleton<Lists>.instance.chestList = originalChestList;
     }
 
-    public void ShuffleChests(int seed)
+    public List<string> GetRandomItems(System.Random random)
     {
-        if (originalChestList != null)
+        List<string> items = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
+        return items.OrderBy(item => random.NextDouble()).ToList();
+    }
+
+    public void SetChestItems(List<string> items)
+    {
+        ChestList chestList = this.CreateChestList(items);
+        PseudoSingleton<Lists>.instance.chestList = chestList;
+    }
+
+    public void SetDataFromSettings(RandomisationSettings settings)
+    {
+        if (settings.useRandomeister)
         {
-            List<string> items = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
+            if (settings.randomSeed) settings.seed = new System.Random().Next();
 
-            System.Random random = new(seed);
-            List<string> shuffledItems = items.OrderBy(item => random.NextDouble()).ToList();
-
-            randomChestList = CloneChestList(originalChestList);
-            ReplaceChestItems(randomChestList, shuffledItems);
-
-            Logger.LogInfo("Randomising chests");
-            PseudoSingleton<Lists>.instance.chestList = randomChestList;
+            if (settings.randomiseChests)
+            {
+                System.Random random = new System.Random(settings.seed);
+                settings.items = this.GetRandomItems(random);
+            }
         }
     }
 
-    public void LogChestRandomisation()
+    public void CreateStoryFileRandomiser(int storySlot, RandomisationSettings settings)
     {
-        if (originalChestList != null && randomChestList != null)
+        this.SetDataFromSettings(settings);
+        this.WriteRandomisationData(storySlot, settings);
+        this.LogChestRandomisation(settings.items);
+        this.LoadStoryFileRandomiser(settings);
+    }
+
+    public void LoadStoryFileRandomiser(RandomisationData data)
+    {
+        this.SetChestItems(data.items);
+    }
+
+    public void LogChestRandomisation(List<string> newItems)
+    {
+        if (originalChestList != null)
         {
             Logger.LogInfo("Writing log data");
             List<string> logLines = new();
             List<string> originalItems = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
-            List<string> shuffledItems = randomChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
-            for (int i = 0; i < originalItems.Count; i++) logLines.Add(originalItems[i] + " is now " + shuffledItems[i]);
+            for (int i = 0; i < originalItems.Count; i++) logLines.Add(originalItems[i] + " is now " + newItems[i]);
             string logDir = "unsighted-randomeister/logs/randomisation/";
             if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
             File.WriteAllLines(logDir + DateTime.Now.ToString("yy-MM-dd-HH-mm-ss-fff") + ".txt", logLines);
         }
     }
 
-    public bool GameSlotIsStory(int gameSlot)
+    public int GetSlotIndex(int gameSlot)
     {
-        int page = (int)Math.Floor(gameSlot / 9d);
-        int mode = (int)Math.Floor(gameSlot / 3d) % 3;
-        return page >= 0 && page < 2 && mode == 0;
+        return gameSlot & SLOTS_PER_PAGE;
+    }
+
+    public int GetSlotMode(int gameSlot)
+    {
+        return (int) Math.Floor((double) gameSlot / SLOTS_PER_PAGE) % SLOTS_PER_PAGE;
+    }
+
+    public int GetSlotPage(int gameSlot)
+    {
+        return (int) Math.Floor((double) gameSlot / (MODES * SLOTS_PER_PAGE));
+    }
+
+    public int GameSlotToStorySlot(int gameSlot)
+    {
+        int page = this.GetSlotPage(gameSlot);
+        if (page >= PAGES_PER_MODE || page < 0) throw new ArgumentException("file index " + gameSlot + " is not within the page limits for saved games");
+        if (this.GetSlotMode(gameSlot) != STORY_MODE) throw new ArgumentException("file index " + gameSlot + " is not a story game slot");
+        return (gameSlot % SLOTS_PER_PAGE) + (SLOTS_PER_PAGE * page);
+    }
+
+    public int StorySlotToGameSlot(int storySlot)
+    {
+        return (storySlot % SLOTS_PER_PAGE) + (SLOTS_PER_PAGE * MODES) * (int) Math.Floor((double) storySlot / SLOTS_PER_PAGE);
     }
 
     public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)
     {
-        if (Slots != null)
+        if (this.GetSlotMode(gameSlot) == 0 && this.GetSlotPage(gameSlot) >= 0 && this.GetSlotPage(gameSlot) < PAGES_PER_MODE)
         {
-            if (GameSlotIsStory(gameSlot))
-            {
-                CurrentSlot = Slots[gameSlot % 9 + 3 * (int)Math.Floor((double)gameSlot / 9)];
+            int storySlot = this.GameSlotToStorySlot(gameSlot);
 
+            CurrentSlot = Slots[storySlot];
+
+            if (newGame)
+            {
                 if (CurrentSlot.RandomiseChests.Value)
                 {
-                    if (newGame && CurrentSlot.UseRandomSeed.Value)
-                    {
-                        Logger.LogInfo("Generating new seed");
-                        CurrentSlot.Seed.Value = new System.Random().Next();
-                        //Randomisation is performed by event handler... though if you can find a way to change this please do
-                    }
-                    else ShuffleChests(CurrentSlot.Seed.Value);
+                    RandomisationSettings settings = new RandomisationSettings(true, originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList());
+                    settings.randomSeed = CurrentSlot.UseRandomSeed.Value;
+                    settings.seed = CurrentSlot.Seed.Value;
 
-                    if (newGame) LogChestRandomisation();
+                    this.CreateStoryFileRandomiser(storySlot, settings);
                 }
-                else UnshuffleChests();
+                else
+                {
+                    this.UnshuffleChests();
+                    this.DeleteRandomisationData(storySlot);
+                }
             }
             else
             {
-                CurrentSlot = null;
-                UnshuffleChests();
+                if (this.HasRandomisationData(storySlot)) this.LoadStoryFileRandomiser(this.ReadRandomisationData(storySlot));
+                else this.UnshuffleChests();
+            }
+        }
+        else
+        {
+            CurrentSlot = null;
+            this.UnshuffleChests();
+        }
+    }
+
+    public void OnFileErased(SaveSlotButton button)
+    {
+        this.DeleteRandomisationData(button.saveSlot);
+    }
+
+    public void OnFileCopied(SaveSlotPopup popup, int gameSlot)
+    {
+        int storySlot = this.GameSlotToStorySlot(gameSlot);
+
+        if (this.HasRandomisationData(storySlot)) for (int newSlot = 0; newSlot < PAGES_PER_MODE * SLOTS_PER_PAGE; newSlot++)
+        {
+            if (!popup.SaveExist(this.StorySlotToGameSlot(newSlot)))
+            {
+                this.CopyRandomisationData(storySlot, newSlot);
+                break;
             }
         }
     }
+
 }
