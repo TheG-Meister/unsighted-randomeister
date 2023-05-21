@@ -58,7 +58,7 @@ public class Plugin : BaseUnityPlugin
 
     public string GetRandomisationDataPath(int storyFile)
     {
-        return "unsighted-randomeister/saves/file" + (storyFile + 1) + ".dat";
+        return "unsighted-randomeister/saves/file-" + (storyFile + 1) + ".dat";
     }
 
     public bool HasRandomisationData(int storyFile)
