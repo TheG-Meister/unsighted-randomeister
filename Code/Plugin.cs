@@ -73,6 +73,15 @@ public class Plugin : BaseUnityPlugin
         return Serializer.Load<RandomisationData>(this.GetRandomisationDataPath(storyFile));
     }
 
+    public void CopyRandomisationData(int fromStoryFile, int toStoryFile)
+    {
+        if (fromStoryFile < 0 || fromStoryFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(fromStoryFile + " is not a valid story file slot index");
+        if (!this.HasRandomisationData(fromStoryFile)) throw new ArgumentException("There is no randomisation data for story file " + fromStoryFile);
+        if (toStoryFile < 0 || toStoryFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(toStoryFile + " is not a valid story file slot index");
+
+        File.Copy(this.GetRandomisationDataPath(fromStoryFile), this.GetRandomisationDataPath(toStoryFile), true);
+    }
+
     public void WriteRandomisationData(int storyFile, RandomisationData data)
     {
         string path = this.GetRandomisationDataPath(storyFile);
@@ -221,6 +230,11 @@ public class Plugin : BaseUnityPlugin
         return (gameSlot % SLOTS_PER_PAGE) + (SLOTS_PER_PAGE * page);
     }
 
+    public int StorySlotToGameSlot(int storySlot)
+    {
+        return (storySlot % SLOTS_PER_PAGE) + (SLOTS_PER_PAGE * MODES) * (int) Math.Floor((double) storySlot / SLOTS_PER_PAGE);
+    }
+
     public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)
     {
         if (this.GetSlotMode(gameSlot) == 0 && this.GetSlotPage(gameSlot) >= 0 && this.GetSlotPage(gameSlot) < PAGES_PER_MODE)
@@ -257,4 +271,24 @@ public class Plugin : BaseUnityPlugin
             this.UnshuffleChests();
         }
     }
+
+    public void OnFileErased(SaveSlotButton button)
+    {
+        this.DeleteRandomisationData(button.saveSlot);
+    }
+
+    public void OnFileCopied(SaveSlotPopup popup, int gameSlot)
+    {
+        int storySlot = this.GameSlotToStorySlot(gameSlot);
+
+        if (this.HasRandomisationData(storySlot)) for (int newSlot = 0; newSlot < PAGES_PER_MODE * SLOTS_PER_PAGE; newSlot++)
+        {
+            if (!popup.SaveExist(this.StorySlotToGameSlot(newSlot)))
+            {
+                this.CopyRandomisationData(storySlot, newSlot);
+                break;
+            }
+        }
+    }
+
 }
