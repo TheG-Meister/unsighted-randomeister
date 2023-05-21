@@ -94,4 +94,16 @@ internal class HarmonyHooks
         if (SceneManager.GetActiveScene().name == "DowntownJumpRoom" && __instance.gameObject.name == "JumpBootsChest") __instance.fragileItem = false;
     }
 
+    [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.EraseConfirm)), HarmonyPostfix]
+    public static void AfterFileErase(SaveSlotButton __instance)
+    {
+        Plugin.Instance.OnFileErased(__instance);
+    }
+
+    [HarmonyPatch(typeof(SaveSlotPopup), nameof(SaveSlotPopup.CopyFile)), HarmonyPrefix]
+    public static void BeforeFileCopy(SaveSlotPopup __instance, int originalSlotNumber)
+    {
+        Plugin.Instance.OnFileCopied(__instance, originalSlotNumber);
+    }
+
 }
