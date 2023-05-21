@@ -170,12 +170,12 @@ public class Plugin : BaseUnityPlugin
     {
         if (settings.useRandomeister)
         {
-            if (settings.randomSeed) settings.seed = new System.Random().Next();
+            if (settings.randomSeed) settings.data.seed = new System.Random().Next();
 
             if (settings.randomiseChests)
             {
-                System.Random random = new System.Random(settings.seed);
-                settings.items = this.GetRandomItems(random);
+                System.Random random = new System.Random(settings.data.seed);
+                settings.data.items = this.GetRandomItems(random);
             }
         }
     }
@@ -183,9 +183,9 @@ public class Plugin : BaseUnityPlugin
     public void CreateStoryFileRandomiser(int storySlot, RandomisationSettings settings)
     {
         this.SetDataFromSettings(settings);
-        this.WriteRandomisationData(storySlot, settings);
-        this.LogChestRandomisation(settings.items);
-        this.LoadStoryFileRandomiser(settings);
+        this.WriteRandomisationData(storySlot, settings.data);
+        this.LogChestRandomisation(settings.data.items);
+        this.LoadStoryFileRandomiser(settings.data);
     }
 
     public void LoadStoryFileRandomiser(RandomisationData data)
@@ -247,9 +247,11 @@ public class Plugin : BaseUnityPlugin
             {
                 if (CurrentSlot.RandomiseChests.Value)
                 {
-                    RandomisationSettings settings = new RandomisationSettings(true, originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList());
+                    RandomisationData data = new RandomisationData(originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList());
+                    data.seed = CurrentSlot.Seed.Value;
+
+                    RandomisationSettings settings = new RandomisationSettings(true, data);
                     settings.randomSeed = CurrentSlot.UseRandomSeed.Value;
-                    settings.seed = CurrentSlot.Seed.Value;
 
                     this.CreateStoryFileRandomiser(storySlot, settings);
                 }
