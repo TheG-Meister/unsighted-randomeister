@@ -221,19 +221,27 @@ public class Plugin : BaseUnityPlugin
 
             if (newGame)
             {
-                if (this.options.randomiseChests.Value)
+                if (this.options.useRandomeister.Value)
                 {
-                    RandomisationData data = new RandomisationData(originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList())
+                    if (this.options.randomiseChests.Value)
                     {
-                        seed = this.options.seed.Value
-                    };
+                        RandomisationData data = new RandomisationData(originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList())
+                        {
+                            seed = this.options.seed.Value
+                        };
 
-                    RandomisationSettings settings = new RandomisationSettings(true, data)
+                        RandomisationSettings settings = new RandomisationSettings(true, data)
+                        {
+                            randomSeed = this.options.randomSeed.Value
+                        };
+
+                        this.CreateStoryFileRandomiser(storySlot, settings);
+                    }
+                    else
                     {
-                        randomSeed = this.options.randomSeed.Value
-                    };
-
-                    this.CreateStoryFileRandomiser(storySlot, settings);
+                        this.UnshuffleChests();
+                        this.DeleteRandomisationData(storySlot);
+                    }
                 }
                 else
                 {
