@@ -17,43 +17,22 @@ public class Plugin : BaseUnityPlugin
 
     public const int STORY_MODE = 0;
 
-    public ConfigSlot? CurrentSlot;
-    public List<ConfigSlot>? Slots;
-    public List<RandomisationData> data;
+    public Options options;
 
     private ChestList? originalChestList;
-    private ChestList? randomChestList;
 
     public static Plugin Instance { get; private set; } = null!;
 
     public Plugin()
     {
-        this.data = new(PAGES_PER_MODE * SLOTS_PER_PAGE);
+        if (Instance != null) throw new InvalidOperationException("There cannot be more than one instance of this plugin");
 
-        if (Instance == null)
-        {
-            Instance = this;
+        this.options = new(Config);
 
-            Logger.LogInfo($"Applying {typeof(HarmonyHooks)} ...");
-            Harmony.CreateAndPatchAll(typeof(HarmonyHooks));
+        Instance = this;
 
-            Slots = new List<ConfigSlot>();
-            this.data = new();
-
-            for (int i = 0; i < PAGES_PER_MODE * SLOTS_PER_PAGE; i++)
-            {
-                string slotName = "File " + (i + 1);
-                string slotCategory = slotName + " Settings";
-
-                ConfigEntry<bool> randomiseChests = Config.Bind(slotCategory, slotName + " - Randomise Chests", true, "Randomise chest items in Main Story " + slotName + ". Turning this setting off makes chests give their usual items (may require a restart)");
-                ConfigEntry<bool> useRandomSeed = Config.Bind(slotCategory, slotName + " - Use random seed", true, "If \"Randomise Chests\" is enabled for this file, generate a random seed for randomisation when starting a new game. Turn this setting off to set the seed yourself.");
-                ConfigEntry<int> seed = Config.Bind(slotCategory, slotName + " - Seed", 0, "If any randomisation options are enabled for this file, use this value to seed the randomisation. If \"Use Random Seed\" is enabled for this file, this number will be randomised when starting a new game.");
-
-                ConfigSlot slot = new(randomiseChests, useRandomSeed, seed);
-
-                Slots.Add(slot);
-            }
-        }
+        Logger.LogInfo($"Applying {typeof(HarmonyHooks)} ...");
+        Harmony.CreateAndPatchAll(typeof(HarmonyHooks));
     }
 
     public string GetRandomisationDataPath(int storyFile)
@@ -150,7 +129,6 @@ public class Plugin : BaseUnityPlugin
     public void UnshuffleChests()
     {
         Logger.LogInfo("Unshuffling chests");
-        randomChestList = null;
         PseudoSingleton<Lists>.instance.chestList = originalChestList;
     }
 
@@ -241,19 +219,29 @@ public class Plugin : BaseUnityPlugin
         {
             int storySlot = this.GameSlotToStorySlot(gameSlot);
 
-            CurrentSlot = Slots[storySlot];
-
             if (newGame)
             {
-                if (CurrentSlot.RandomiseChests.Value)
+                if (this.options.useRandomeister.Value)
                 {
-                    RandomisationData data = new RandomisationData(originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList());
-                    data.seed = CurrentSlot.Seed.Value;
+                    if (this.options.randomiseChests.Value)
+                    {
+                        RandomisationData data = new RandomisationData(originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList())
+                        {
+                            seed = this.options.seed.Value
+                        };
 
-                    RandomisationSettings settings = new RandomisationSettings(true, data);
-                    settings.randomSeed = CurrentSlot.UseRandomSeed.Value;
+                        RandomisationSettings settings = new RandomisationSettings(true, data)
+                        {
+                            randomSeed = this.options.randomSeed.Value
+                        };
 
-                    this.CreateStoryFileRandomiser(storySlot, settings);
+                        this.CreateStoryFileRandomiser(storySlot, settings);
+                    }
+                    else
+                    {
+                        this.UnshuffleChests();
+                        this.DeleteRandomisationData(storySlot);
+                    }
                 }
                 else
                 {
@@ -267,11 +255,7 @@ public class Plugin : BaseUnityPlugin
                 else this.UnshuffleChests();
             }
         }
-        else
-        {
-            CurrentSlot = null;
-            this.UnshuffleChests();
-        }
+        else this.UnshuffleChests();
     }
 
     public void OnFileErased(SaveSlotButton button)
