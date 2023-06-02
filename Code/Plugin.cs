@@ -23,11 +23,20 @@ public class Plugin : BaseUnityPlugin
 
     public static Plugin Instance { get; private set; } = null!;
 
+    public Dictionary<string, List<string>> itemPools;
+    public const string VANILLA_POOL = "Vanilla";
+    public const string ALMOST_ALL_ITEMS_POOL = "Almost every item";
+
     public Plugin()
     {
         if (Instance != null) throw new InvalidOperationException("There cannot be more than one instance of this plugin");
 
         this.options = new(Config);
+
+        this.itemPools = new()
+        {
+            { ALMOST_ALL_ITEMS_POOL, new() { "Key", "JumpBoots", "DisposableSyringe", "Bolts1", "Bolts2", "Bolts3", "Bolts4", "AncientClockGear", "AncientClockPendulum", "AncientClockHands", "AncientClockFace", "AttackCogBlueprint", "DefenseCogBlueprint", "ReloadCogBlueprint", "StaminaCogBlueprint", "SpeedCogBlueprint", "SyringeCogBlueprint", "ReviveCogBlueprint", "HealthChip", "StaminaChip", "StrengthChip", "DefenseChip", "InvincibilityChip", "SpinnerChip", "SteadyChip", "ShurikenChip", "SwordChip", "AxeChip", "RiskChip", "PowerChip", "VirusChip", "FatigueChip", "SpinChipA", "SpinChipB", "JumperChip", "RunnerChip", "SpeedChipA", "ReloadChip", "BulletChip", "DrifterChip", "SpeedChipB", "BoltChip", "WalletChip", "FasterHealChip", "VigorChip", "VampireChip", "ComboChipA", "ComboChipB", "SyringeChip", "AutoSyringeChip", "DoubleBarrelChip", "OffenseChip", "DogChip", "MerchantChip", "ScavengerChip", "AnimaChip", "ParryMasterChip", "CogChip", "BigHeartChip", "GlitchChip", "Blaster", "DoctorsGun", "Spinner", "Hookshot1", "AutomaticBlaster", "Shotgun", "Flamethrower", "Icethrower", "GranadeLauncher", "IceGranade", "GranadeShotgun", "IronEdge", "ThunderEdge", "Frostbite", "Flameblade", "ElementalBlade", "WarAxe", "IceAxe", "FireAxe", "ThunderAxe", "RaquelAxe", "IronStar", "IceStar", "FireStar", "ThunderStar", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "JumpBoots", "JumpBoots", "Hookshot1", "AttackCog", "DefenseCog", "ReloadCog", "StaminaCog", "SpeedCog", "SyringeCog", "ReviveCog", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust" } }
+        };
 
         Instance = this;
 
@@ -77,7 +86,11 @@ public class Plugin : BaseUnityPlugin
 
     public void SetOriginalChestList(Lists lists)
     {
-        if (this.originalChestList == null) this.originalChestList = lists.chestList;
+        if (this.originalChestList == null)
+        {
+            this.originalChestList = lists.chestList;
+            this.itemPools.Add(VANILLA_POOL, this.originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList());
+        }
     }
 
     private ChestObject CloneChest(ChestObject other)
@@ -132,9 +145,14 @@ public class Plugin : BaseUnityPlugin
         PseudoSingleton<Lists>.instance.chestList = originalChestList;
     }
 
-    public List<string> GetRandomItems(System.Random random)
+    public List<string> GetItemPool(string name)
     {
-        List<string> items = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
+        if (this.itemPools.ContainsKey(name)) return this.itemPools[name];
+        else return this.itemPools[VANILLA_POOL];
+    }
+
+    public List<string> GetRandomItems(List<string> items, System.Random random)
+    {
         return items.OrderBy(item => random.NextDouble()).ToList();
     }
 
@@ -142,6 +160,20 @@ public class Plugin : BaseUnityPlugin
     {
         ChestList chestList = this.CreateChestList(items);
         PseudoSingleton<Lists>.instance.chestList = chestList;
+    }
+
+    public RandomisationSettings CreateSettingsFromConfig()
+    {
+        RandomisationData data = new(this.itemPools[this.options.chestItemPool.Value])
+        {
+            seed = this.options.seed.Value
+        };
+
+        return new(true, data)
+        {
+            randomSeed = this.options.randomSeed.Value,
+            chestItemPool = this.options.chestItemPool.Value,
+        };
     }
 
     public void SetDataFromSettings(RandomisationSettings settings)
@@ -153,7 +185,7 @@ public class Plugin : BaseUnityPlugin
             if (settings.randomiseChests)
             {
                 System.Random random = new System.Random(settings.data.seed);
-                settings.data.items = this.GetRandomItems(random);
+                settings.data.items = this.GetRandomItems(this.GetItemPool(settings.chestItemPool), random);
             }
         }
     }
@@ -177,7 +209,7 @@ public class Plugin : BaseUnityPlugin
         {
             Logger.LogInfo("Writing log data");
             List<string> logLines = new();
-            List<string> originalItems = originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList();
+            List<string> originalItems = this.itemPools[VANILLA_POOL];
             for (int i = 0; i < originalItems.Count; i++) logLines.Add(originalItems[i] + " is now " + newItems[i]);
             string logDir = "unsighted-randomeister/logs/randomisation/";
             if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
@@ -225,17 +257,7 @@ public class Plugin : BaseUnityPlugin
                 {
                     if (this.options.randomiseChests.Value)
                     {
-                        RandomisationData data = new RandomisationData(originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList())
-                        {
-                            seed = this.options.seed.Value
-                        };
-
-                        RandomisationSettings settings = new RandomisationSettings(true, data)
-                        {
-                            randomSeed = this.options.randomSeed.Value
-                        };
-
-                        this.CreateStoryFileRandomiser(storySlot, settings);
+                        this.CreateStoryFileRandomiser(storySlot, this.CreateSettingsFromConfig());
                     }
                     else
                     {

@@ -14,6 +14,7 @@ public class Options
 
     public const string CATEGORY_RANDOMISATION = "Randomisation";
     public ConfigEntry<bool> randomiseChests;
+    public ConfigEntry<string> chestItemPool;
 
     public const string CATEGORY_CUSTOM_GAME = "Custom Game";
 
@@ -25,5 +26,9 @@ public class Options
         this.seed = configFile.Bind(CATEGORY_SEED, "Seed", 0, "This value will be used to \"seed\" the randomisation of the next story file created. Two games created with the same settings, on the same randomiser version, that use the same seed will have all randomisation performed the same way. If \"Use random seed\" is enabled for this file, this number will itself be randomised when starting a new game.");
 
         this.randomiseChests = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise chests", true, "If this option is enabled, the items found in chests throughout Arcadia will be randomised upon the creation of a new story file. Items will be placed in chests according to the specified seed, or a random seed if \"Use random seed\" is enabled. Turn this option off to have chests contain their original items.");
+        
+        AcceptableValueList<string> chestItemPoolValues = new(Plugin.VANILLA_POOL, Plugin.ALMOST_ALL_ITEMS_POOL);
+        ConfigDescription chestItemPoolDescription = new("The name of the item pool to use for randomisation. \"Vanilla\" uses the items found in the unrandomised game, while \"Almost every item\" uses one of almost every item, including a few pairs of jump boots, a collection of keys and a lot of meteor dust.", chestItemPoolValues);
+        this.chestItemPool = configFile.Bind(CATEGORY_RANDOMISATION, "Chest item pool", Plugin.VANILLA_POOL, chestItemPoolDescription);
     }
 }
