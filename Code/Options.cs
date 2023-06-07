@@ -16,7 +16,7 @@ public class Options
     public ConfigEntry<bool> randomiseChests;
     public ConfigEntry<string> chestItemPool;
 
-    public const string CATEGORY_CUSTOM_GAME = "Custom Game";
+    public const string CATEGORY_CUSTOMISER = "Customisation";
 
     public Options(ConfigFile configFile)
     {
