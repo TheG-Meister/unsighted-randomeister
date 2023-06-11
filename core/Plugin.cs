@@ -3,8 +3,9 @@ global using HarmonyLib;
 global using UnityEngine;
 
 using BepInEx.Logging;
+using dev.gmeister.unsighted.randomeister.data;
 
-namespace dev.gmeister.unsighted.randomeister;
+namespace dev.gmeister.unsighted.randomeister.core;
 
 [BepInPlugin(GUID, NAME, VERSION)]
 public class Plugin : BaseUnityPlugin
@@ -19,7 +20,7 @@ public class Plugin : BaseUnityPlugin
 
     public const int STORY_MODE = 0;
 
-    public Options options;
+    public PluginConfig options;
 
     public RandomisationData? currentData;
 
@@ -35,17 +36,17 @@ public class Plugin : BaseUnityPlugin
     {
         if (Instance != null) throw new InvalidOperationException("There cannot be more than one instance of this plugin");
 
-        this.options = new(Config);
+        options = new(Config);
 
-        this.itemPools = new()
+        itemPools = new()
         {
             { ALMOST_ALL_ITEMS_POOL, new() { "Key", "JumpBoots", "DisposableSyringe", "Bolts1", "Bolts2", "Bolts3", "Bolts4", "AncientClockGear", "AncientClockPendulum", "AncientClockHands", "AncientClockFace", "AttackCogBlueprint", "DefenseCogBlueprint", "ReloadCogBlueprint", "StaminaCogBlueprint", "SpeedCogBlueprint", "SyringeCogBlueprint", "ReviveCogBlueprint", "HealthChip", "StaminaChip", "StrengthChip", "DefenseChip", "InvincibilityChip", "SpinnerChip", "SteadyChip", "ShurikenChip", "SwordChip", "AxeChip", "RiskChip", "PowerChip", "VirusChip", "FatigueChip", "SpinChipA", "SpinChipB", "JumperChip", "RunnerChip", "SpeedChipA", "ReloadChip", "BulletChip", "DrifterChip", "SpeedChipB", "BoltChip", "WalletChip", "FasterHealChip", "VigorChip", "VampireChip", "ComboChipA", "ComboChipB", "SyringeChip", "AutoSyringeChip", "DoubleBarrelChip", "OffenseChip", "DogChip", "MerchantChip", "ScavengerChip", "AnimaChip", "ParryMasterChip", "CogChip", "BigHeartChip", "GlitchChip", "Blaster", "DoctorsGun", "Spinner", "Hookshot1", "AutomaticBlaster", "Shotgun", "Flamethrower", "Icethrower", "GranadeLauncher", "IceGranade", "GranadeShotgun", "IronEdge", "ThunderEdge", "Frostbite", "Flameblade", "ElementalBlade", "WarAxe", "IceAxe", "FireAxe", "ThunderAxe", "RaquelAxe", "IronStar", "IceStar", "FireStar", "ThunderStar", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "JumpBoots", "JumpBoots", "Hookshot1", "AttackCog", "DefenseCog", "ReloadCog", "StaminaCog", "SpeedCog", "SyringeCog", "ReviveCog", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust" } }
         };
 
         Instance = this;
 
-        Logger.LogInfo($"Applying {typeof(HarmonyHooks)} ...");
-        Harmony.CreateAndPatchAll(typeof(HarmonyHooks));
+        Logger.LogInfo($"Applying {typeof(Hooks)} ...");
+        Harmony.CreateAndPatchAll(typeof(Hooks));
     }
 
     public string GetRandomisationDataPath(int storyFile)
@@ -55,45 +56,45 @@ public class Plugin : BaseUnityPlugin
 
     public bool HasRandomisationData(int storyFile)
     {
-        return File.Exists(this.GetRandomisationDataPath(storyFile));
+        return File.Exists(GetRandomisationDataPath(storyFile));
     }
 
     public RandomisationData ReadRandomisationData(int storyFile)
     {
         if (storyFile < 0 || storyFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(storyFile + " is not a valid story file slot index");
-        if (!this.HasRandomisationData(storyFile)) throw new ArgumentException("There is no randomisation data for story file " + storyFile);
-        return Serializer.Load<RandomisationData>(this.GetRandomisationDataPath(storyFile));
+        if (!HasRandomisationData(storyFile)) throw new ArgumentException("There is no randomisation data for story file " + storyFile);
+        return Serializer.Load<RandomisationData>(GetRandomisationDataPath(storyFile));
     }
 
     public void CopyRandomisationData(int fromStoryFile, int toStoryFile)
     {
         if (fromStoryFile < 0 || fromStoryFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(fromStoryFile + " is not a valid story file slot index");
-        if (!this.HasRandomisationData(fromStoryFile)) throw new ArgumentException("There is no randomisation data for story file " + fromStoryFile);
+        if (!HasRandomisationData(fromStoryFile)) throw new ArgumentException("There is no randomisation data for story file " + fromStoryFile);
         if (toStoryFile < 0 || toStoryFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(toStoryFile + " is not a valid story file slot index");
 
-        File.Copy(this.GetRandomisationDataPath(fromStoryFile), this.GetRandomisationDataPath(toStoryFile), true);
+        File.Copy(GetRandomisationDataPath(fromStoryFile), GetRandomisationDataPath(toStoryFile), true);
     }
 
     public void WriteRandomisationData(int storyFile, RandomisationData data)
     {
-        string path = this.GetRandomisationDataPath(storyFile);
+        string path = GetRandomisationDataPath(storyFile);
         Directory.CreateDirectory(Path.GetDirectoryName(path));
-        Serializer.Save<RandomisationData>(path, data);
+        Serializer.Save(path, data);
     }
 
     public void DeleteRandomisationData(int storyFile)
     {
-        File.Delete(this.GetRandomisationDataPath(storyFile));
+        File.Delete(GetRandomisationDataPath(storyFile));
     }
 
     public ManualLogSource GetLogger() { return Logger; }
 
     public void SetOriginalChestList(Lists lists)
     {
-        if (this.originalChestList == null)
+        if (originalChestList == null)
         {
-            this.originalChestList = lists.chestList;
-            this.itemPools.Add(VANILLA_POOL, this.originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList());
+            originalChestList = lists.chestList;
+            itemPools.Add(VANILLA_POOL, originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList());
         }
     }
 
@@ -104,7 +105,7 @@ public class Plugin : BaseUnityPlugin
             reward = other.reward,
             chestName = other.chestName,
             roomName = other.roomName,
-            abilitiesNeeded = (Abilities[])other.abilitiesNeeded,
+            abilitiesNeeded = other.abilitiesNeeded,
             dontCountToTotal = other.dontCountToTotal
         };
 
@@ -137,7 +138,7 @@ public class Plugin : BaseUnityPlugin
 
     public ChestList CreateChestList(List<string> items)
     {
-        ChestList chestList = this.CloneChestList(this.originalChestList);
+        ChestList chestList = CloneChestList(originalChestList);
         int i = 0;
         foreach (AreaChestList areaChestList in chestList.areas) foreach (ChestObject chestObject in areaChestList.chestList) chestObject.reward = items[i++];
         return chestList;
@@ -151,8 +152,8 @@ public class Plugin : BaseUnityPlugin
 
     public List<string> GetItemPool(string name)
     {
-        if (this.itemPools.ContainsKey(name)) return this.itemPools[name];
-        else return this.itemPools[VANILLA_POOL];
+        if (itemPools.ContainsKey(name)) return itemPools[name];
+        else return itemPools[VANILLA_POOL];
     }
 
     public List<string> GetRandomItems(List<string> items, System.Random random)
@@ -162,22 +163,22 @@ public class Plugin : BaseUnityPlugin
 
     public void SetChestItems(List<string> items)
     {
-        ChestList chestList = this.CreateChestList(items);
+        ChestList chestList = CreateChestList(items);
         PseudoSingleton<Lists>.instance.chestList = chestList;
     }
 
     public RandomisationSettings CreateSettingsFromConfig()
     {
-        RandomisationData data = new(this.itemPools[this.options.chestItemPool.Value])
+        RandomisationData data = new(itemPools[options.chestItemPool.Value])
         {
-            seed = this.options.seed.Value,
-            removeFragileOnJumpBootsChest = this.options.removeFragileOnJumpBootsChest.Value,
+            seed = options.seed.Value,
+            removeFragileOnJumpBootsChest = options.removeFragileOnJumpBootsChest.Value,
         };
 
         return new(true, data)
         {
-            randomSeed = this.options.randomSeed.Value,
-            chestItemPool = this.options.chestItemPool.Value,
+            randomSeed = options.randomSeed.Value,
+            chestItemPool = options.chestItemPool.Value,
         };
     }
 
@@ -190,35 +191,35 @@ public class Plugin : BaseUnityPlugin
             if (settings.randomiseChests)
             {
                 System.Random random = new System.Random(settings.data.seed);
-                settings.data.items = this.GetRandomItems(this.GetItemPool(settings.chestItemPool), random);
+                settings.data.items = GetRandomItems(GetItemPool(settings.chestItemPool), random);
             }
         }
     }
 
     public void CreateStoryFileRandomiser(int storySlot, RandomisationSettings settings)
     {
-        this.SetDataFromSettings(settings);
-        this.WriteRandomisationData(storySlot, settings.data);
-        this.LogChestRandomisation(settings.data.items);
-        this.LoadStoryFileRandomiser(settings.data);
+        SetDataFromSettings(settings);
+        WriteRandomisationData(storySlot, settings.data);
+        LogChestRandomisation(settings.data.items);
+        LoadStoryFileRandomiser(settings.data);
     }
 
     public void LoadStoryFileRandomiser(RandomisationData data)
     {
-        this.currentData = data;
-        this.SetChestItems(data.items);
+        currentData = data;
+        SetChestItems(data.items);
     }
 
     public void CreateVanillaStoryFile(int storySlot)
     {
-        this.DeleteRandomisationData(storySlot);
-        this.LoadVanillaStoryFile();
+        DeleteRandomisationData(storySlot);
+        LoadVanillaStoryFile();
     }
 
     public void LoadVanillaStoryFile()
     {
-        this.currentData = null;
-        this.ResetChestItems();
+        currentData = null;
+        ResetChestItems();
     }
 
     public void LogChestRandomisation(List<string> newItems)
@@ -227,7 +228,7 @@ public class Plugin : BaseUnityPlugin
         {
             Logger.LogInfo("Writing log data");
             List<string> logLines = new();
-            List<string> originalItems = this.itemPools[VANILLA_POOL];
+            List<string> originalItems = itemPools[VANILLA_POOL];
             for (int i = 0; i < originalItems.Count; i++) logLines.Add(originalItems[i] + " is now " + newItems[i]);
             string logDir = "unsighted-randomeister/logs/randomisation/";
             if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
@@ -242,64 +243,64 @@ public class Plugin : BaseUnityPlugin
 
     public int GetSlotMode(int gameSlot)
     {
-        return (int) Math.Floor((double) gameSlot / SLOTS_PER_PAGE) % SLOTS_PER_PAGE;
+        return (int)Math.Floor((double)gameSlot / SLOTS_PER_PAGE) % SLOTS_PER_PAGE;
     }
 
     public int GetSlotPage(int gameSlot)
     {
-        return (int) Math.Floor((double) gameSlot / (MODES * SLOTS_PER_PAGE));
+        return (int)Math.Floor((double)gameSlot / (MODES * SLOTS_PER_PAGE));
     }
 
     public int GameSlotToStorySlot(int gameSlot)
     {
-        int page = this.GetSlotPage(gameSlot);
+        int page = GetSlotPage(gameSlot);
         if (page >= PAGES_PER_MODE || page < 0) throw new ArgumentException("file index " + gameSlot + " is not within the page limits for saved games");
-        if (this.GetSlotMode(gameSlot) != STORY_MODE) throw new ArgumentException("file index " + gameSlot + " is not a story game slot");
-        return (gameSlot % SLOTS_PER_PAGE) + (SLOTS_PER_PAGE * page);
+        if (GetSlotMode(gameSlot) != STORY_MODE) throw new ArgumentException("file index " + gameSlot + " is not a story game slot");
+        return gameSlot % SLOTS_PER_PAGE + SLOTS_PER_PAGE * page;
     }
 
     public int StorySlotToGameSlot(int storySlot)
     {
-        return (storySlot % SLOTS_PER_PAGE) + (SLOTS_PER_PAGE * MODES) * (int) Math.Floor((double) storySlot / SLOTS_PER_PAGE);
+        return storySlot % SLOTS_PER_PAGE + SLOTS_PER_PAGE * MODES * (int)Math.Floor((double)storySlot / SLOTS_PER_PAGE);
     }
 
     public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)
     {
-        if (this.GetSlotMode(gameSlot) == 0 && this.GetSlotPage(gameSlot) >= 0 && this.GetSlotPage(gameSlot) < PAGES_PER_MODE)
+        if (GetSlotMode(gameSlot) == 0 && GetSlotPage(gameSlot) >= 0 && GetSlotPage(gameSlot) < PAGES_PER_MODE)
         {
-            int storySlot = this.GameSlotToStorySlot(gameSlot);
+            int storySlot = GameSlotToStorySlot(gameSlot);
 
             if (newGame)
             {
-                if (this.options.useRandomeister.Value) this.CreateStoryFileRandomiser(storySlot, this.CreateSettingsFromConfig());
-                else this.CreateVanillaStoryFile(storySlot);
+                if (options.useRandomeister.Value) CreateStoryFileRandomiser(storySlot, CreateSettingsFromConfig());
+                else CreateVanillaStoryFile(storySlot);
             }
             else
             {
-                if (this.HasRandomisationData(storySlot)) this.LoadStoryFileRandomiser(this.ReadRandomisationData(storySlot));
-                else this.LoadVanillaStoryFile();
+                if (HasRandomisationData(storySlot)) LoadStoryFileRandomiser(ReadRandomisationData(storySlot));
+                else LoadVanillaStoryFile();
             }
         }
-        else this.LoadVanillaStoryFile();
+        else LoadVanillaStoryFile();
     }
 
     public void OnFileErased(SaveSlotButton button)
     {
-        this.DeleteRandomisationData(button.saveSlot);
+        DeleteRandomisationData(button.saveSlot);
     }
 
     public void OnFileCopied(SaveSlotPopup popup, int gameSlot)
     {
-        int storySlot = this.GameSlotToStorySlot(gameSlot);
+        int storySlot = GameSlotToStorySlot(gameSlot);
 
-        if (this.HasRandomisationData(storySlot)) for (int newSlot = 0; newSlot < PAGES_PER_MODE * SLOTS_PER_PAGE; newSlot++)
-        {
-            if (!popup.SaveExist(this.StorySlotToGameSlot(newSlot)))
+        if (HasRandomisationData(storySlot)) for (int newSlot = 0; newSlot < PAGES_PER_MODE * SLOTS_PER_PAGE; newSlot++)
             {
-                this.CopyRandomisationData(storySlot, newSlot);
-                break;
+                if (!popup.SaveExist(StorySlotToGameSlot(newSlot)))
+                {
+                    CopyRandomisationData(storySlot, newSlot);
+                    break;
+                }
             }
-        }
     }
 
 }

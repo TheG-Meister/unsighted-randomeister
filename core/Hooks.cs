@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace dev.gmeister.unsighted.randomeister;
+namespace dev.gmeister.unsighted.randomeister.core;
 
-internal class HarmonyHooks
+internal class Hooks
 {
 
     [HarmonyPatch(typeof(Helpers), nameof(Helpers.GetChestReward)), HarmonyPostfix]
@@ -34,13 +34,13 @@ internal class HarmonyHooks
     }
 
     [HarmonyPatch(typeof(Lists), nameof(Lists.Start)), HarmonyPostfix]
-    private static void Lists_Start_Post(Lists __instance)
+    private static void AfterListsStart(Lists __instance)
     {
         Plugin.Instance.SetOriginalChestList(__instance);
     }
 
     [HarmonyPatch(typeof(SplashScreenScene), nameof(SplashScreenScene.Start)), HarmonyPrefix]
-    private static bool SplashScreenScene_Start_Pre(SplashScreenScene __instance)
+    private static bool BeforeSplashScreenSceneStart(SplashScreenScene __instance)
     {
         Plugin.Instance.GetLogger().LogInfo("Attempting to skip intro...");
         Time.timeScale = 1f;
@@ -50,14 +50,14 @@ internal class HarmonyHooks
     }
 
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
-    public static void LoadedGame()
+    public static void BeforeGameLoaded()
     {
         Plugin.Instance.GetLogger().LogInfo("Game loaded");
         Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, false);
     }
 
     [HarmonyPatch(typeof(NewGamePopup), nameof(NewGamePopup.NewGameCoroutine)), HarmonyPrefix]
-    public static void NewGame()
+    public static void BeforeNewGame()
     {
         Plugin.Instance.GetLogger().LogInfo("New Game");
         Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, true);

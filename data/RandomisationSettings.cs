@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace dev.gmeister.unsighted.randomeister;
+namespace dev.gmeister.unsighted.randomeister.data;
 
 public class RandomisationSettings
 {
