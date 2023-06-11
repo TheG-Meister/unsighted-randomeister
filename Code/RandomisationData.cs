@@ -14,6 +14,7 @@ public class RandomisationData
 {
     public int seed = 0;
     public List<string> items;
+    public bool removeFragileOnJumpBootsChest = true;
 
     public RandomisationData(List<string> items)
     {

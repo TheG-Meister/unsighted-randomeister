@@ -21,6 +21,8 @@ public class Plugin : BaseUnityPlugin
 
     public Options options;
 
+    public RandomisationData? currentData;
+
     private ChestList? originalChestList;
 
     public static Plugin Instance { get; private set; } = null!;
@@ -141,7 +143,7 @@ public class Plugin : BaseUnityPlugin
         return chestList;
     }
 
-    public void UnshuffleChests()
+    public void ResetChestItems()
     {
         Logger.LogInfo("Unshuffling chests");
         PseudoSingleton<Lists>.instance.chestList = originalChestList;
@@ -168,7 +170,8 @@ public class Plugin : BaseUnityPlugin
     {
         RandomisationData data = new(this.itemPools[this.options.chestItemPool.Value])
         {
-            seed = this.options.seed.Value
+            seed = this.options.seed.Value,
+            removeFragileOnJumpBootsChest = this.options.removeFragileOnJumpBootsChest.Value,
         };
 
         return new(true, data)
@@ -202,7 +205,20 @@ public class Plugin : BaseUnityPlugin
 
     public void LoadStoryFileRandomiser(RandomisationData data)
     {
+        this.currentData = data;
         this.SetChestItems(data.items);
+    }
+
+    public void CreateVanillaStoryFile(int storySlot)
+    {
+        this.DeleteRandomisationData(storySlot);
+        this.LoadVanillaStoryFile();
+    }
+
+    public void LoadVanillaStoryFile()
+    {
+        this.currentData = null;
+        this.ResetChestItems();
     }
 
     public void LogChestRandomisation(List<string> newItems)
@@ -255,31 +271,16 @@ public class Plugin : BaseUnityPlugin
 
             if (newGame)
             {
-                if (this.options.useRandomeister.Value)
-                {
-                    if (this.options.randomiseChests.Value)
-                    {
-                        this.CreateStoryFileRandomiser(storySlot, this.CreateSettingsFromConfig());
-                    }
-                    else
-                    {
-                        this.UnshuffleChests();
-                        this.DeleteRandomisationData(storySlot);
-                    }
-                }
-                else
-                {
-                    this.UnshuffleChests();
-                    this.DeleteRandomisationData(storySlot);
-                }
+                if (this.options.useRandomeister.Value) this.CreateStoryFileRandomiser(storySlot, this.CreateSettingsFromConfig());
+                else this.CreateVanillaStoryFile(storySlot);
             }
             else
             {
                 if (this.HasRandomisationData(storySlot)) this.LoadStoryFileRandomiser(this.ReadRandomisationData(storySlot));
-                else this.UnshuffleChests();
+                else this.LoadVanillaStoryFile();
             }
         }
-        else this.UnshuffleChests();
+        else this.LoadVanillaStoryFile();
     }
 
     public void OnFileErased(SaveSlotButton button)
