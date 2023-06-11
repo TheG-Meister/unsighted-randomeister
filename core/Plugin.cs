@@ -22,7 +22,7 @@ public class Plugin : BaseUnityPlugin
 
     public PluginConfig options;
 
-    public RandomisationData? currentData;
+    public FileData? currentData;
 
     private ChestList? originalChestList;
 
@@ -59,11 +59,11 @@ public class Plugin : BaseUnityPlugin
         return File.Exists(GetRandomisationDataPath(storyFile));
     }
 
-    public RandomisationData ReadRandomisationData(int storyFile)
+    public FileData ReadRandomisationData(int storyFile)
     {
         if (storyFile < 0 || storyFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(storyFile + " is not a valid story file slot index");
         if (!HasRandomisationData(storyFile)) throw new ArgumentException("There is no randomisation data for story file " + storyFile);
-        return Serializer.Load<RandomisationData>(GetRandomisationDataPath(storyFile));
+        return Serializer.Load<FileData>(GetRandomisationDataPath(storyFile));
     }
 
     public void CopyRandomisationData(int fromStoryFile, int toStoryFile)
@@ -75,7 +75,7 @@ public class Plugin : BaseUnityPlugin
         File.Copy(GetRandomisationDataPath(fromStoryFile), GetRandomisationDataPath(toStoryFile), true);
     }
 
-    public void WriteRandomisationData(int storyFile, RandomisationData data)
+    public void WriteRandomisationData(int storyFile, FileData data)
     {
         string path = GetRandomisationDataPath(storyFile);
         Directory.CreateDirectory(Path.GetDirectoryName(path));
@@ -167,9 +167,9 @@ public class Plugin : BaseUnityPlugin
         PseudoSingleton<Lists>.instance.chestList = chestList;
     }
 
-    public RandomisationSettings CreateSettingsFromConfig()
+    public FileSettings CreateSettingsFromConfig()
     {
-        RandomisationData data = new(itemPools[options.chestItemPool.Value])
+        FileData data = new(itemPools[options.chestItemPool.Value])
         {
             seed = options.seed.Value,
             removeFragileOnJumpBootsChest = options.removeFragileOnJumpBootsChest.Value,
@@ -182,7 +182,7 @@ public class Plugin : BaseUnityPlugin
         };
     }
 
-    public void SetDataFromSettings(RandomisationSettings settings)
+    public void SetDataFromSettings(FileSettings settings)
     {
         if (settings.useRandomeister)
         {
@@ -196,7 +196,7 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    public void CreateStoryFileRandomiser(int storySlot, RandomisationSettings settings)
+    public void CreateStoryFileRandomiser(int storySlot, FileSettings settings)
     {
         SetDataFromSettings(settings);
         WriteRandomisationData(storySlot, settings.data);
@@ -204,7 +204,7 @@ public class Plugin : BaseUnityPlugin
         LoadStoryFileRandomiser(settings.data);
     }
 
-    public void LoadStoryFileRandomiser(RandomisationData data)
+    public void LoadStoryFileRandomiser(FileData data)
     {
         currentData = data;
         SetChestItems(data.items);
