@@ -1,24 +1,17 @@
-﻿global using BepInEx;
-global using HarmonyLib;
-global using UnityEngine;
-
+﻿using BepInEx;
 using BepInEx.Logging;
 using dev.gmeister.unsighted.randomeister.data;
+using dev.gmeister.unsighted.randomeister.io;
+using dev.gmeister.unsighted.randomeister.unsighted;
+using HarmonyLib;
+using UnityEngine;
+using static dev.gmeister.unsighted.randomeister.core.Constants;
 
 namespace dev.gmeister.unsighted.randomeister.core;
 
 [BepInPlugin(GUID, NAME, VERSION)]
 public class Plugin : BaseUnityPlugin
 {
-    public const string GUID = "dev.gmeister.unsighted.randomeister";
-    public const string NAME = "Unsighted Randomeister";
-    public const string VERSION = "0.2.0";
-
-    public const int MODES = 3;
-    public const int PAGES_PER_MODE = 2;
-    public const int SLOTS_PER_PAGE = 3;
-
-    public const int STORY_MODE = 0;
 
     public PluginConfig options;
 
@@ -29,8 +22,6 @@ public class Plugin : BaseUnityPlugin
     public static Plugin Instance { get; private set; } = null!;
 
     public Dictionary<string, List<string>> itemPools;
-    public const string VANILLA_POOL = "Vanilla";
-    public const string ALMOST_ALL_ITEMS_POOL = "Almost every item";
 
     public Plugin()
     {
@@ -47,44 +38,6 @@ public class Plugin : BaseUnityPlugin
 
         Logger.LogInfo($"Applying {typeof(Hooks)} ...");
         Harmony.CreateAndPatchAll(typeof(Hooks));
-    }
-
-    public string GetRandomisationDataPath(int storyFile)
-    {
-        return "unsighted-randomeister/saves/file-" + (storyFile + 1) + ".dat";
-    }
-
-    public bool HasRandomisationData(int storyFile)
-    {
-        return File.Exists(GetRandomisationDataPath(storyFile));
-    }
-
-    public FileData ReadRandomisationData(int storyFile)
-    {
-        if (storyFile < 0 || storyFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(storyFile + " is not a valid story file slot index");
-        if (!HasRandomisationData(storyFile)) throw new ArgumentException("There is no randomisation data for story file " + storyFile);
-        return Serializer.Load<FileData>(GetRandomisationDataPath(storyFile));
-    }
-
-    public void CopyRandomisationData(int fromStoryFile, int toStoryFile)
-    {
-        if (fromStoryFile < 0 || fromStoryFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(fromStoryFile + " is not a valid story file slot index");
-        if (!HasRandomisationData(fromStoryFile)) throw new ArgumentException("There is no randomisation data for story file " + fromStoryFile);
-        if (toStoryFile < 0 || toStoryFile >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(toStoryFile + " is not a valid story file slot index");
-
-        File.Copy(GetRandomisationDataPath(fromStoryFile), GetRandomisationDataPath(toStoryFile), true);
-    }
-
-    public void WriteRandomisationData(int storyFile, FileData data)
-    {
-        string path = GetRandomisationDataPath(storyFile);
-        Directory.CreateDirectory(Path.GetDirectoryName(path));
-        Serializer.Save(path, data);
-    }
-
-    public void DeleteRandomisationData(int storyFile)
-    {
-        File.Delete(GetRandomisationDataPath(storyFile));
     }
 
     public ManualLogSource GetLogger() { return Logger; }
@@ -190,16 +143,16 @@ public class Plugin : BaseUnityPlugin
 
             if (settings.randomiseChests)
             {
-                System.Random random = new System.Random(settings.data.seed);
+                System.Random random = new(settings.data.seed);
                 settings.data.items = GetRandomItems(GetItemPool(settings.chestItemPool), random);
             }
         }
     }
 
-    public void CreateStoryFileRandomiser(int storySlot, FileSettings settings)
+    public void CreateStoryFileRandomiser(FileDataIO fileDataIO, FileSettings settings)
     {
         SetDataFromSettings(settings);
-        WriteRandomisationData(storySlot, settings.data);
+        fileDataIO.Write(settings.data);
         LogChestRandomisation(settings.data.items);
         LoadStoryFileRandomiser(settings.data);
     }
@@ -210,9 +163,9 @@ public class Plugin : BaseUnityPlugin
         SetChestItems(data.items);
     }
 
-    public void CreateVanillaStoryFile(int storySlot)
+    public void CreateVanillaStoryFile(FileDataIO fileDataIO)
     {
-        DeleteRandomisationData(storySlot);
+        if (fileDataIO.Exists()) fileDataIO.Delete();
         LoadVanillaStoryFile();
     }
 
@@ -236,48 +189,21 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    public int GetSlotIndex(int gameSlot)
-    {
-        return gameSlot & SLOTS_PER_PAGE;
-    }
-
-    public int GetSlotMode(int gameSlot)
-    {
-        return (int)Math.Floor((double)gameSlot / SLOTS_PER_PAGE) % SLOTS_PER_PAGE;
-    }
-
-    public int GetSlotPage(int gameSlot)
-    {
-        return (int)Math.Floor((double)gameSlot / (MODES * SLOTS_PER_PAGE));
-    }
-
-    public int GameSlotToStorySlot(int gameSlot)
-    {
-        int page = GetSlotPage(gameSlot);
-        if (page >= PAGES_PER_MODE || page < 0) throw new ArgumentException("file index " + gameSlot + " is not within the page limits for saved games");
-        if (GetSlotMode(gameSlot) != STORY_MODE) throw new ArgumentException("file index " + gameSlot + " is not a story game slot");
-        return gameSlot % SLOTS_PER_PAGE + SLOTS_PER_PAGE * page;
-    }
-
-    public int StorySlotToGameSlot(int storySlot)
-    {
-        return storySlot % SLOTS_PER_PAGE + SLOTS_PER_PAGE * MODES * (int)Math.Floor((double)storySlot / SLOTS_PER_PAGE);
-    }
-
     public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)
     {
-        if (GetSlotMode(gameSlot) == 0 && GetSlotPage(gameSlot) >= 0 && GetSlotPage(gameSlot) < PAGES_PER_MODE)
+        if (FileNumbers.GetMode(gameSlot) == STORY_MODE && FileNumbers.GetPage(gameSlot) >= 0 && FileNumbers.GetPage(gameSlot) < PAGES_PER_MODE)
         {
-            int storySlot = GameSlotToStorySlot(gameSlot);
+            int index = FileNumbers.GetIndex(gameSlot);
+            FileDataIO fileDataIO = new(index);
 
             if (newGame)
             {
-                if (options.useRandomeister.Value) CreateStoryFileRandomiser(storySlot, CreateSettingsFromConfig());
-                else CreateVanillaStoryFile(storySlot);
+                if (options.useRandomeister.Value) CreateStoryFileRandomiser(fileDataIO, CreateSettingsFromConfig());
+                else CreateVanillaStoryFile(fileDataIO);
             }
             else
             {
-                if (HasRandomisationData(storySlot)) LoadStoryFileRandomiser(ReadRandomisationData(storySlot));
+                if (fileDataIO.Exists()) LoadStoryFileRandomiser(fileDataIO.Read());
                 else LoadVanillaStoryFile();
             }
         }
@@ -286,21 +212,26 @@ public class Plugin : BaseUnityPlugin
 
     public void OnFileErased(SaveSlotButton button)
     {
-        DeleteRandomisationData(button.saveSlot);
+        FileDataIO dataIO = new(button.saveSlot);
+        if (dataIO.Exists()) dataIO.Delete();
     }
 
     public void OnFileCopied(SaveSlotPopup popup, int gameSlot)
     {
-        int storySlot = GameSlotToStorySlot(gameSlot);
+        if (FileNumbers.GetMode(gameSlot) == STORY_MODE)
+        {
+            int index = FileNumbers.GetIndex(gameSlot);
+            FileDataIO fileDataIO = new(index);
 
-        if (HasRandomisationData(storySlot)) for (int newSlot = 0; newSlot < PAGES_PER_MODE * SLOTS_PER_PAGE; newSlot++)
-            {
-                if (!popup.SaveExist(StorySlotToGameSlot(newSlot)))
+            if (fileDataIO.Exists()) for (int newSlot = 0; newSlot < PAGES_PER_MODE * SLOTS_PER_PAGE; newSlot++)
                 {
-                    CopyRandomisationData(storySlot, newSlot);
-                    break;
+                    if (!popup.SaveExist(FileNumbers.ToGameSlot(index, STORY_MODE)))
+                    {
+                        fileDataIO.CopyTo(newSlot);
+                        break;
+                    }
                 }
-            }
+        }
     }
 
 }

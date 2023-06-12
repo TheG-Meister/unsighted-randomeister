@@ -1,4 +1,5 @@
 ﻿using BepInEx.Configuration;
+using static dev.gmeister.unsighted.randomeister.core.Constants;
 
 namespace dev.gmeister.unsighted.randomeister.core;
 
@@ -32,8 +33,8 @@ public class PluginConfig
 
         randomiseChests = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise chests", true, "If this option is enabled, the items found in chests throughout Arcadia will be randomised upon the creation of a new story file. Items will be placed in chests according to the specified seed, or a random seed if \"Use random seed\" is enabled. Turn this option off to have chests contain their original items.");
 
-        AcceptableValueList<string> chestItemPoolValues = new(Plugin.VANILLA_POOL, Plugin.ALMOST_ALL_ITEMS_POOL);
+        AcceptableValueList<string> chestItemPoolValues = new(VANILLA_POOL, ALMOST_ALL_ITEMS_POOL);
         ConfigDescription chestItemPoolDescription = new("The name of the item pool to use for randomisation. \"Vanilla\" uses the items found in the unrandomised game, while \"Almost every item\" uses one of almost every item, including a few pairs of jump boots, a collection of keys and a lot of meteor dust.", chestItemPoolValues);
-        chestItemPool = configFile.Bind(CATEGORY_RANDOMISATION, "Chest item pool", Plugin.VANILLA_POOL, chestItemPoolDescription);
+        chestItemPool = configFile.Bind(CATEGORY_RANDOMISATION, "Chest item pool", VANILLA_POOL, chestItemPoolDescription);
     }
 }
