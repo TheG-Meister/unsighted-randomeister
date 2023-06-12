@@ -1,4 +1,5 @@
 ﻿using dev.gmeister.unsighted.randomeister.data;
+using dev.gmeister.unsighted.randomeister.unsighted;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,45 +12,49 @@ namespace dev.gmeister.unsighted.randomeister.io;
 public class FileDataIO
 {
 
-    public int slot;
+    private FileNumber number;
 
-    public FileDataIO(int slot)
+    public FileDataIO(FileNumber number)
     {
-        this.slot = slot;
+        if (number == null) throw new ArgumentNullException(nameof(number));
+        if (!number.IsValid()) throw new ArgumentException("FileNumber is not valid", nameof(number));
+        if (!number.IsStory()) throw new ArgumentException("FileNumber is not a story file number", nameof(number));
+
+        this.number = number;
     }
 
-    public string GetPath()
+    public string Path()
     {
-        return PATH_DEFAULT + PATH_FILE_DATA + "file-" + (this.slot + 1) + ".dat";
+        return PATH_DEFAULT + PATH_FILE_DATA + "file-" + (this.number.Index() + 1) + ".dat";
     }
 
     public bool Exists()
     {
-        return File.Exists(this.GetPath());
+        return File.Exists(this.Path());
     }
 
     public FileData Read()
     {
-        if (this.slot < 0 || this.slot >= PAGES_PER_MODE * SLOTS_PER_PAGE) throw new ArgumentException(this.slot + " is not a valid story file slot index");
-        if (!this.Exists()) throw new ArgumentException("There is no randomisation data for story file " + this.slot);
-        return Serializer.Load<FileData>(this.GetPath());
+        if (!this.Exists()) throw new ArgumentException("There is no randomisation data for story file " + this.number.Index());
+        return Serializer.Load<FileData>(this.Path());
     }
 
-    public void CopyTo(int slot)
+    public void Copy(FileDataIO other)
     {
-        new FileDataIO(slot).Write(this.Read());
+        if (!this.Exists()) throw new ArgumentException("There is no randomisation data for story file " + this.number.Index());
+        File.Copy(this.Path(), other.Path());
     }
 
     public void Write(FileData data)
     {
-        string path = this.GetPath();
-        Directory.CreateDirectory(Path.GetDirectoryName(path));
+        string path = this.Path();
+        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
         Serializer.Save(path, data);
     }
 
     public void Delete()
     {
-        File.Delete(GetPath());
+        File.Delete(this.Path());
     }
 
 }

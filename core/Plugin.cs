@@ -191,10 +191,10 @@ public class Plugin : BaseUnityPlugin
 
     public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)
     {
-        if (FileNumbers.GetMode(gameSlot) == STORY_MODE && FileNumbers.GetPage(gameSlot) >= 0 && FileNumbers.GetPage(gameSlot) < PAGES_PER_MODE)
+        FileNumber number = new(gameSlot);
+        if (number.IsValid() && number.IsStory())
         {
-            int index = FileNumbers.GetIndex(gameSlot);
-            FileDataIO fileDataIO = new(index);
+            FileDataIO fileDataIO = new(number);
 
             if (newGame)
             {
@@ -212,22 +212,23 @@ public class Plugin : BaseUnityPlugin
 
     public void OnFileErased(SaveSlotButton button)
     {
-        FileDataIO dataIO = new(button.saveSlot);
+        FileDataIO dataIO = new(new(button.saveSlot));
         if (dataIO.Exists()) dataIO.Delete();
     }
 
     public void OnFileCopied(SaveSlotPopup popup, int gameSlot)
     {
-        if (FileNumbers.GetMode(gameSlot) == STORY_MODE)
+        FileNumber number = new(gameSlot);
+        if (number.IsStory())
         {
-            int index = FileNumbers.GetIndex(gameSlot);
-            FileDataIO fileDataIO = new(index);
+            FileDataIO fileDataIO = new(number);
 
             if (fileDataIO.Exists()) for (int newSlot = 0; newSlot < PAGES_PER_MODE * SLOTS_PER_PAGE; newSlot++)
                 {
-                    if (!popup.SaveExist(FileNumbers.ToGameSlot(index, STORY_MODE)))
+                    FileNumber newNumber = new(newSlot, STORY_MODE);
+                    if (!popup.SaveExist(newNumber.Get()))
                     {
-                        fileDataIO.CopyTo(newSlot);
+                        fileDataIO.Copy(new(newNumber));
                         break;
                     }
                 }
