@@ -2,6 +2,7 @@
 using BepInEx.Logging;
 using dev.gmeister.unsighted.randomeister.data;
 using dev.gmeister.unsighted.randomeister.io;
+using dev.gmeister.unsighted.randomeister.rando;
 using dev.gmeister.unsighted.randomeister.unsighted;
 using HarmonyLib;
 using UnityEngine;
@@ -51,52 +52,6 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    private ChestObject CloneChest(ChestObject other)
-    {
-        ChestObject chest = new()
-        {
-            reward = other.reward,
-            chestName = other.chestName,
-            roomName = other.roomName,
-            abilitiesNeeded = other.abilitiesNeeded,
-            dontCountToTotal = other.dontCountToTotal
-        };
-
-        return chest;
-    }
-
-    private AreaChestList CloneAreaChestList(AreaChestList other)
-    {
-        AreaChestList areaChestList = new(other.areaName);
-        foreach (ChestObject chest in other.chestList) areaChestList.chestList.Add(CloneChest(chest));
-
-        return areaChestList;
-    }
-
-    private ChestList CloneChestList(ChestList other)
-    {
-        ChestList chestList = ScriptableObject.CreateInstance<ChestList>();
-        chestList.areas = new List<AreaChestList>();
-        chestList.chestList = new List<ChestObject>();
-
-        foreach (AreaChestList areaChestList in other.areas)
-        {
-            AreaChestList newAreaChestList = CloneAreaChestList(areaChestList);
-            chestList.areas.Add(newAreaChestList);
-            chestList.chestList.AddRange(newAreaChestList.chestList);
-        }
-
-        return chestList;
-    }
-
-    public ChestList CreateChestList(List<string> items)
-    {
-        ChestList chestList = CloneChestList(originalChestList);
-        int i = 0;
-        foreach (AreaChestList areaChestList in chestList.areas) foreach (ChestObject chestObject in areaChestList.chestList) chestObject.reward = items[i++];
-        return chestList;
-    }
-
     public void ResetChestItems()
     {
         Logger.LogInfo("Unshuffling chests");
@@ -114,9 +69,17 @@ public class Plugin : BaseUnityPlugin
         return items.OrderBy(item => random.NextDouble()).ToList();
     }
 
+    public ChestList CreateChestList(List<string> items)
+    {
+        ChestList chestList = Chests.CloneChestList(this.originalChestList);
+        int i = 0;
+        foreach (AreaChestList areaChestList in chestList.areas) foreach (ChestObject chestObject in areaChestList.chestList) chestObject.reward = items[i++];
+        return chestList;
+    }
+
     public void SetChestItems(List<string> items)
     {
-        ChestList chestList = CreateChestList(items);
+        ChestList chestList = this.CreateChestList(items);
         PseudoSingleton<Lists>.instance.chestList = chestList;
     }
 
@@ -144,7 +107,9 @@ public class Plugin : BaseUnityPlugin
             if (settings.randomiseChests)
             {
                 System.Random random = new(settings.data.seed);
-                settings.data.items = GetRandomItems(GetItemPool(settings.chestItemPool), random);
+
+                ChestList randomChestList = new Randomiser(random, this.originalChestList, GetItemPool(settings.chestItemPool)).Randomise();
+                settings.data.items = randomChestList.areas.SelectMany(area => area.chestList).Select(chest => chest.reward).ToList();
             }
         }
     }
