@@ -100,10 +100,6 @@ public class Randomiser
             { new() { Weapon, Rails }, new() { } }
         };
 
-        List<ChestObject> prologueChests = new() { chestTable["DowntownPushPuzzle"]["Chest"], chestTable["DowntownGardenEntrance"]["DarkChest1"], chestTable["DowntownJumpRoom"]["JumpyChest"], chestTable["DowntownJumpRoom"]["JumpBootsChest"], chestTable["DowntownHoleRoom"]["OffscreenChest"], chestTable["DowntownBallPuzzle"]["KeyChest"], chestTable["DowntownSecretDeadend"]["DeadendChest"] };
-        List<ChestObject> startChests = new() { chestTable["GardenVillage"]["RooftopChest"], chestTable["GardenDeepForest"]["DeepForestChest1"], chestTable["GardenWestArea"]["FirstDustChest"] };
-        List<ChestObject> gunChests = new() { chestTable["DowntownGardenEntrance"]["DarkChest1"], chestTable["DowntownJumpRoom"]["JumpyChest"], chestTable["DowntownJumpRoom"]["JumpBootsChest"] };
-
         Dictionary<ChestObject, string> results = new()
         {
             { GetAndRemove(chestPool, chestPool.Find(chest => prologueAreas[new()].Contains(chest))), GetAndRemove(itemPool, itemPool.Find(item => itemAbilities[item].Contains(Weapon))) },
