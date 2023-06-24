@@ -2,9 +2,9 @@
 using BepInEx.Logging;
 using dev.gmeister.unsighted.randomeister.data;
 using dev.gmeister.unsighted.randomeister.io;
+using dev.gmeister.unsighted.randomeister.rando;
 using dev.gmeister.unsighted.randomeister.unsighted;
 using HarmonyLib;
-using UnityEngine;
 using static dev.gmeister.unsighted.randomeister.core.Constants;
 
 namespace dev.gmeister.unsighted.randomeister.core;
@@ -31,7 +31,7 @@ public class Plugin : BaseUnityPlugin
 
         itemPools = new()
         {
-            { ALMOST_ALL_ITEMS_POOL, new() { "Key", "JumpBoots", "DisposableSyringe", "Bolts1", "Bolts2", "Bolts3", "Bolts4", "AncientClockGear", "AncientClockPendulum", "AncientClockHands", "AncientClockFace", "AttackCogBlueprint", "DefenseCogBlueprint", "ReloadCogBlueprint", "StaminaCogBlueprint", "SpeedCogBlueprint", "SyringeCogBlueprint", "ReviveCogBlueprint", "HealthChip", "StaminaChip", "StrengthChip", "DefenseChip", "InvincibilityChip", "SpinnerChip", "SteadyChip", "ShurikenChip", "SwordChip", "AxeChip", "RiskChip", "PowerChip", "VirusChip", "FatigueChip", "SpinChipA", "SpinChipB", "JumperChip", "RunnerChip", "SpeedChipA", "ReloadChip", "BulletChip", "DrifterChip", "SpeedChipB", "BoltChip", "WalletChip", "FasterHealChip", "VigorChip", "VampireChip", "ComboChipA", "ComboChipB", "SyringeChip", "AutoSyringeChip", "DoubleBarrelChip", "OffenseChip", "DogChip", "MerchantChip", "ScavengerChip", "AnimaChip", "ParryMasterChip", "CogChip", "BigHeartChip", "GlitchChip", "Blaster", "DoctorsGun", "Spinner", "Hookshot1", "AutomaticBlaster", "Shotgun", "Flamethrower", "Icethrower", "GranadeLauncher", "IceGranade", "GranadeShotgun", "IronEdge", "ThunderEdge", "Frostbite", "Flameblade", "ElementalBlade", "WarAxe", "IceAxe", "FireAxe", "ThunderAxe", "RaquelAxe", "IronStar", "IceStar", "FireStar", "ThunderStar", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "JumpBoots", "JumpBoots", "Hookshot1", "AttackCog", "DefenseCog", "ReloadCog", "StaminaCog", "SpeedCog", "SyringeCog", "ReviveCog", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust" } }
+            { ALMOST_ALL_ITEMS_POOL, new() { "Key", "JumpBoots", "DisposableSyringe", "Bolts1", "Bolts2", "Bolts3", "Bolts4", "AncientClockGear", "AncientClockPendulum", "AncientClockHands", "AncientClockFace", "AttackCogBlueprint", "DefenseCogBlueprint", "ReloadCogBlueprint", "StaminaCogBlueprint", "SpeedCogBlueprint", "SyringeCogBlueprint", "ReviveCogBlueprint", "HealthChip", "StaminaChip", "StrengthChip", "DefenseChip", "InvincibilityChip", "SpinnerChip", "SteadyChip", "ShurikenChip", "SwordChip", "AxeChip", "RiskChip", "PowerChip", "VirusChip", "FatigueChip", "SpinChipA", "SpinChipB", "JumperChip", "RunnerChip", "SpeedChipA", "ReloadChip", "BulletChip", "DrifterChip", "SpeedChipB", "BoltChip", "WalletChip", "FasterHealChip", "VigorChip", "VampireChip", "ComboChipA", "ComboChipB", "SyringeChip", "AutoSyringeChip", "DoubleBarrelChip", "OffenseChip", "DogChip", "MerchantChip", "ScavengerChip", "AnimaChip", "ParryMasterChip", "CogChip", "BigHeartChip", "GlitchChip", "Blaster", "DoctorsGun", "Spinner", "Hookshot1", "AutomaticBlaster", "Shotgun", "Flamethrower", "Icethrower", "GranadeLauncher", "IceGranade", "GranadeShotgun", "IronEdge", "ThunderEdge", "Frostbite", "Flameblade", "ElementalBlade", "WarAxe", "IceAxe", "FireAxe", "ThunderAxe", "RaquelAxe", "IronStar", "IceStar", "FireStar", "ThunderStar", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Hookshot1", "AttackCog", "DefenseCog", "ReloadCog", "StaminaCog", "SpeedCog", "SyringeCog", "ReviveCog", "HealthChip", "StaminaChip", "HealthChip", "StaminaChip", "HealthChip", "StaminaChip", "HealthChip", "StaminaChip", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust" } }
         };
 
         Instance = this;
@@ -51,52 +51,6 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    private ChestObject CloneChest(ChestObject other)
-    {
-        ChestObject chest = new()
-        {
-            reward = other.reward,
-            chestName = other.chestName,
-            roomName = other.roomName,
-            abilitiesNeeded = other.abilitiesNeeded,
-            dontCountToTotal = other.dontCountToTotal
-        };
-
-        return chest;
-    }
-
-    private AreaChestList CloneAreaChestList(AreaChestList other)
-    {
-        AreaChestList areaChestList = new(other.areaName);
-        foreach (ChestObject chest in other.chestList) areaChestList.chestList.Add(CloneChest(chest));
-
-        return areaChestList;
-    }
-
-    private ChestList CloneChestList(ChestList other)
-    {
-        ChestList chestList = ScriptableObject.CreateInstance<ChestList>();
-        chestList.areas = new List<AreaChestList>();
-        chestList.chestList = new List<ChestObject>();
-
-        foreach (AreaChestList areaChestList in other.areas)
-        {
-            AreaChestList newAreaChestList = CloneAreaChestList(areaChestList);
-            chestList.areas.Add(newAreaChestList);
-            chestList.chestList.AddRange(newAreaChestList.chestList);
-        }
-
-        return chestList;
-    }
-
-    public ChestList CreateChestList(List<string> items)
-    {
-        ChestList chestList = CloneChestList(originalChestList);
-        int i = 0;
-        foreach (AreaChestList areaChestList in chestList.areas) foreach (ChestObject chestObject in areaChestList.chestList) chestObject.reward = items[i++];
-        return chestList;
-    }
-
     public void ResetChestItems()
     {
         Logger.LogInfo("Unshuffling chests");
@@ -114,9 +68,17 @@ public class Plugin : BaseUnityPlugin
         return items.OrderBy(item => random.NextDouble()).ToList();
     }
 
+    public ChestList CreateChestList(List<string> items)
+    {
+        ChestList chestList = Chests.CloneChestList(this.originalChestList);
+        int i = 0;
+        foreach (AreaChestList areaChestList in chestList.areas) foreach (ChestObject chestObject in areaChestList.chestList) chestObject.reward = items[i++];
+        return chestList;
+    }
+
     public void SetChestItems(List<string> items)
     {
-        ChestList chestList = CreateChestList(items);
+        ChestList chestList = this.CreateChestList(items);
         PseudoSingleton<Lists>.instance.chestList = chestList;
     }
 
@@ -144,7 +106,9 @@ public class Plugin : BaseUnityPlugin
             if (settings.randomiseChests)
             {
                 System.Random random = new(settings.data.seed);
-                settings.data.items = GetRandomItems(GetItemPool(settings.chestItemPool), random);
+
+                ChestList randomChestList = new Randomiser(random, this.originalChestList, GetItemPool(settings.chestItemPool)).Randomise();
+                settings.data.items = randomChestList.areas.SelectMany(area => area.chestList).Select(chest => chest.reward).ToList();
             }
         }
     }

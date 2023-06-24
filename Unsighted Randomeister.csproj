@@ -7,20 +7,27 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <BaseOutputPath>bin</BaseOutputPath>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DebugType>embedded</DebugType>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>embedded</DebugType>
+    <DebugType>full</DebugType>
+    <Optimize>True</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Libraries\**" />
     <EmbeddedResource Remove="Libraries\**" />
     <None Remove="Libraries\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Unofficial.pdb2mdb" Version="4.2.3.4" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,5 +56,9 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="C:\Users\The_G_Meister\.nuget\packages\mono.unofficial.pdb2mdb\4.2.3.4\tools\pdb2mdb &quot;E:\grant\documents\.my-stuff\projects\unsighted-randomiser\plugin\Unsighted Randomeister\bin\Debug\net48\Unsighted Randomeister.dll&quot;" />
+  </Target>
 
 </Project>
