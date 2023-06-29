@@ -90,6 +90,8 @@ public class Plugin : BaseUnityPlugin
         {
             seed = options.seed.Value,
             removeFragileOnJumpBootsChest = options.removeFragileOnJumpBootsChest.Value,
+            newChestRadar = options.newChestRadar.Value,
+            chestRadarMoreOften = options.chestRadarMoreOften.Value,
         };
 
         return new(true, data)
