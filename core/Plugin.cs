@@ -18,6 +18,7 @@ public class Plugin : BaseUnityPlugin
     public FileData? currentData;
 
     private ChestList? originalChestList;
+    public Items? items;
 
     public static Plugin Instance { get; private set; } = null!;
 
@@ -36,8 +37,8 @@ public class Plugin : BaseUnityPlugin
 
         Instance = this;
 
-        Logger.LogInfo($"Applying {typeof(Hooks)} ...");
-        Harmony.CreateAndPatchAll(typeof(Hooks));
+        Logger.LogInfo($"Loading {GUID}");
+        new Harmony(GUID).PatchAll();
     }
 
     public ManualLogSource GetLogger() { return Logger; }
@@ -47,6 +48,7 @@ public class Plugin : BaseUnityPlugin
         if (originalChestList == null)
         {
             originalChestList = lists.chestList;
+            this.items = new Items(lists);
             itemPools.Add(VANILLA_POOL, originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList());
         }
     }

@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace dev.gmeister.unsighted.randomeister.core;
 
+[Harmony]
 internal class Hooks
 {
 
