@@ -18,7 +18,6 @@ public class ItemChestMeteorPingCoroutineHook
 
     public static MethodBase TargetMethod()
     {
-        Debug.Log("Finding method");
         Type type = AccessTools.FirstInner(typeof(ItemChest), t => t.Name.Contains("MeteorPingCoroutine"));
         return AccessTools.FirstMethod(type, method => method.Name.Contains("MoveNext"));
     }
@@ -29,8 +28,6 @@ public class ItemChestMeteorPingCoroutineHook
     [HarmonyTranspiler]
     public static IEnumerable<CodeInstruction> CustomChestPings(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
     {
-        Debug.Log("Running transpiler");
-
         List<CodeInstruction> result = new(instructions);
         int conditionalsStart = -1;
         int conditionalsEnd = -1;
@@ -47,7 +44,6 @@ public class ItemChestMeteorPingCoroutineHook
                 else if (currentBlock == COLLECTED_METEOR_DUST_ONCE)
                 {
                     conditionalsEnd = i;
-                    Debug.Log("Found conditionals");
                     break;
                 }
 
@@ -74,14 +70,9 @@ public class ItemChestMeteorPingCoroutineHook
                 new CodeInstruction(OpCodes.Ret)
             };
 
-            for (int i = conditionalsStart - 1; i < conditionalsEnd + 2; i++) Debug.Log($"{i}:      {result[i]}");
-            Debug.Log("Removing codes");
             result[conditionalsStart].opcode = OpCodes.Nop;
             result.RemoveRange(conditionalsStart + 1, conditionalsEnd - conditionalsStart);
-            for (int i = conditionalsStart - 1; i < conditionalsStart + 22; i++) Debug.Log($"{i}:      {result[i]}");
-            Debug.Log("Adding codes");
             result.InsertRange(conditionalsStart + 1, addedCodes);
-            for (int i = conditionalsStart - 1; i < conditionalsStart + 22; i++) Debug.Log($"{i}:      {result[i]}");
         }
 
         return result;
