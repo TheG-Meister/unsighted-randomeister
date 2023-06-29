@@ -80,7 +80,6 @@ public class ItemChestMeteorPingCoroutineHook
 
     public static bool ShouldMeteorDustPing(ItemChest chest)
     {
-        Debug.Log("Testing for whether chest should ping");
         return true;
     }
 
