@@ -14,7 +14,11 @@ public class FileData
 {
     public int seed = 0;
     public List<string> items;
-    public bool removeFragileOnJumpBootsChest = true;
+    public bool removeFragileOnJumpBootsChest = false;
+
+    public bool newChestRadar = false;
+    public bool chestRadarMoreOften = false;
+    public float chestRadarScale = 1f;
 
     public FileData(List<string> items)
     {
