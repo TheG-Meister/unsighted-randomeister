@@ -80,7 +80,7 @@ public class ItemChestMeteorPingCoroutineHook
 
     public static bool ShouldMeteorDustPing(ItemChest chest)
     {
-        return true;
+        return !chest.ObjectRegistred();
     }
 
 }
