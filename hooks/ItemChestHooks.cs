@@ -20,19 +20,19 @@ public class ItemChestHooks
     [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.ShowDustPing)), HarmonyPostfix]
     public static void ToggleDustPingDuringGameplay(ItemChest __instance, ref bool __result)
     {
-        __result = !gameTime.paused && PseudoSingleton<GlobalGameData>.instance.currentData.radarLevel != 2;
+        if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.chestRadarMoreOften) __result = !gameTime.paused && PseudoSingleton<GlobalGameData>.instance.currentData.radarLevel != 2;
     }
 
     [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.Start)), HarmonyPostfix]
     public static void SetIconAfterChestStart(ItemChest __instance)
     {
-        ChangeMeteorPing(__instance);
+        if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.newChestRadar) ChangeMeteorPing(__instance);
     }
 
     [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.DustIconColor)), HarmonyPostfix]
     public static void SetIconBeforeColourChange(ItemChest __instance)
     {
-        ChangeMeteorPing(__instance, false, true, false);
+        if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.newChestRadar) ChangeMeteorPing(__instance, false, true, false);
     }
 
     public static void ChangeMeteorPing(ItemChest chest, bool icon = true, bool color = true, bool scale = true)
@@ -44,7 +44,7 @@ public class ItemChestHooks
         {
             ItemObject itemObject = Plugin.Instance.items.GetItemObject(item);
             if (icon) SetMeteorPingIcon(chest, itemObject.itemMenuIcon);
-            if (scale) ScaleMeteorPing(chest.dustIcon.GetComponent<TweenScale>(), METEOR_PING_SCALE);
+            if (scale) ScaleMeteorPing(chest.dustIcon.GetComponent<TweenScale>(), Plugin.Instance.options.chestRadarScale.Value);
 
             if (itemObject is ChipObject chipObject && chipObject != null)
             {

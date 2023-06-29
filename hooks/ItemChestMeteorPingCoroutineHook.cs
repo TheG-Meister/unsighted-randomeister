@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using dev.gmeister.unsighted.randomeister.core;
+using HarmonyLib;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections;
@@ -80,7 +81,8 @@ public class ItemChestMeteorPingCoroutineHook
 
     public static bool ShouldMeteorDustPing(ItemChest chest)
     {
-        return !chest.ObjectRegistred();
+        if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.newChestRadar) return !chest.ObjectRegistred();
+        else return PseudoSingleton<Helpers>.instance.GetChestReward(chest.gameObject.name, PseudoSingleton<MapManager>.instance.playerRoom.sceneName) == "MeteorDust" && !chest.ObjectRegistred() && PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains("CollectedMeteorDustOnce");
     }
 
 }
