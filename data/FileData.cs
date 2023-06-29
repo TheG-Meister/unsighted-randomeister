@@ -18,7 +18,6 @@ public class FileData
 
     public bool newChestRadar = false;
     public bool chestRadarMoreOften = false;
-    public float chestRadarScale = 1f;
 
     public FileData(List<string> items)
     {
