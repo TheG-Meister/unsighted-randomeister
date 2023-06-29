@@ -7,6 +7,8 @@ Unsighted Randomeister is a randomiser mod for UNSIGHTED. Currently part-way thr
 * Simple softlock prevention
 * Saving, loading and copying randomised data
 
+![chest-radar-gif](https://github.com/TheG-Meister/unsighted-randomeister/blob/mistress/docs/gifs/chest-radar.gif "Chest Radar")
+
 A few more features are planned before release, including:
 * A GUI
 * Improving randomiser "logic"
