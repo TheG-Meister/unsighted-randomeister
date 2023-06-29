@@ -11,6 +11,9 @@ public class PluginConfig
 
     public const string CATEGORY_PATCHES = "Patches";
     public ConfigEntry<bool> removeFragileOnJumpBootsChest;
+    public ConfigEntry<bool> modifyChestRadar;
+    public ConfigEntry<float> chestRadarScale;
+    public ConfigEntry<bool> chestRadarMoreOften;
 
     public const string CATEGORY_SEED = "Seed";
     public ConfigEntry<bool> randomSeed;
@@ -27,6 +30,9 @@ public class PluginConfig
         useRandomeister = configFile.Bind(CATEGORY_GENERAL, "Use randomeister", true, "Enable the use of the randomeister plugin. Turning this option off will disable all other randomisation options, and cause new story files to be completely unchanged. It does not disable other tweaks and hacks included in this plugin.");
 
         removeFragileOnJumpBootsChest = configFile.Bind(CATEGORY_PATCHES, "Fix Jump Boots chest", true, "Prevents the item in the jump boots chest from being removed from the player upon death or quit out. This can delete entire stacks of items but lets the item in the chest be collected over and over.");
+        modifyChestRadar = configFile.Bind(CATEGORY_PATCHES, "New chest radar", true, "Every chest now has a radar displaying it's item, similar to the meteor dust radar.");
+        chestRadarScale = configFile.Bind(CATEGORY_PATCHES, "Chest radar scale", 1.4f, "Scales the items on the chest radar by the specified amount.");
+        chestRadarMoreOften = configFile.Bind(CATEGORY_PATCHES, "Chest radar more often", true, "Enables the chest radar during combat and cutscenes.");
 
         randomSeed = configFile.Bind(CATEGORY_SEED, "Use random seed", true, "Enabling this option will generate a random seed with which all other randomisation will be performed upon starting a new game. Turn this setting off to set the seed yourself.");
         seed = configFile.Bind(CATEGORY_SEED, "Seed", 0, "This value will be used to \"seed\" the randomisation of the next story file created. Two games created with the same settings, on the same randomiser version, that use the same seed will have all randomisation performed the same way. If \"Use random seed\" is enabled for this file, this number will itself be randomised when starting a new game.");
