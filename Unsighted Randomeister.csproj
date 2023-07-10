@@ -33,32 +33,25 @@
 
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>Libraries\0Harmony.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>Libraries\Assembly-CSharp_publicized.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\Assembly-CSharp_publicized.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>Libraries\Assembly-CSharp-firstpass.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>Libraries\BepInEx.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\BepInEx.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>Libraries\UnityEngine.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>Libraries\UnityEngine.CoreModule.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>Libraries\UnityEngine.UI.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>libraries\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
 
