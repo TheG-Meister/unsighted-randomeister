@@ -2,7 +2,7 @@
 using BepInEx.Logging;
 using dev.gmeister.unsighted.randomeister.data;
 using dev.gmeister.unsighted.randomeister.io;
-using dev.gmeister.unsighted.randomeister.logging;
+using dev.gmeister.unsighted.randomeister.logger;
 using dev.gmeister.unsighted.randomeister.rando;
 using dev.gmeister.unsighted.randomeister.unsighted;
 using HarmonyLib;
