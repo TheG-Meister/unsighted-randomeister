@@ -3,18 +3,22 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <LangVersion>10.0</LangVersion>
-    <RootNamespace>Unsighted Randomeister</RootNamespace>
+    <RootNamespace>dev.gmeister.unsighted.randomeister</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <BaseOutputPath>bin</BaseOutputPath>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+    <SignAssembly>False</SignAssembly>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DebugType>embedded</DebugType>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>embedded</DebugType>
+    <DebugType>full</DebugType>
+    <Optimize>True</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,29 +28,30 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Mono.Unofficial.pdb2mdb" Version="4.2.3.4" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>Libraries\0Harmony.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>Libraries\Assembly-CSharp_publicized.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\Assembly-CSharp_publicized.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>Libraries\Assembly-CSharp-firstpass.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>Libraries\BepInEx.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\BepInEx.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>Libraries\UnityEngine.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>Libraries\UnityEngine.CoreModule.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>libraries\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>libraries\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
 
