@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static UnityEngine.Debug;
 using static dev.gmeister.unsighted.randomeister.unsighted.Ability;
-using static dev.gmeister.unsighted.randomeister.unsighted.Abilities;
+using static dev.gmeister.unsighted.randomeister.unsighted.AbilityTools;
 
 namespace dev.gmeister.unsighted.randomeister.rando;
 

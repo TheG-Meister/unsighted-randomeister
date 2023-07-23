@@ -10,7 +10,7 @@ using static dev.gmeister.unsighted.randomeister.unsighted.Ability;
 
 namespace dev.gmeister.unsighted.randomeister.unsighted;
 
-public class Abilities
+public class AbilityTools
 {
 
     public static readonly Dictionary<string, List<Ability>> itemAbilities = new ()
