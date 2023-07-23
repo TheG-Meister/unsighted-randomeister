@@ -4,9 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace dev.gmeister.unsighted.randomeister.logger
+namespace dev.gmeister.unsighted.randomeister.logger;
+
+public class ChestLogger
 {
-    internal class ChestLogger
+    private string dir;
+
+    public ChestLogger(string dir)
     {
+        this.dir = dir;
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
     }
+
+
+
 }
