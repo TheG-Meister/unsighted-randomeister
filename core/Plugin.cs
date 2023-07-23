@@ -22,6 +22,7 @@ public class Plugin : BaseUnityPlugin
     public Items? items;
 
     public MovementLogger movementLogger;
+    public ChestLogger chestLogger;
 
     public static Plugin Instance { get; private set; } = null!;
 
@@ -39,6 +40,7 @@ public class Plugin : BaseUnityPlugin
         };
 
         movementLogger = new MovementLogger("unsighted-randomeister/logs/movement-log.tsv");
+        this.chestLogger = new ChestLogger(Path.Combine(Constants.PATH_DEFAULT, Constants.PATH_CHEST_LOGS));
 
         Instance = this;
 
