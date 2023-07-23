@@ -1,13 +1,16 @@
 ﻿using dev.gmeister.unsighted.randomeister.core;
 using dev.gmeister.unsighted.randomeister.unsighted;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine.SceneManagement;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
+[Harmony]
 public class ChestLogger
 {
     private string dir;
@@ -18,9 +21,9 @@ public class ChestLogger
         if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
     }
 
-    public void LogChest(string scene, string chest, List<ItemObject> items)
+    public void LogChest(string scene, string chest, List<string> items)
     {
-        List<Ability> abilities = items.FindAll(item => AbilityTools.itemAbilities.ContainsKey(item.itemName)).SelectMany(item => AbilityTools.itemAbilities[item.itemName]).Distinct().ToList();
+        List<Ability> abilities = items.FindAll(item => AbilityTools.itemAbilities.ContainsKey(item)).SelectMany(item => AbilityTools.itemAbilities[item]).Distinct().ToList();
         abilities.Sort();
 
         if (!abilities.Any()) return;
@@ -37,6 +40,20 @@ public class ChestLogger
 
         string line = scene + "-" + chest;
         File.AppendAllLines(path, new List<string>() { line });
+    }
+
+    [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.ChestOpenCoroutine)), HarmonyPrefix]
+    public static void BeforeChestOpen(ItemChest __instance)
+    {
+        PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
+        List<string> items = data.currentWeapons.Select(weapon => weapon.equipmentName).ToList();
+        foreach (PlayerItemData item in data.playerItems)
+        {
+            if (item.itemName == "JumpBoots") items.Add("JumpBoots");
+            if (item.itemName == "Spinner") items.Add("Spinner");
+        }
+
+        Plugin.Instance.chestLogger.LogChest(SceneManager.GetActiveScene().name, __instance.gameObject.name, items);
     }
 
 }
