@@ -2,21 +2,14 @@
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class MovementLogger : IDisposable
+public class MovementLogger : Logger
 {
-    private StreamWriter stream;
 
     private string? currentLocation;
 
-    public MovementLogger(string path)
+    public MovementLogger(string path) : base(path)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(path));
-        stream = new StreamWriter(path, true);
-    }
-
-    private string BoolToString(bool value)
-    {
-        return value ? "1" : "";
+        currentLocation = null;
     }
 
     public void SetLocation(string location, bool transition, bool teleport)
