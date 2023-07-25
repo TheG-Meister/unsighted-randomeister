@@ -30,4 +30,6 @@ public class Constants
     public const string PATH_FILE_DATA = "saves/";
     public const string PATH_CHEST_LOGS = "chest-logs/";
 
+    public const char CHEST_ID_SEPARATOR = '_';
+
 }

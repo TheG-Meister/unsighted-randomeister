@@ -1,4 +1,5 @@
-﻿using System;
+﻿using dev.gmeister.unsighted.randomeister.core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -46,6 +47,19 @@ public class Chests
         }
 
         return chestList;
+    }
+
+    public static string GetChestID(ChestObject chest)
+    {
+        return chest.roomName + Constants.CHEST_ID_SEPARATOR + chest.chestName;
+    }
+
+    public static void GetChestLocation(string id, ref string scene, ref string chest)
+    {
+        string[] split = id.Split(Constants.CHEST_ID_SEPARATOR);
+
+        scene = split[0];
+        chest = split[1];
     }
 
 }
