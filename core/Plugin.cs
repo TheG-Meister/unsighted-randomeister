@@ -40,7 +40,7 @@ public class Plugin : BaseUnityPlugin
         };
 
         movementLogger = new MovementLogger("unsighted-randomeister/logs/movement-log.tsv");
-        this.chestLogger = new ChestLogger(Path.Combine(Constants.PATH_DEFAULT, Constants.PATH_CHEST_LOGS));
+        this.chestLogger = new ChestLogger(Path.Combine(Constants.PATH_DEFAULT, PATH_LOGS, Constants.PATH_CHEST_LOGS));
 
         Instance = this;
 

@@ -28,7 +28,8 @@ public class Constants
     //Directory structure constants
     public const string PATH_DEFAULT = "unsighted-randomeister/";
     public const string PATH_FILE_DATA = "saves/";
-    public const string PATH_CHEST_LOGS = "chest-logs/";
+    public const string PATH_CHEST_LOGS = "chest/";
+    public const string PATH_LOGS = "logs/";
 
     public const char CHEST_ID_SEPARATOR = '_';
 
