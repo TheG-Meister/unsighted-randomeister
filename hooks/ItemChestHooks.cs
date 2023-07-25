@@ -42,7 +42,7 @@ public class ItemChestHooks
 
         if (Plugin.Instance.items != null)
         {
-            ItemObject itemObject = Plugin.Instance.items.GetItemObject(item);
+            ItemObject itemObject = PseudoSingleton<Helpers>.instance.GetItemObject(item);
             if (icon) SetMeteorPingIcon(chest, itemObject.itemMenuIcon);
             if (scale) ScaleMeteorPing(chest.dustIcon.GetComponent<TweenScale>(), Plugin.Instance.options.chestRadarScale.Value);
 
