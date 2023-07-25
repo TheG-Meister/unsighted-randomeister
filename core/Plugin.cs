@@ -130,9 +130,7 @@ public class Plugin : BaseUnityPlugin
             if (settings.randomiseChests)
             {
                 System.Random random = new(settings.data.seed);
-
-                ChestList randomChestList = new Randomiser(random, this.originalChestList, GetItemPool(settings.chestItemPool)).Randomise();
-                settings.data.chestItems = Chests.GetChestItemDictionary(randomChestList);
+                settings.data.chestItems = new Randomiser(random, this.originalChestList, GetItemPool(settings.chestItemPool)).Randomise();
             }
         }
     }

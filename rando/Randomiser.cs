@@ -68,7 +68,7 @@ public class Randomiser
         };
     }
 
-    public ChestList Randomise()
+    public Dictionary<string, string> Randomise()
     {
         //Logic is currently the following:
         // - Put a weapon in the lab chest
@@ -148,9 +148,10 @@ public class Randomiser
             itemPool.Remove(nextItem);
         }
 
-        foreach (KeyValuePair<ChestObject, string> randomChest in results) randomChest.Key.reward = randomChest.Value;
+        Dictionary<string, string> result = new();
+        foreach (KeyValuePair<ChestObject, string> chestItems in results) result.Add(Chests.GetChestID(chestItems.Key), chestItems.Value);
 
-        return chestList;
+        return result;
     }
 
     private T GetAndRemove<T>(List<T> list, T element)
