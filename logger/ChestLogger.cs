@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
+using static dev.gmeister.unsighted.randomeister.unsighted.Ability;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
@@ -14,6 +15,7 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class ChestLogger
 {
     private string dir;
+    public static readonly List<Ability> unusedAbilities = new() { Axe, Sword };
 
     public ChestLogger(string dir)
     {
@@ -24,6 +26,7 @@ public class ChestLogger
     public void LogChest(string scene, string chest, List<string> items)
     {
         List<Ability> abilities = items.FindAll(item => AbilityTools.itemAbilities.ContainsKey(item)).SelectMany(item => AbilityTools.itemAbilities[item]).Distinct().ToList();
+        abilities.RemoveAll(ability => unusedAbilities.Contains(ability));
         abilities.Sort();
 
         if (!abilities.Any()) return;
