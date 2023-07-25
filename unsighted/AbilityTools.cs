@@ -20,7 +20,7 @@ public class AbilityTools
         { "DoctorsGun", new() { Gun } },
         { "Spinner", new() { Rails, Water, Rock } },
         { "Hookshot1", new() { Hook } },
-        { "Hookshot2", new() { DoubleHook } },
+        { "Hookshot2", new() { Hook, DoubleHook } },
         { "AutomaticBlaster", new() { Gun } },
         { "Shotgun", new() { Gun } },
         { "Flamethrower", new() { Gun, Plant } },
