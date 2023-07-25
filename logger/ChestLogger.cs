@@ -38,7 +38,7 @@ public class ChestLogger
 
         string path = Path.Combine(dir, file);
 
-        string line = scene + "-" + chest;
+        string line = $"{scene}_{chest}";
         File.AppendAllLines(path, new List<string>() { line });
     }
 
