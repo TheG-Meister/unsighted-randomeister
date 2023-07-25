@@ -37,7 +37,7 @@ public class ChestLogger
             file += abilities[i].ToString().ToLower();
             if (i < abilities.Count - 1) file += "-";
         }
-        file += ".tsv";
+        file += ".txt";
 
         string path = Path.Combine(dir, file);
 
