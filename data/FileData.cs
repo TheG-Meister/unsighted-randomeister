@@ -13,14 +13,14 @@ namespace dev.gmeister.unsighted.randomeister.data;
 public class FileData
 {
     public int seed = 0;
-    public List<string> items;
+    public Dictionary<string, string> chestItems;
     public bool removeFragileOnJumpBootsChest = false;
 
     public bool newChestRadar = false;
     public bool chestRadarMoreOften = false;
 
-    public FileData(List<string> items)
+    public FileData(Dictionary<string, string> chestItems)
     {
-        this.items = items;
+        this.chestItems = chestItems;
     }
 }

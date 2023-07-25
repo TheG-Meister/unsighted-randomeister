@@ -82,23 +82,30 @@ public class Plugin : BaseUnityPlugin
         return items.OrderBy(item => random.NextDouble()).ToList();
     }
 
-    public ChestList CreateChestList(List<string> items)
+
+
+    public ChestList CreateChestList(Dictionary<string, string> chestItems)
     {
         ChestList chestList = Chests.CloneChestList(this.originalChestList);
-        int i = 0;
-        foreach (AreaChestList areaChestList in chestList.areas) foreach (ChestObject chestObject in areaChestList.chestList) chestObject.reward = items[i++];
+        Dictionary<string, ChestObject> chestObjects = Chests.GetChestObjectDictionary(chestList);
+
+        foreach (KeyValuePair<string, string> chestItem in chestItems) 
+        {
+            if (chestObjects.ContainsKey(chestItem.Key)) chestObjects[chestItem.Key].reward = chestItem.Value;
+        }
+
         return chestList;
     }
 
-    public void SetChestItems(List<string> items)
+    public void SetChestItems(Dictionary<string, string> chestItems)
     {
-        ChestList chestList = this.CreateChestList(items);
+        ChestList chestList = this.CreateChestList(chestItems);
         PseudoSingleton<Lists>.instance.chestList = chestList;
     }
 
     public FileSettings CreateSettingsFromConfig()
     {
-        FileData data = new(itemPools[options.chestItemPool.Value])
+        FileData data = new(Chests.GetChestItemDictionary(this.originalChestList))
         {
             seed = options.seed.Value,
             removeFragileOnJumpBootsChest = options.removeFragileOnJumpBootsChest.Value,
@@ -125,7 +132,7 @@ public class Plugin : BaseUnityPlugin
                 System.Random random = new(settings.data.seed);
 
                 ChestList randomChestList = new Randomiser(random, this.originalChestList, GetItemPool(settings.chestItemPool)).Randomise();
-                settings.data.items = randomChestList.areas.SelectMany(area => area.chestList).Select(chest => chest.reward).ToList();
+                settings.data.chestItems = Chests.GetChestItemDictionary(randomChestList);
             }
         }
     }
@@ -134,14 +141,14 @@ public class Plugin : BaseUnityPlugin
     {
         SetDataFromSettings(settings);
         fileDataIO.Write(settings.data);
-        LogChestRandomisation(settings.data.items);
+        LogChestRandomisation(settings.data.chestItems);
         LoadStoryFileRandomiser(settings.data);
     }
 
     public void LoadStoryFileRandomiser(FileData data)
     {
         currentData = data;
-        SetChestItems(data.items);
+        SetChestItems(data.chestItems);
     }
 
     public void CreateVanillaStoryFile(FileDataIO fileDataIO)
@@ -156,18 +163,22 @@ public class Plugin : BaseUnityPlugin
         ResetChestItems();
     }
 
-    public void LogChestRandomisation(List<string> newItems)
+    public void LogChestRandomisation(Dictionary<string, string> chestItems)
     {
-        if (originalChestList != null)
+        Logger.LogInfo("Writing log data");
+        List<string> logLines = new();
+
+        foreach (KeyValuePair<string, string> chestItem in chestItems)
         {
-            Logger.LogInfo("Writing log data");
-            List<string> logLines = new();
-            List<string> originalItems = itemPools[VANILLA_POOL];
-            for (int i = 0; i < originalItems.Count; i++) logLines.Add(originalItems[i] + " is now " + newItems[i]);
-            string logDir = "unsighted-randomeister/logs/randomisation/";
-            if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
-            File.WriteAllLines(logDir + DateTime.Now.ToString("yy-MM-dd-HH-mm-ss-fff") + ".txt", logLines);
+            string scene, chest;
+            Chests.GetChestLocation(chestItem.Key, out scene, out chest);
+
+            logLines.Add($"{scene}, {chest} = {chestItem.Value}");
         }
+
+        string logDir = "unsighted-randomeister/logs/randomisation/";
+        if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
+        File.WriteAllLines(logDir + DateTime.Now.ToString("yy-MM-dd-HH-mm-ss-fff") + ".txt", logLines);
     }
 
     public void SetCurrentSlotAndRandomise(int gameSlot, bool newGame)

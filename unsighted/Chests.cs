@@ -54,12 +54,38 @@ public class Chests
         return chest.roomName + Constants.CHEST_ID_SEPARATOR + chest.chestName;
     }
 
-    public static void GetChestLocation(string id, ref string scene, ref string chest)
+    public static void GetChestLocation(string id, out string scene, out string chest)
     {
         string[] split = id.Split(Constants.CHEST_ID_SEPARATOR);
 
         scene = split[0];
         chest = split[1];
+    }
+
+    public static Dictionary<string, ChestObject> GetChestObjectDictionary(ChestList chestList)
+    {
+        Dictionary<string, ChestObject> result = new();
+
+        foreach (AreaChestList areaChestList in chestList.areas)
+            foreach (ChestObject chest in areaChestList.chestList)
+            {
+                result.Add(Chests.GetChestID(chest), chest);
+            }
+
+        return result;
+    }
+
+    public static Dictionary<string, string> GetChestItemDictionary(ChestList chestList)
+    {
+        Dictionary<string, string> result = new();
+
+        foreach (AreaChestList areaChestList in chestList.areas)
+            foreach (ChestObject chest in areaChestList.chestList)
+            {
+                result.Add(Chests.GetChestID(chest), chest.reward);
+            }
+
+        return result;
     }
 
 }
