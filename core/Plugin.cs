@@ -110,6 +110,7 @@ public class Plugin : BaseUnityPlugin
         {
             randomSeed = options.randomSeed.Value,
             chestItemPool = options.chestItemPool.Value,
+            randomiseChests = options.randomiseChests.Value,
         };
     }
 
