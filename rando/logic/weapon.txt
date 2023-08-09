@@ -1,0 +1,3 @@
+GardenVillage_RooftopChest
+GardenDeepForest_DeepForestChest1
+GardenWestArea_FirstDustChest

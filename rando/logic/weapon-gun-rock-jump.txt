@@ -1,0 +1,3 @@
+SuburbsRailsDowntownElevator_DustChest
+MuseumEntrance_DustChest
+MuseumPrizeRoom_MuseumTreasureRoomChest
