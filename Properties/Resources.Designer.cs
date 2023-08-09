@@ -61,12 +61,12 @@ namespace dev.gmeister.unsighted.randomeister.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
+        ///   Looks up a localized string similar to weapon,gun,jump	CavesMinecartBarrierPuzzle_SecretForkChest,CavesPond_BattleChestCavesPond_DustChestCavesNestRoom_DustChestCavesNestRoom_KeyChestCavesCorridor_ChestSewersCentralRoom_EasyChest2AquariumWestElevator_BlockPuzzleChestAquariumExternalCombatRoom_FrostbiteChestMuseumLabyrinth_DustChest,MuseumMoonDeviceCorridor_TopChest,MuseumKeyRoomF2_Chest,MuseumKeyRoom_MuseumKey1,DowntownFinalPuzzle_KeyChest,DowntownIndustrialZoneEntrance_GhoulBattleChest
+        ///weapon,gun,rock,jump	SuburbsRailsDowntownElevator_DustChest [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static byte[] BasicLogic {
+        internal static string BasicLogic {
             get {
-                object obj = ResourceManager.GetObject("BasicLogic", resourceCulture);
-                return ((byte[])(obj));
+                return ResourceManager.GetString("BasicLogic", resourceCulture);
             }
         }
     }

@@ -28,6 +28,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="rando\logic\BasicLogic.tsv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="rando\logic\BasicLogic.tsv" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Mono.Unofficial.pdb2mdb" Version="4.2.3.4" />
   </ItemGroup>
 
