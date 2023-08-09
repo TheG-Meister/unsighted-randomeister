@@ -6,6 +6,9 @@ namespace dev.gmeister.unsighted.randomeister.core;
 public class PluginConfig
 {
 
+    public const string CATEGORY_DEVELOPER = "Developer";
+    public ConfigEntry<bool> chestLogging;
+
     public const string CATEGORY_GENERAL = "General";
     public ConfigEntry<bool> useRandomeister;
 
@@ -27,6 +30,9 @@ public class PluginConfig
 
     public PluginConfig(ConfigFile configFile)
     {
+        ConfigDescription chestLoggingDescription = new("Enables primitive chest logging for use in the randomiser logic", null, new ConfigurationManagerAttributes() { IsAdvanced = true });
+        this.chestLogging = configFile.Bind(CATEGORY_DEVELOPER, "Chest logging", false, chestLoggingDescription);
+
         useRandomeister = configFile.Bind(CATEGORY_GENERAL, "Use randomeister", true, "Enable the use of the randomeister plugin. Turning this option off will disable all other randomisation options, and cause new story files to be completely unchanged. It does not disable other tweaks and hacks included in this plugin.");
 
         removeFragileOnJumpBootsChest = configFile.Bind(CATEGORY_PATCHES, "Fix Jump Boots chest", true, "Prevents the item in the jump boots chest from being removed from the player upon death or quit out. This can delete entire stacks of items but lets the item in the chest be collected over and over.");
