@@ -19,7 +19,7 @@ public class BasicLogicReader
 
     public Dictionary<HashSet<Ability>, List<ChestObject>> Read()
     {
-        Dictionary<HashSet<Ability>, List<ChestObject>> result = new();
+        Dictionary<HashSet<Ability>, List<ChestObject>> result = new(HashSet<Ability>.CreateSetComparer());
 
         List<string> rawLines = Properties.Resources.BasicLogic.Replace("\r", "").Split('\n').ToList();
         rawLines.RemoveAll(line => string.IsNullOrEmpty(line));
