@@ -35,6 +35,22 @@ public class ItemChestHooks
         if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.newChestRadar) ChangeMeteorPing(__instance, false, true, false);
     }
 
+    [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.UpdateDustIconPosition)), HarmonyPostfix]
+    public static void SetIconPosition(ItemChest __instance)
+    {
+        float scale = 5f;
+
+        PlayerInfo player = PseudoSingleton<PlayersManager>.instance.players[0];
+        Vector3 chestPos = __instance.myAnimator.mySpriteRenderer.transform.position;
+        Vector3 playerPos = player.transform.position;// + Vector3.up * player.gameObject.GetComponent<TopdownPhysics>().height;
+        Vector3 playerToChest = chestPos - playerPos;
+
+        Vector3 position = PseudoSingleton<CameraSystem>.instance.PositionInsideCamera(chestPos, -1f) ? chestPos : playerPos + playerToChest.normalized * scale;
+
+        __instance.dustIcon.transform.position = position;
+        __instance.meteorPing.transform.position = position;
+    }
+
     public static void ChangeMeteorPing(ItemChest chest, bool icon = true, bool color = true, bool scale = true)
     {
         if (chest == null) return;
