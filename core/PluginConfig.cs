@@ -44,11 +44,11 @@ public class PluginConfig
 
         newChestRadar = configFile.Bind(CATEGORY_CHEST_RADAR, "Enable chest radar", true, "Every chest now has a radar displaying it's item, similar to the meteor dust radar.");
         chestRadarMoreOften = configFile.Bind(CATEGORY_CHEST_RADAR, "Radar in combat & cutscenes", true, "Enables the chest radar during combat and cutscenes.");
-        chestRadarScale = configFile.Bind(CATEGORY_CHEST_RADAR, "Radar icon scale", 1.4f, new ConfigDescription("Scale the radar's item icons", new AcceptableValueRange<float>(0f, 3f)));
+        chestRadarScale = configFile.Bind(CATEGORY_CHEST_RADAR, "Radar icon scale", 1.4f, new ConfigDescription("Scale the radar's item icons", new AcceptableValueRange<float>(0f, 5f)));
         chestRadarCameraPadding = configFile.Bind(CATEGORY_CHEST_RADAR, "Radar padding", 1.5f, new ConfigDescription("Pull radar pings away from the edge of the screen", new AcceptableValueRange<float>(0f, 3f)));
         chestRadarSnapping = configFile.Bind(CATEGORY_CHEST_RADAR, "Radar snapping", true, "Snaps radar pings to chests when they are on screen");
         chestRadarCircular = configFile.Bind(CATEGORY_CHEST_RADAR, "Circular radar", false, "Limits radar pings to a circle around Player 1");
-        chestRadarRadius = configFile.Bind(CATEGORY_CHEST_RADAR, "Circular radar radius", 5f, new ConfigDescription("Scale the circular radar size", new AcceptableValueRange<float>(1f, 100f)));
+        chestRadarRadius = configFile.Bind(CATEGORY_CHEST_RADAR, "Circular radar radius", 5f, new ConfigDescription("Scale the circular radar size", new AcceptableValueRange<float>(1f, 20f)));
 
         randomSeed = configFile.Bind(CATEGORY_SEED, "Use random seed", true, "Enabling this option will generate a random seed with which all other randomisation will be performed upon starting a new game. Turn this setting off to set the seed yourself.");
         seed = configFile.Bind(CATEGORY_SEED, "Seed", 0, "This value will be used to \"seed\" the randomisation of the next story file created. Two games created with the same settings, on the same randomiser version, that use the same seed will have all randomisation performed the same way. If \"Use random seed\" is enabled for this file, this number will itself be randomised when starting a new game.");
