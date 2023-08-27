@@ -38,10 +38,10 @@ public class ItemChestHooks
     [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.UpdateDustIconPosition)), HarmonyPostfix]
     public static void SetIconPosition(ItemChest __instance)
     {
-        float radius = 5f;
+        float cameraPadding = 1.5f;
         bool snapToChest = false;
         bool limitToAlma = true;
-        float cameraPadding = 1.5f;
+        float radius = 5f;
         float minRadius = 1f;
 
         CameraSystem camera = PseudoSingleton<CameraSystem>.instance;
