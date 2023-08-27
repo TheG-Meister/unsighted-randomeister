@@ -38,14 +38,49 @@ public class ItemChestHooks
     [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.UpdateDustIconPosition)), HarmonyPostfix]
     public static void SetIconPosition(ItemChest __instance)
     {
-        float scale = 5f;
+        float radius = 5f;
+        bool snapToChest = false;
+        bool limitToAlma = true;
+        float cameraPadding = 1.5f;
+        float minRadius = 1f;
+
+        CameraSystem camera = PseudoSingleton<CameraSystem>.instance;
+        float cameraTop = camera.myTransform.position.y + camera.cameraSizeY * 0.5f - cameraPadding;
+        float cameraBottom = camera.myTransform.position.y - camera.cameraSizeY * 0.5f + cameraPadding;
+        float cameraRight = camera.myTransform.position.x + camera.cameraSizeX * 0.5f - cameraPadding;
+        float cameraLeft = camera.myTransform.position.x - camera.cameraSizeX * 0.5f + cameraPadding;
 
         PlayerInfo player = PseudoSingleton<PlayersManager>.instance.players[0];
         Vector3 chestPos = __instance.myAnimator.mySpriteRenderer.transform.position;
-        Vector3 playerPos = player.transform.position;// + Vector3.up * player.gameObject.GetComponent<TopdownPhysics>().height;
-        Vector3 playerToChest = chestPos - playerPos;
+        Vector3 centrePos = player.transform.position + Vector3.up * player.gameObject.GetComponent<TopdownPhysics>().globalHeight;
 
-        Vector3 position = PseudoSingleton<CameraSystem>.instance.PositionInsideCamera(chestPos, -1f) ? chestPos : playerPos + playerToChest.normalized * scale;
+        Vector3 position = Vector3.zero;
+
+        if (camera.PositionInsideCamera(chestPos) && snapToChest) position = chestPos;
+        else
+        {
+            if (!camera.PositionInsideCamera(centrePos, -cameraPadding))
+            {
+                centrePos = camera.myTransform.position;
+                limitToAlma = false;
+            }
+
+            Vector3 centreToChest = chestPos - centrePos;
+
+            float scale = centreToChest.magnitude;
+            if (chestPos.x > cameraRight) scale = (cameraRight - centrePos.x) / centreToChest.normalized.x;
+            else if (chestPos.x < cameraLeft) scale = (cameraLeft - centrePos.x) / centreToChest.normalized.x;
+            if (chestPos.y > cameraTop) scale = Math.Min(scale, (cameraTop - centrePos.y) / centreToChest.normalized.y);
+            else if (chestPos.y < cameraBottom) scale = Math.Min(scale, (cameraBottom - centrePos.y) / centreToChest.normalized.y);
+
+            if (limitToAlma)
+            {
+                if (scale > radius) scale = radius;
+                else if (scale < minRadius) scale = minRadius;
+            }
+
+            position = centrePos + centreToChest * scale;
+        }
 
         __instance.dustIcon.transform.position = position;
         __instance.meteorPing.transform.position = position;
