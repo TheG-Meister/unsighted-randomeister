@@ -35,6 +35,60 @@ public class ItemChestHooks
         if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.newChestRadar) ChangeMeteorPing(__instance, false, true, false);
     }
 
+    [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.UpdateDustIconPosition)), HarmonyPostfix]
+    public static void SetIconPosition(ItemChest __instance)
+    {
+        if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.newChestRadar)
+        {
+            float cameraPadding = Plugin.Instance.options.chestRadarCameraPadding.Value;
+            bool snapToChest = Plugin.Instance.options.chestRadarSnapping.Value;
+            bool limitToAlma = Plugin.Instance.options.chestRadarCircular.Value;
+            float radius = Plugin.Instance.options.chestRadarRadius.Value;
+            float minRadius = 1f;
+
+            CameraSystem camera = PseudoSingleton<CameraSystem>.instance;
+            float cameraTop = camera.myTransform.position.y + camera.cameraSizeY * 0.5f - cameraPadding;
+            float cameraBottom = camera.myTransform.position.y - camera.cameraSizeY * 0.5f + cameraPadding;
+            float cameraRight = camera.myTransform.position.x + camera.cameraSizeX * 0.5f - cameraPadding;
+            float cameraLeft = camera.myTransform.position.x - camera.cameraSizeX * 0.5f + cameraPadding;
+
+            PlayerInfo player = PseudoSingleton<PlayersManager>.instance.players[0];
+            Vector3 chestPos = __instance.myAnimator.mySpriteRenderer.transform.position;
+            Vector3 centrePos = player.transform.position + Vector3.up * player.gameObject.GetComponent<TopdownPhysics>().globalHeight;
+
+            Vector3 position = Vector3.zero;
+
+            if (camera.PositionInsideCamera(chestPos) && snapToChest) position = chestPos;
+            else
+            {
+                if (!camera.PositionInsideCamera(centrePos, -cameraPadding))
+                {
+                    centrePos = camera.myTransform.position;
+                    limitToAlma = false;
+                }
+
+                Vector3 centreToChest = chestPos - centrePos;
+
+                float scale = centreToChest.magnitude;
+                if (chestPos.x > cameraRight) scale = (cameraRight - centrePos.x) / centreToChest.normalized.x;
+                else if (chestPos.x < cameraLeft) scale = (cameraLeft - centrePos.x) / centreToChest.normalized.x;
+                if (chestPos.y > cameraTop) scale = Math.Min(scale, (cameraTop - centrePos.y) / centreToChest.normalized.y);
+                else if (chestPos.y < cameraBottom) scale = Math.Min(scale, (cameraBottom - centrePos.y) / centreToChest.normalized.y);
+
+                if (limitToAlma)
+                {
+                    if (scale > radius) scale = radius;
+                    else if (scale < minRadius && scale != centreToChest.magnitude) scale = minRadius;
+                }
+
+                position = centrePos + centreToChest.normalized * scale;
+            }
+
+            __instance.dustIcon.transform.position = position;
+            __instance.meteorPing.transform.position = position;
+        }
+    }
+
     public static void ChangeMeteorPing(ItemChest chest, bool icon = true, bool color = true, bool scale = true)
     {
         if (chest == null) return;
