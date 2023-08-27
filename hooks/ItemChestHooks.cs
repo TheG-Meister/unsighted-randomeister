@@ -78,7 +78,7 @@ public class ItemChestHooks
                 if (limitToAlma)
                 {
                     if (scale > radius) scale = radius;
-                    else if (scale < minRadius) scale = minRadius;
+                    else if (scale < minRadius && scale != centreToChest.magnitude) scale = minRadius;
                 }
 
                 position = centrePos + centreToChest.normalized * scale;
