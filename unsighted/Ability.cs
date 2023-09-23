@@ -12,7 +12,7 @@ public enum Ability
     Axe,
     Sword,
     Shuriken,
-    Bullet,
+    Gun,
     Spray,
     Grenade,
     Hook,

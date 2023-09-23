@@ -20,7 +20,7 @@ public class Randomiser
     Dictionary<string, ChestObject> chestTable = new();
     List<ChestObject> chestPool = new();
 
-    List<Ability> requiredAbilities = new() { Weapon, Bullet, Shuriken, Plant, Hook, DoubleHook, Rock, Water, Rails, Jump };
+    List<Ability> requiredAbilities = new() { Weapon, Gun, Shuriken, Plant, Hook, DoubleHook, Rock, Water, Rails, Jump };
     List<ChestObject> bannedChests;
     List<ChestObject> unbannedChests;
 
@@ -78,7 +78,7 @@ public class Randomiser
         Dictionary<ChestObject, string> results = new()
         {
             { GetAndRemove(chestPool, chestPool.Find(chest => prologueAreas[new()].Contains(chest))), GetAndRemove(itemPool, itemPool.Find(item => itemAbilities.ContainsKey(item) && itemAbilities[item].Contains(Weapon))) },
-            { GetAndRemove(chestPool, chestPool.Find(chest => prologueAreas[new() { Weapon }].Contains(chest))), GetAndRemove(itemPool, itemPool.Find(item => itemAbilities.ContainsKey(item) && itemAbilities[item].Contains(Bullet))) },
+            { GetAndRemove(chestPool, chestPool.Find(chest => prologueAreas[new() { Weapon }].Contains(chest))), GetAndRemove(itemPool, itemPool.Find(item => itemAbilities.ContainsKey(item) && itemAbilities[item].Contains(Gun))) },
         };
 
         string startingItem = itemPool.Find(item => itemAbilities.ContainsKey(item) && (itemAbilities[item].Contains(Water) || itemAbilities[item].Contains(Hook) || itemAbilities[item].Contains(Jump)));

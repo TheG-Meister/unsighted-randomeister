@@ -16,13 +16,13 @@ public class AbilityTools
     public static readonly Dictionary<string, List<Ability>> itemAbilities = new ()
     {
         { "JumpBoots", new () { Jump } },
-        { "Blaster", new() { Bullet } },
-        { "DoctorsGun", new() { Bullet } },
+        { "Blaster", new() { Gun } },
+        { "DoctorsGun", new() { Gun } },
         { "Spinner", new() { Rails, Water, Rock } },
         { "Hookshot1", new() { Hook } },
         { "Hookshot2", new() { Hook, DoubleHook } },
-        { "AutomaticBlaster", new() { Bullet } },
-        { "Shotgun", new() { Bullet } },
+        { "AutomaticBlaster", new() { Gun } },
+        { "Shotgun", new() { Gun } },
         { "Flamethrower", new() { Spray, Plant } },
         { "Icethrower", new() { Spray, Water } },
         { "GranadeLauncher", new() { Rock, Grenade } },
@@ -41,7 +41,7 @@ public class AbilityTools
         { "ThunderAxe", new() { Weapon, Axe } },
         { "RaquelAxe", new() { Weapon, Axe } },
         { "IronStar", new() { Shuriken } },
-        { "IceStar", new() { Shuriken } },
+        { "IceStar", new() { Shuriken, Water } },
         { "FireStar", new() { Shuriken, Plant } },
         { "ThunderStar", new() { Shuriken } },
     };
