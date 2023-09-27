@@ -19,6 +19,8 @@ public class FileData
     public bool newChestRadar = false;
     public bool chestRadarMoreOften = false;
 
+    public Dictionary<string, DropController> enemyDropTables = new();
+
     public FileData(Dictionary<string, string> chestItems)
     {
         this.chestItems = chestItems;
