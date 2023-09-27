@@ -9,6 +9,32 @@ namespace dev.gmeister.unsighted.randomeister.rando;
 public class EnemyDropRandomiser
 {
 
+    public static readonly Dictionary<string, int> ITEM_POOL_LENGTHS = new Dictionary<string, int>()
+    {
+        {"BubbleHeadEnemy", 3},
+        {"MosquitoEnemy", 3},
+        {"SpiderEnemy", 3},
+        {"ArcherEnemy", 2},
+        {"ScrapRobotEnemy", 2},
+        {"CrabEnemy", 2},
+        {"CyberWarriorEnemy", 2},
+        {"GhoulEnemyController", 2},
+        {"HopSpiderEnemy", 2},
+        {"Moonface", 2},
+        {"PantherEnemy", 2},
+        {"SamuraiEnemy", 2},
+        {"SlugEnemy", 2},
+        {"ArmadilloMechaEnemy", 1},
+        {"BeetleEnemy", 1},
+        {"DrillMechaEnemy", 1},
+        {"FireMecha", 1},
+        {"Harpie", 1},
+        {"JellyfishEnemy", 1},
+        {"SharkEnemyController", 1},
+    };
+
+    public static readonly List<string> ITEM_POOL = new List<string>() { "MetalCog", "WoodenBranch", "MetalScrap", "IronBar", "Wires", "IceCrystal", "EletricCoil", "FlammableOil", "EngineOil", "Fuse" };
+
     private Random random;
     private List<string> itemPool;
     private Dictionary<string, int> itemPoolLengths;

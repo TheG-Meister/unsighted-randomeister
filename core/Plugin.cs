@@ -131,6 +131,7 @@ public class Plugin : BaseUnityPlugin
             {
                 System.Random random = new(settings.data.seed);
                 settings.data.chestItems = new Randomiser(random, this.originalChestList, GetItemPool(settings.chestItemPool)).Randomise();
+                settings.data.enemyDropTables = new EnemyDropRandomiser(random, EnemyDropRandomiser.ITEM_POOL, EnemyDropRandomiser.ITEM_POOL_LENGTHS).Randomise();
             }
         }
     }
