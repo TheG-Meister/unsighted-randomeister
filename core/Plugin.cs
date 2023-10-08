@@ -128,14 +128,16 @@ public class Plugin : BaseUnityPlugin
             if (settings.randomSeed) settings.data.seed = new System.Random().Next();
             Random random = new(settings.data.seed);
 
+            Random chestRandom = new(random.Next());
             if (settings.randomiseChests)
             {
-                settings.data.chestItems = new Randomiser(new(random.Next()), this.originalChestList, GetItemPool(settings.chestItemPool)).Randomise();
+                settings.data.chestItems = new Randomiser(chestRandom, this.originalChestList, GetItemPool(settings.chestItemPool)).Randomise();
             }
 
+            Random enemyDropRandom = new(random.Next());
             if (settings.randomiseEnemyDrops)
             {
-                settings.data.
+                settings.data.enemyDropTables = new EnemyDropRandomiser(enemyDropRandom, EnemyDropRandomiser.ITEM_POOL, EnemyDropRandomiser.ITEM_POOL_LENGTHS).Randomise();
             }
         }
     }
