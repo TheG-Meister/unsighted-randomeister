@@ -11,6 +11,7 @@ public class FileSettings
     public bool useRandomeister;
     public bool randomSeed = true;
     public bool randomiseChests = true;
+    public bool randomiseEnemyDrops = true;
     public string chestItemPool = "";
     public FileData data;
 
