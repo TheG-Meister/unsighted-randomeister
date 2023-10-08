@@ -31,6 +31,7 @@ public class PluginConfig
     public const string CATEGORY_RANDOMISATION = "Randomisation";
     public ConfigEntry<bool> randomiseChests;
     public ConfigEntry<string> chestItemPool;
+    public ConfigEntry<bool> randomiseEnemyDrops;
 
     public const string CATEGORY_CUSTOMISER = "Customisation";
 
@@ -55,5 +56,6 @@ public class PluginConfig
 
         randomiseChests = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise chests", true, "If this option is enabled, the items found in chests throughout Arcadia will be randomised upon the creation of a new story file. Items will be placed in chests according to the specified seed, or a random seed if \"Use random seed\" is enabled. Turn this option off to have chests contain their original items.");
         chestItemPool = configFile.Bind(CATEGORY_RANDOMISATION, "Chest item pool", VANILLA_POOL, new ConfigDescription("The name of the item pool to use for randomisation. \"Vanilla\" uses the items found in the unrandomised game, while \"Almost every item\" uses one of almost every item, including a few pairs of jump boots, a collection of keys and a lot of meteor dust.", new AcceptableValueList<string>(VANILLA_POOL, ALMOST_ALL_ITEMS_POOL)));
+        this.randomiseEnemyDrops = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise enemy drops", true, "Make each enemy time drop a single, random crafting material after a fixed number of kills");
     }
 }
