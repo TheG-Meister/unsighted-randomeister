@@ -68,7 +68,7 @@ internal class Hooks
     [HarmonyPatch(typeof(RotatingSpiderBossRoom), nameof(RotatingSpiderBossRoom.Start)), HarmonyPrefix]
     public static bool BeforeQueenSpinarachBossRoomLoad(RotatingSpiderBossRoom __instance)
     {
-        if (Plugin.Instance.currentData == null || Plugin.Instance.currentData.removeFragileOnJumpBootsChest) return true;
+        if (Plugin.Instance.currentData == null || !Plugin.Instance.currentData.removeFragileOnJumpBootsChest) return true;
 
         List<string> dataStrings = PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings;
         bool bossDefeated = dataStrings.Contains("RotatingSpiderDefeated");
