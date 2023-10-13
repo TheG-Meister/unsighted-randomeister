@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace dev.gmeister.unsighted.randomeister.hooks;
 
@@ -30,7 +31,7 @@ public class MetalScrapOreHooks
 
         if (firstStloc_1 > -1)
         {
-            List<CodeInstruction> addedCodes = new(instructions)
+            List<CodeInstruction> addedCodes = new()
             {
                 new CodeInstruction(OpCodes.Ldarg_0),
                 new CodeInstruction(OpCodes.Ldloc_1),
@@ -39,6 +40,8 @@ public class MetalScrapOreHooks
             };
 
             result.InsertRange(firstStloc_1 + 1, addedCodes);
+            foreach (CodeInstruction instruction in result) Debug.Log(instruction);
+
         }
 
         return result;
