@@ -49,7 +49,7 @@ public class MetalScrapOreHooks
 
     public static string ReplaceMaterialCrystalItem(MetalScrapOre crystal, string item)
     {
-        return "Null";
+        return item;
     }
 
 }
