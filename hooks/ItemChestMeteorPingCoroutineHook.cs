@@ -35,8 +35,6 @@ public class ItemChestMeteorPingCoroutineHook
         int lastRet = -1;
         string? currentBlock = null;
 
-        Debug.Log(result.Count);
-
         for (int i = 0; i < result.Count; i++)
         {
             if (result[i].opcode == OpCodes.Ret)

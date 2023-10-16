@@ -40,8 +40,6 @@ public class MetalScrapOreHooks
             };
 
             result.InsertRange(firstStloc_1 + 1, addedCodes);
-            foreach (CodeInstruction instruction in result) Debug.Log(instruction);
-
         }
 
         return result;
