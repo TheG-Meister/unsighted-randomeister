@@ -41,16 +41,6 @@ internal class Hooks
         Plugin.Instance.SetOriginalChestList(__instance);
     }
 
-    [HarmonyPatch(typeof(SplashScreenScene), nameof(SplashScreenScene.Start)), HarmonyPrefix]
-    private static bool BeforeSplashScreenSceneStart(SplashScreenScene __instance)
-    {
-        Plugin.Instance.GetLogger().LogInfo("Attempting to skip intro...");
-        Time.timeScale = 1f;
-        __instance.CheckBestResolution();
-        SceneManager.LoadScene("TitleScreen");
-        return false;
-    }
-
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
     public static void BeforeGameLoaded()
     {
