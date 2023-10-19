@@ -37,7 +37,7 @@ public class Randomiser
         {
             foreach (ChestObject chest in areaChestList.chestList)
             {
-                chestTable.Add($"{chest.roomName}_{chest.chestName}", chest);
+                chestTable.Add(Chests.GetChestID(chest), chest);
                 this.chestPool.Add(chest);
             }
         }
