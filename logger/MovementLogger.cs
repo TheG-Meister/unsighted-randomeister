@@ -22,6 +22,7 @@ public class MovementLogger : Logger
     private string? currentLocation;
     private readonly HashSet<PlayerAction> actions;
     private readonly List<string> tags;
+    private bool sceneChange;
     public bool announce;
     public bool log;
 
@@ -34,9 +35,10 @@ public class MovementLogger : Logger
         this.tags = new();
         this.announce = announce;
         this.log = log;
+        this.sceneChange = false;
     }
 
-    public void SetLocation(string location, Vector3 position)
+    public void SetLocation(string location, Vector3 position, bool sceneChange)
     {
         if (this.log)
         {
@@ -82,7 +84,7 @@ public class MovementLogger : Logger
 
     public void AddActions(Vector3 position, params PlayerAction[] actions)
     {
-        if (this.log)
+        if (this.log && !this.sceneChange)
         {
             List<string> announcements = new();
             foreach (PlayerAction action in actions)
@@ -143,7 +145,7 @@ public class MovementLogger : Logger
 
         Vector3 pos = PseudoSingleton<CameraSystem>.instance.myTransform.position;
         pos.z = 0;
-        Plugin.Instance.movementLogger.SetLocation(location, pos);
+        Plugin.Instance.movementLogger.SetLocation(location, pos, true);
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.EndPlayerScreenTransition)), HarmonyPostfix]
@@ -165,7 +167,7 @@ public class MovementLogger : Logger
         while (original.MoveNext()) yield return original.Current;
         Vector3 pos = PseudoSingleton<CameraSystem>.instance.myTransform.position;
         pos.z = 0;
-        Plugin.Instance.movementLogger.SetLocation(location, pos);
+        Plugin.Instance.movementLogger.SetLocation(location, pos, false);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StaminaChargeCoroutine)), HarmonyPrefix]
