@@ -56,7 +56,7 @@ public class MovementLogger : Logger
             }
             if (this.announce)
             {
-                PseudoSingleton<InGameTextController>.instance.ShowText(location, this.GetPositionOnCamera(position), color: colour, duration: 2f);
+                PseudoSingleton<InGameTextController>.instance.ShowText(location, this.GetPositionInCamera(position), color: colour, duration: 2f);
             }
             currentLocation = location;
         }
@@ -75,10 +75,15 @@ public class MovementLogger : Logger
         this.tags.Clear();
     }
 
-    public Vector3 GetPositionOnCamera(Vector3 pos)
+    public Vector3 GetPositionInCamera(Vector3 pos)
     {
         CameraSystem cameraSystem = PseudoSingleton<CameraSystem>.instance;
-        if (!cameraSystem.PositionInsideCamera(pos, -2f)) return cameraSystem.myTransform.position;
+        if (!cameraSystem.PositionInsideCamera(pos, -2f))
+        {
+            Vector3 cameraPos = cameraSystem.myTransform.position;
+            cameraPos.z = 0;
+            return cameraPos;
+        }
         else return pos;
     }
 
@@ -96,7 +101,7 @@ public class MovementLogger : Logger
                     announcements.Add(action.ToString());
                 }
             }
-            if (this.announce) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionOnCamera(position));
+            if (this.announce) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position));
         }
     }
 
