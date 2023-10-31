@@ -100,26 +100,4 @@ internal class Hooks
         Plugin.Instance.OnFileCopied(__instance, originalSlotNumber);
     }
 
-    [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
-    public static void OnScreenTransition(ScreenTransition __instance)
-    {
-        string location = SceneManager.GetActiveScene().name + " " + __instance.myDirection + " " + __instance.triggerID;
-
-        Plugin.Instance.movementLogger.SetLocation(location, false, false);
-    }
-
-    [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.Start)), HarmonyPrefix]
-    public static void OnScreenTransitionObjectStart(ScreenTransition __instance)
-    {
-        /*if (ScreenTransition.playerTransitioningScreens &&
-            ScreenTransition.currentDoorName == __instance.gameObject.name &&
-            (ScreenTransition.teleportCheat ||
-            ScreenTransition.lastSceneName == PseudoSingleton<MapManager>.instance.GetNextRoomName(__instance.myDirection, __instance.triggerID)))
-        {
-            string location = SceneManager.GetActiveScene().name + " " + __instance.myDirection + " " + __instance.triggerID;
-
-            Plugin.Instance.movementLogger.SetLocation(location, true, false);
-        }*/
-    }
-
 }

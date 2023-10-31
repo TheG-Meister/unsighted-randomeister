@@ -21,7 +21,7 @@ public class Logger : IDisposable
         return value ? "1" : "";
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         this.stream.Dispose();
     }

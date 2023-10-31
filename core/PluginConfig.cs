@@ -8,6 +8,8 @@ public class PluginConfig
 
     public const string CATEGORY_DEVELOPER = "Developer";
     public ConfigEntry<bool> chestLogging;
+    public ConfigEntry<bool> movementLogging;
+    public ConfigEntry<bool> movementLoggingAnnouncements;
 
     public const string CATEGORY_GENERAL = "General";
     public ConfigEntry<bool> useRandomeister;
@@ -38,6 +40,15 @@ public class PluginConfig
     public PluginConfig(ConfigFile configFile)
     {
         this.chestLogging = configFile.Bind(CATEGORY_DEVELOPER, "Chest logging", false, new ConfigDescription("Enables primitive chest logging for use in the randomiser logic", null, new ConfigurationManagerAttributes() { IsAdvanced = true }));
+
+        this.movementLogging = configFile.Bind(CATEGORY_DEVELOPER, "Movement logging", false, "Saves player movement information to the system. Send the files to @the_g_meister on discord to help improve the randomiser!");
+        this.movementLogging.SettingChanged += (o, e) =>
+        {
+            Plugin.Instance.movementLogger.log = this.movementLogging.Value;
+            if (!this.movementLogging.Value) Plugin.Instance.movementLogger.ClearLocation();
+        };
+        this.movementLoggingAnnouncements = configFile.Bind(CATEGORY_DEVELOPER, "Movement logging announcements", true, "If movement logging is enabled, announces various various actions. Try to minimise white announcements, which report actions. Green announcements report new locations, yellow announcements report resets, and blue announcements report other useful information.");
+        this.movementLoggingAnnouncements.SettingChanged += (o, e) => { Plugin.Instance.movementLogger.announce = this.movementLoggingAnnouncements.Value; };
 
         useRandomeister = configFile.Bind(CATEGORY_GENERAL, "Use randomeister", true, "Enable the use of the randomeister plugin. Turning this option off will disable all other randomisation options, and cause new story files to be completely unchanged. It does not disable other tweaks and hacks included in this plugin.");
 
