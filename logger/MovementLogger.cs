@@ -378,10 +378,14 @@ public class MovementLogger : Logger
             if (!__instance.upwardAttack)
             {
                 HashSet<PlayerAction> actions = new() { Dodge, Jump };
-                if (__instance.jumpedWhileRiddingSpinner) actions.Add(JumpOffSpinner);
+                if (__instance.jumpedWhileRiddingSpinner)
+                {
+                    actions.Add(JumpOffSpinner);
+                    if (__instance.axis == Vector3.zero) actions.Add(JumpUpOffSpinner);
+                }
                 if (__instance.wallKicked) actions.Add(WallJump);
                 if (__instance.axis == Vector3.zero) actions.Add(JumpUp);
-                if (__instance.jumpedWhileRiddingSpinner && __instance.axis == Vector3.zero) actions.Add(JumpUpOffSpinner);
+                if (__instance.hookshotClimbing) actions.Add(JumpWhileHanging);
                 Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
             }
             else if (__instance.wallKicked) Plugin.Instance.movementLogger.AddActions(__instance, Jump, ClimbSlash);
