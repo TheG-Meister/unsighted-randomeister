@@ -59,5 +59,8 @@ public enum PlayerAction
     StandOnMaterialCrystal,
     StandOnMinecart,
     StandOnBarrier,
+    StandOnRockBlock,
+
+    CoyoteJump,
 
 }
