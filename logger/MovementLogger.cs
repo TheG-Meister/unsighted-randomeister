@@ -38,7 +38,7 @@ public class MovementLogger : Logger
         this.sceneChange = false;
     }
 
-    public void SetLocation(string location, Vector3 position, bool sceneChange)
+    public void SetLocation(string location, string announcement, Vector3 position, bool sceneChange = false)
     {
         if (this.log)
         {
@@ -56,7 +56,7 @@ public class MovementLogger : Logger
             }
             if (this.announce)
             {
-                PseudoSingleton<InGameTextController>.instance.ShowText(location, this.GetPositionInCamera(position), color: colour, duration: 2f);
+                PseudoSingleton<InGameTextController>.instance.ShowText(announcement, this.GetPositionInCamera(position), color: colour, duration: 2f);
             }
             currentLocation = location;
         }
@@ -75,16 +75,89 @@ public class MovementLogger : Logger
         this.tags.Clear();
     }
 
+    public static Vector3 GetCameraPos()
+    {
+        Vector3 pos = PseudoSingleton<CameraSystem>.instance.myTransform.position;
+        pos.z = 0;
+        return pos;
+    }
+
     public Vector3 GetPositionInCamera(Vector3 pos)
     {
         CameraSystem cameraSystem = PseudoSingleton<CameraSystem>.instance;
-        if (!cameraSystem.PositionInsideCamera(pos, -2f))
-        {
-            Vector3 cameraPos = cameraSystem.myTransform.position;
-            cameraPos.z = 0;
-            return cameraPos;
-        }
+        if (!cameraSystem.PositionInsideCamera(pos, -2f)) return MovementLogger.GetCameraPos();
         else return pos;
+    }
+
+    public static string SnakeToPascalCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        else
+        {
+            StringBuilder builder = new();
+
+            bool lastUnderscore = true;
+            foreach (char c in text)
+            {
+                if (c == '_') lastUnderscore = true;
+                else if (char.IsLetter(c))
+                {
+                    if (lastUnderscore)
+                    {
+                        builder.Append(char.ToUpperInvariant(c));
+                        lastUnderscore = false;
+                    }
+                    else builder.Append(char.ToLowerInvariant(c));
+                }
+                else builder.Append(c);
+            }
+
+            return builder.ToString();
+        }
+    }
+
+    public static string AddSpacesToPascalCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        else
+        {
+            StringBuilder builder = new();
+
+            bool lastSpecial = false;
+            foreach (char c in text)
+            {
+                if (char.IsLetter(c))
+                {
+                    if (lastSpecial)
+                    {
+                        builder.Append(' ');
+                        builder.Append(char.ToUpperInvariant(c));
+                        lastSpecial = false;
+                    }
+                    else
+                    {
+                        if (char.IsUpper(c))
+                        {
+                            if (builder.Length > 0) builder.Append(' ');
+                            builder.Append(c);
+                        }
+                        else builder.Append(c);
+                    }
+                }
+                else
+                {
+                    if (lastSpecial) builder.Append(c);
+                    else
+                    {
+                        if (builder.Length > 0) builder.Append(' ');
+                        builder.Append(c);
+                        lastSpecial = true;
+                    }
+                }
+            }
+
+            return builder.ToString();
+        }
     }
 
     public void AddActions(Vector3 position, params PlayerAction[] actions)
@@ -115,42 +188,18 @@ public class MovementLogger : Logger
         this.tags.AddRange(tags);
     }
 
-    public static string SnakeToPascalCase(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return text;
-        else
-        {
-            StringBuilder builder = new();
-
-            bool lastUnderscore = true;
-            foreach (char c in text)
-            {
-                if (c == '_') lastUnderscore = true;
-                else if (Char.IsLetter(c) && lastUnderscore)
-                {
-                    builder.Append(Char.ToUpperInvariant(c));
-                    lastUnderscore = false;
-                }
-                else builder.Append(c);
-            }
-
-            return builder.ToString();
-        }
-    }
-
     public static string GetTransitionName(string scene, ScreenTransition transition)
     {
         return String.Join(Constants.SCENE_TRANSITION_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
     }
 
+    public static string GetTransitionAnnouncement
+
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
     public static void OnScreenTransition(ScreenTransition __instance)
     {
         string location = MovementLogger.GetTransitionName(SceneManager.GetActiveScene().name, __instance);
-
-        Vector3 pos = PseudoSingleton<CameraSystem>.instance.myTransform.position;
-        pos.z = 0;
-        Plugin.Instance.movementLogger.SetLocation(location, pos, true);
+        Plugin.Instance.movementLogger.SetLocation(location, MovementLogger.GetCameraPos(), true);
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.EndPlayerScreenTransition)), HarmonyPostfix]
@@ -170,9 +219,7 @@ public class MovementLogger : Logger
     public static IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string location)
     {
         while (original.MoveNext()) yield return original.Current;
-        Vector3 pos = PseudoSingleton<CameraSystem>.instance.myTransform.position;
-        pos.z = 0;
-        Plugin.Instance.movementLogger.SetLocation(location, pos, false);
+        Plugin.Instance.movementLogger.SetLocation(location, MovementLogger.GetCameraPos(), false);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StaminaChargeCoroutine)), HarmonyPrefix]
