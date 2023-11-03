@@ -55,7 +55,9 @@ public enum PlayerAction
     HitSwitchWithBox,
     ClimbSlash,
     Respawn,
+
     StandOnMaterialCrystal,
     StandOnMinecart,
+    StandOnBarrier,
 
 }
