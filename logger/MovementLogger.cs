@@ -173,10 +173,10 @@ public class MovementLogger : Logger
                 {
                     this.actions.Add(action);
                     //if (!this.silentActions.Contains(action)) 
-                    announcements.Add(action.ToString());
+                    announcements.Add(MovementLogger.AddSpacesToPascalCase(action.ToString()));
                 }
             }
-            if (this.announce) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position));
+            if (this.announce) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f);
         }
     }
 
@@ -220,6 +220,15 @@ public class MovementLogger : Logger
     {
         while (original.MoveNext()) yield return original.Current;
         Plugin.Instance.movementLogger.SetLocation(location, MovementLogger.GetCameraPos(), false);
+        List<PlayerInfo> players = PseudoSingleton<PlayersManager>.instance.players;
+        foreach (PlayerInfo player in players)
+        {
+            if (player.myCharacter.ridingSpinner)
+            {
+                Plugin.Instance.movementLogger.AddActions(player.myCharacter, Spinner);
+                break;
+            }
+        }
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StaminaChargeCoroutine)), HarmonyPrefix]
@@ -234,8 +243,11 @@ public class MovementLogger : Logger
         if ((!__instance.jumpAttacking || __instance.myPhysics.grounded) && (!__instance.staminaDrained || !__instance.myPhysics.grounded || __instance.jumpAttacking))
         {
             List<PlayerAction> actions = new() { Attack };
-            if (!__instance.jumpAttacking && (!__instance.myPhysics.grounded || (___forceJumpAttack && !__instance.myInfo.canJump) || __instance.ridingSpinner)) actions.Add(JumpAttack);
-            if (__instance.running) actions.Add(DashAttack);
+            if (!__instance.jumpAttacking)
+            {
+                if (!__instance.myPhysics.grounded || (___forceJumpAttack && !__instance.myInfo.canJump) || __instance.ridingSpinner) actions.Add(JumpAttack);
+                else if (__instance.running) actions.Add(DashAttack);
+            }
             Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
         }
     }
@@ -370,32 +382,47 @@ public class MovementLogger : Logger
             Plugin.Instance.movementLogger.AddActions(__instance, JumpWhileHanging);
     }
 
-    [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.DashCoroutine)), HarmonyPrefix]
-    public static void LogJump(BasicCharacterController __instance, float impulseStrength)
+    [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.DashCoroutine)), HarmonyPostfix]
+    public static void LogJump(BasicCharacterController __instance, float impulseStrength, ref IEnumerator __result)
     {
-        if (impulseStrength == 0 && !__instance.climbingDash)
+        __result = MovementLogger.GetJumpLoggingEnumerator(__result, __instance, impulseStrength);
+    }
+
+    public static IEnumerator GetJumpLoggingEnumerator(IEnumerator original, BasicCharacterController character, float impulseStrength)
+    {
+        for (int i = 0; original.MoveNext(); i++)
         {
-            if (!__instance.upwardAttack)
+            yield return original.Current;
+            if (i == 0)
             {
-                HashSet<PlayerAction> actions = new() { Dodge, Jump };
-                if (__instance.jumpedWhileRiddingSpinner)
+                if (impulseStrength == 0 && !character.climbingDash)
                 {
-                    actions.Add(JumpOffSpinner);
-                    if (__instance.axis == Vector3.zero) actions.Add(JumpUpOffSpinner);
+                    if (!character.upwardAttack)
+                    {
+                        HashSet<PlayerAction> actions = new() { Dodge, Jump };
+                        if (character.jumpedWhileRiddingSpinner)
+                        {
+                            actions.Add(JumpOffSpinner);
+                            if (character.axis == Vector3.zero) actions.Add(JumpUpOffSpinner);
+                        }
+                        if (character.wallJumping) actions.Add(WallJump);
+                        if (character.axis == Vector3.zero) actions.Add(JumpUp);
+                        if (character.hookshotClimbing) actions.Add(JumpWhileHanging);
+                        if (!character.myPhysics.grounded && !character.climbing && !character.wallJumping && (!character.jumpedWhileRiddingSpinner || character.myPhysics.height != 1f)) actions.Add(CoyoteJump);
+                        Plugin.Instance.movementLogger.AddActions(character, actions.ToArray());
+                    }
+                    else if (character.wallJumping) Plugin.Instance.movementLogger.AddActions(character, Jump, ClimbSlash);
                 }
-                if (__instance.wallKicked) actions.Add(WallJump);
-                if (__instance.axis == Vector3.zero) actions.Add(JumpUp);
-                if (__instance.hookshotClimbing) actions.Add(JumpWhileHanging);
-                Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
             }
-            else if (__instance.wallKicked) Plugin.Instance.movementLogger.AddActions(__instance, Jump, ClimbSlash);
         }
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.RollCoroutine)), HarmonyPrefix]
     public static void LogDodge(BasicCharacterController __instance)
     {
-        Plugin.Instance.movementLogger.AddActions(__instance, Dodge);
+        HashSet<PlayerAction> actions = new() { Dodge };
+        if (!__instance.myPhysics.grounded && (!__instance.jumpedWhileRiddingSpinner || __instance.myPhysics.height != 1f)) actions.Add(CoyoteJump);
+        Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.LiftObjectCoroutine)), HarmonyPrefix]
