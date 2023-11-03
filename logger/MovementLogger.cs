@@ -38,7 +38,7 @@ public class MovementLogger : Logger
         this.sceneChange = false;
     }
 
-    public void SetLocation(string location, string announcement, Vector3 position, bool sceneChange = false)
+    public void SetLocation(string location, Vector3 position, bool sceneChange = false)
     {
         if (this.log)
         {
@@ -56,6 +56,8 @@ public class MovementLogger : Logger
             }
             if (this.announce)
             {
+                List<string> splits = location.Split('_').ToList();
+                string announcement = splits.Select(s => AddSpacesToPascalCase(s)).Join(delimiter: ", ");
                 PseudoSingleton<InGameTextController>.instance.ShowText(announcement, this.GetPositionInCamera(position), color: colour, duration: 2f);
             }
             currentLocation = location;
@@ -190,10 +192,8 @@ public class MovementLogger : Logger
 
     public static string GetTransitionName(string scene, ScreenTransition transition)
     {
-        return String.Join(Constants.SCENE_TRANSITION_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
+        return String.Join(Constants.SCENE_TRANSITION_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
     }
-
-    public static string GetTransitionAnnouncement
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
     public static void OnScreenTransition(ScreenTransition __instance)
