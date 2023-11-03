@@ -46,9 +46,16 @@ public enum PlayerAction
     ThrowBox,
     BoxJump,
 
+    Hailee,
+    HaileePush,
+    HaileeMissile,
+
     Telehook,
     Wierdshot,
     HitSwitchWithBox,
     ClimbSlash,
+    Respawn,
+    StandOnMaterialCrystal,
+    StandOnMinecart,
 
 }
