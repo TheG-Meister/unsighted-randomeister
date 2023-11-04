@@ -378,8 +378,16 @@ public class MovementLogger : Logger
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.Dash)), HarmonyPrefix]
     public static void LogHookshotJump(BasicCharacterController __instance, float impulseStrength)
     {
-        if (impulseStrength == 0 && __instance.hookshotClimbing)
-            Plugin.Instance.movementLogger.AddActions(__instance, JumpWhileHanging);
+        if (impulseStrength == 0 && !__instance.climbingDash && !__instance.upwardAttack)
+        {
+            if (__instance.hookshotClimbing) Plugin.Instance.movementLogger.AddActions(__instance, JumpWhileHanging);
+            else if (!__instance.myPhysics.grounded &&
+                    !__instance.climbing &&
+                    !__instance.climbingDash &&
+                    !__instance.wallKicked &&
+                    (!__instance.jumpedWhileRiddingSpinner || __instance.myPhysics.height != 1f))
+                Plugin.Instance.movementLogger.AddActions(__instance, CoyoteJump);
+        }
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.DashCoroutine)), HarmonyPostfix]
@@ -392,8 +400,7 @@ public class MovementLogger : Logger
     {
         for (int i = 0; original.MoveNext(); i++)
         {
-            yield return original.Current;
-            if (i == 0)
+            if (i == 1)
             {
                 if (impulseStrength == 0 && !character.climbingDash)
                 {
@@ -408,12 +415,12 @@ public class MovementLogger : Logger
                         if (character.wallJumping) actions.Add(WallJump);
                         if (character.axis == Vector3.zero) actions.Add(JumpUp);
                         if (character.hookshotClimbing) actions.Add(JumpWhileHanging);
-                        if (!character.myPhysics.grounded && !character.climbing && !character.wallJumping && (!character.jumpedWhileRiddingSpinner || character.myPhysics.height != 1f)) actions.Add(CoyoteJump);
                         Plugin.Instance.movementLogger.AddActions(character, actions.ToArray());
                     }
                     else if (character.wallJumping) Plugin.Instance.movementLogger.AddActions(character, Jump, ClimbSlash);
                 }
             }
+            yield return original.Current;
         }
     }
 
