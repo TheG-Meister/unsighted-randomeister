@@ -497,4 +497,11 @@ public class MovementLogger : Logger
         Plugin.Instance.GetLogger().LogInfo($"Hookshot results: {sb}");*/
     }
 
+    [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.HoleCoroutine)), HarmonyPrefix]
+    public static void LogRespawn(BasicCharacterController __instance)
+    {
+        if (__instance.myPhysics.currentElevatedGround != null && (!__instance.myPhysics.currentElevatedGround.hole || __instance.myPhysics.currentElevatedGround.GetComponent<HoleTeleporter>() == null))
+            Plugin.Instance.movementLogger.AddActions(__instance, Respawn);
+    }
+
 }
