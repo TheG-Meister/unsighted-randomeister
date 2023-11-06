@@ -433,6 +433,7 @@ public class MovementLogger : Logger
     public static void LogDodge(BasicCharacterController __instance)
     {
         HashSet<PlayerAction> actions = new() { Dodge };
+        if (!__instance.jumpedWhileRiddingSpinner) actions.Add(DodgeOffSpinner);
         if (!__instance.myPhysics.grounded && (!__instance.jumpedWhileRiddingSpinner || __instance.myPhysics.height != 1f)) actions.Add(CoyoteJump);
         Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
     }

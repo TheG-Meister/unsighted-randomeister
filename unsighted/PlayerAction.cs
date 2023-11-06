@@ -31,6 +31,7 @@ public enum PlayerAction
     SpinnerAttack,
     JumpOffSpinner,
     JumpUpOffSpinner,
+    DodgeOffSpinner,
     Grind,
     Skip,
 
