@@ -185,6 +185,11 @@ public class MovementLogger : Logger
         this.AddActions(controller.gameObject.transform.position + Vector3.up * (controller.myPhysics.globalHeight + controller.myPhysics.Zsize * 1.55f), actions);
     }
 
+    public void AddActions(MechaController controller, params PlayerAction[] actions)
+    {
+        this.AddActions(controller.transform.position + Vector3.up * (controller.myPhysics.globalHeight), actions);
+    }
+
     public void AddTags(string[] tags)
     {
         this.tags.AddRange(tags);
@@ -376,7 +381,7 @@ public class MovementLogger : Logger
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.Dash)), HarmonyPrefix]
-    public static void LogHookshotJump(BasicCharacterController __instance, float impulseStrength)
+    public static void LogEarlyJump(BasicCharacterController __instance, float impulseStrength)
     {
         if (impulseStrength == 0 && !__instance.climbingDash && !__instance.upwardAttack)
         {
@@ -391,7 +396,7 @@ public class MovementLogger : Logger
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.DashCoroutine)), HarmonyPostfix]
-    public static void LogJump(BasicCharacterController __instance, float impulseStrength, ref IEnumerator __result)
+    public static void LogLateJump(BasicCharacterController __instance, float impulseStrength, ref IEnumerator __result)
     {
         __result = MovementLogger.GetJumpLoggingEnumerator(__result, __instance, impulseStrength);
     }
@@ -509,6 +514,35 @@ public class MovementLogger : Logger
     {
         if (__instance.myPhysics.currentElevatedGround != null && (!__instance.myPhysics.currentElevatedGround.hole || __instance.myPhysics.currentElevatedGround.GetComponent<HoleTeleporter>() == null))
             Plugin.Instance.movementLogger.AddActions(__instance, Respawn);
+    }
+
+    [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StartRidingMecha)), HarmonyPrefix]
+    public static void LogHailee(BasicCharacterController __instance)
+    {
+        Plugin.Instance.movementLogger.AddActions(__instance, Hailee);
+    }
+
+    [HarmonyPatch(typeof(FactoryButton), nameof(FactoryButton.PressedByMecha)), HarmonyPrefix]
+    public static void LogHaileeButton(FactoryButton __instance)
+    {
+        Plugin.Instance.movementLogger.AddActions(__instance.transform.position, HaileeButton);
+    }
+
+    [HarmonyPatch(typeof(MechaController), nameof(MechaController.SetPushSettings)), HarmonyPrefix]
+    public static void LogHaileePush(MechaController __instance, bool ___canPush)
+    {
+        if (___canPush && __instance.axis != Vector3.zero)
+        {
+            ElevatedGround block = __instance.myPhysics.currentPushableObject;
+            if (block != null && block.pushable && block.myPushablePhysics != null && block.myPushablePhysics.onlyPushableByMecha)
+                Plugin.Instance.movementLogger.AddActions(__instance, HaileePush);
+        }
+    }
+
+    [HarmonyPatch(typeof(MechaController), nameof(MechaController.Fire)), HarmonyPrefix]
+    public static void LogHaileeMissile(MechaController __instance, float ___lastFire, BasicCharacterController ___myPlayer)
+    {
+        if (Time.time - ___lastFire >= 0.2f && !___myPlayer.staminaDrained) Plugin.Instance.movementLogger.AddActions(__instance, HaileeMissile);
     }
 
 }

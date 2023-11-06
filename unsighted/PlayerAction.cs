@@ -47,9 +47,9 @@ public enum PlayerAction
     BoxJump,
 
     Hailee,
+    HaileeButton,
     HaileePush,
     HaileeMissile,
-    HaileeButton,
 
     Telehook,
     Wierdshot,
