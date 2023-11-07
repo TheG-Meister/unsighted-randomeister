@@ -62,6 +62,7 @@ public enum PlayerAction
     StandOnMinecart,
     StandOnBarrier,
     StandOnRockBlock,
+    StandOnUnclimbableGround,
 
     CoyoteJump,
 

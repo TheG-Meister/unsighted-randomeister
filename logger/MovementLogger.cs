@@ -22,6 +22,7 @@ public class MovementLogger : Logger
     private string? currentLocation;
     private readonly HashSet<PlayerAction> actions;
     private readonly List<string> tags;
+    private readonly List<string> roomStates;
     private bool sceneChange;
     public bool announce;
     public bool log;
@@ -33,6 +34,7 @@ public class MovementLogger : Logger
         currentLocation = null;
         this.actions = new();
         this.tags = new();
+        this.roomStates = new();
         this.announce = announce;
         this.log = log;
         this.sceneChange = false;
@@ -67,6 +69,7 @@ public class MovementLogger : Logger
             this.currentLocation = null;
         }
         this.actions.Clear();
+        this.roomStates.Clear();
         this.tags.Clear();
     }
 
@@ -75,6 +78,44 @@ public class MovementLogger : Logger
         this.currentLocation = null;
         this.actions.Clear();
         this.tags.Clear();
+    }
+
+    public void AddActions(Vector3 position, params PlayerAction[] actions)
+    {
+        if (this.log && !this.sceneChange)
+        {
+            List<string> announcements = new();
+            foreach (PlayerAction action in actions)
+            {
+                if (!this.actions.Contains(action))
+                {
+                    this.actions.Add(action);
+                    //if (!this.silentActions.Contains(action)) 
+                    announcements.Add(MovementLogger.AddSpacesToPascalCase(action.ToString()));
+                }
+            }
+            if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f);
+        }
+    }
+
+    public void AddActions(BasicCharacterController controller, params PlayerAction[] actions)
+    {
+        this.AddActions(controller.gameObject.transform.position + Vector3.up * (controller.myPhysics.globalHeight + controller.myPhysics.Zsize * 1.55f), actions);
+    }
+
+    public void AddActions(MechaController controller, params PlayerAction[] actions)
+    {
+        this.AddActions(controller.transform.position + Vector3.up * (controller.myPhysics.globalHeight), actions);
+    }
+
+    public void AddRoomStates(Vector3 position, params string[] states)
+    {
+
+    }
+
+    public void AddTags(string[] tags)
+    {
+        this.tags.AddRange(tags);
     }
 
     public static Vector3 GetCameraPos()
@@ -160,39 +201,6 @@ public class MovementLogger : Logger
 
             return builder.ToString();
         }
-    }
-
-    public void AddActions(Vector3 position, params PlayerAction[] actions)
-    {
-        if (this.log && !this.sceneChange)
-        {
-            List<string> announcements = new();
-            foreach (PlayerAction action in actions)
-            {
-                if (!this.actions.Contains(action))
-                {
-                    this.actions.Add(action);
-                    //if (!this.silentActions.Contains(action)) 
-                    announcements.Add(MovementLogger.AddSpacesToPascalCase(action.ToString()));
-                }
-            }
-            if (this.announce) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f);
-        }
-    }
-
-    public void AddActions(BasicCharacterController controller, params PlayerAction[] actions)
-    {
-        this.AddActions(controller.gameObject.transform.position + Vector3.up * (controller.myPhysics.globalHeight + controller.myPhysics.Zsize * 1.55f), actions);
-    }
-
-    public void AddActions(MechaController controller, params PlayerAction[] actions)
-    {
-        this.AddActions(controller.transform.position + Vector3.up * (controller.myPhysics.globalHeight), actions);
-    }
-
-    public void AddTags(string[] tags)
-    {
-        this.tags.AddRange(tags);
     }
 
     public static string GetTransitionName(string scene, ScreenTransition transition)
@@ -544,6 +552,13 @@ public class MovementLogger : Logger
     public static void LogHaileeMissile(MechaController __instance, float ___lastFire, BasicCharacterController ___myPlayer)
     {
         if (Time.time - ___lastFire >= 0.2f && !___myPlayer.staminaDrained) Plugin.Instance.movementLogger.AddActions(__instance, HaileeMissile);
+    }
+
+    [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.Update)), HarmonyPostfix]
+    public static void LogStandOnUnclimbableGround(BasicCharacterController __instance)
+    {
+        ElevatedGround ground = __instance.myPhysics.currentElevatedGround;
+        if (__instance.myPhysics.grounded && ground != null && (ground.infinityWall || ground.impossibleToGrab)) Plugin.Instance.movementLogger.AddActions(__instance, StandOnUnclimbableGround);
     }
 
 }
