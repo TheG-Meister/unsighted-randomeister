@@ -208,15 +208,27 @@ public class MovementLogger : Logger
         return String.Join(Constants.SCENE_TRANSITION_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
     }
 
+    public static void PollActions()
+    {
+        List<PlayerInfo> players = PseudoSingleton<PlayersManager>.instance.players;
+        foreach (PlayerInfo player in players)
+        {
+            HashSet<PlayerAction> actions = new();
+            if (player.myCharacter.ridingSpinner) actions.Add(Spinner);
+            if (player.myCharacter.ridingMecha) actions.Add(Hailee);
+            Plugin.Instance.movementLogger.AddActions(player.myCharacter, actions.ToArray());
+        }
+    }
+
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
-    public static void OnScreenTransition(ScreenTransition __instance)
+    public static void LogEnterScreenTransition(ScreenTransition __instance)
     {
         string location = MovementLogger.GetTransitionName(SceneManager.GetActiveScene().name, __instance);
         Plugin.Instance.movementLogger.SetLocation(location, MovementLogger.GetCameraPos(), true);
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.EndPlayerScreenTransition)), HarmonyPostfix]
-    public static void AfterEndPlayerScreenTransition(ScreenTransition __instance, ref IEnumerator __result)
+    public static void LogExitScreenTransition(ScreenTransition __instance, ref IEnumerator __result)
     {
         if (ScreenTransition.playerTransitioningScreens &&
             ScreenTransition.currentDoorName == __instance.gameObject.name &&
@@ -233,15 +245,7 @@ public class MovementLogger : Logger
     {
         while (original.MoveNext()) yield return original.Current;
         Plugin.Instance.movementLogger.SetLocation(location, MovementLogger.GetCameraPos(), false);
-        List<PlayerInfo> players = PseudoSingleton<PlayersManager>.instance.players;
-        foreach (PlayerInfo player in players)
-        {
-            if (player.myCharacter.ridingSpinner)
-            {
-                Plugin.Instance.movementLogger.AddActions(player.myCharacter, Spinner);
-                break;
-            }
-        }
+        MovementLogger.PollActions();
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StaminaChargeCoroutine)), HarmonyPrefix]
@@ -558,7 +562,18 @@ public class MovementLogger : Logger
     public static void LogStandOnUnclimbableGround(BasicCharacterController __instance)
     {
         ElevatedGround ground = __instance.myPhysics.currentElevatedGround;
-        if (__instance.myPhysics.grounded && ground != null && (ground.infinityWall || ground.impossibleToGrab)) Plugin.Instance.movementLogger.AddActions(__instance, StandOnUnclimbableGround);
+        if (__instance.myPhysics.grounded && ground != null)
+        {
+            HashSet<PlayerAction> actions = new();
+
+            if (ground.infinityWall || ground.impossibleToGrab) actions.Add(StandOnUnclimbableGround);
+            if (ground.GetComponentInParent<MetalScrapOre>() != null) actions.Add(StandOnMaterialCrystal);
+            if (ground.GetComponentInChildren<RockBlock>() != null) actions.Add(StandOnRockBlock);
+            if (ground.GetComponent<Handcar>() != null) actions.Add(StandOnMinecart);
+            if (ground.GetComponentInParent<TrainBarrier>() != null) actions.Add(StandOnBarrier);
+
+            Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
+        }
     }
 
 }
