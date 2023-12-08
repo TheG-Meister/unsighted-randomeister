@@ -11,6 +11,7 @@ using System.Text;
 using System.Linq;
 using System.Collections;
 using System.Reflection.Emit;
+using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
@@ -267,7 +268,7 @@ public class MovementLogger : Logger
 
     public static string GetTransitionName(string scene, ScreenTransition transition)
     {
-        return String.Join(Constants.SCENE_TRANSITION_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
+        return String.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
     }
 
     public static void PollActions()
@@ -636,6 +637,29 @@ public class MovementLogger : Logger
 
             Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
         }
+    }
+
+    // --------------------- STATES --------------------- //
+
+    [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Start)), HarmonyPostfix]
+    public static void LogOreStart(MetalScrapOre __instance)
+    {
+        string oreCode = __instance.GetOreCode();
+        if (PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains(oreCode))
+        {
+            Plugin.Instance.movementLogger.AddRoomStates(__instance.gameObject.transform.position, string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Absent"));
+        }
+        else Plugin.Instance.movementLogger.AddRoomStates(__instance.gameObject.transform.position, string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Present"));
+    }
+
+    [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Destroyed)), HarmonyPostfix]
+    public static void LogOreDestroy(MetalScrapOre __instance)
+    {
+        string oreCode = __instance.GetOreCode();
+        string state = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Absent");
+        string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, oreCode);
+        Plugin.Instance.movementLogger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.gameObject.transform.position, false);
+        Plugin.Instance.movementLogger.AddRoomStates(__instance.gameObject.transform.position, state);
     }
 
 }
