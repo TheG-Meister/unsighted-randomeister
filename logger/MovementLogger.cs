@@ -18,16 +18,12 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementLogger : Logger
 {
 
-    /*
-     * 
-     */
-
     private string? currentScene;
     private string? currentLocation;
     private readonly HashSet<PlayerAction> actions;
-    private readonly List<string> tags;
-    private readonly List<string> gameStates;
-    private readonly List<string> roomStates;
+    private readonly HashSet<string> tags;
+    private readonly HashSet<string> gameStates;
+    private readonly HashSet<string> roomStates;
     private bool changingScene;
     private float gameTime;
     private float realTime;
