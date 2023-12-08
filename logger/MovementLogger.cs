@@ -177,7 +177,7 @@ public class MovementLogger : Logger
 
     public void AddTags(string[] tags)
     {
-        this.tags.AddRange(tags);
+        foreach (string tag in tags) this.tags.Add(tag);
     }
 
     public static Vector3 GetCameraPos()
