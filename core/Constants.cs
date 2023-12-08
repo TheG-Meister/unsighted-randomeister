@@ -32,6 +32,6 @@ public class Constants
     public const string PATH_LOGS = "logs/";
 
     public const char CHEST_ID_SEPARATOR = '_';
-    public const char SCENE_TRANSITION_ID_SEPARATOR = '_';
+    public const char MOVEMENT_LOGGER_ID_SEPARATOR = '_';
 
 }
