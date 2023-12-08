@@ -6,7 +6,6 @@ using System.Drawing;
 using TMPro.Examples;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static System.Collections.Specialized.BitVector32;
 using static dev.gmeister.unsighted.randomeister.unsighted.PlayerAction;
 using System.Text;
 using System.Linq;
@@ -19,11 +18,19 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementLogger : Logger
 {
 
+    /*
+     * 
+     */
+
+    private string? currentScene;
     private string? currentLocation;
     private readonly HashSet<PlayerAction> actions;
     private readonly List<string> tags;
+    private readonly List<string> gameStates;
     private readonly List<string> roomStates;
-    private bool sceneChange;
+    private bool changingScene;
+    private float gameTime;
+    private float realTime;
     public bool announce;
     public bool log;
 
@@ -31,43 +38,63 @@ public class MovementLogger : Logger
 
     public MovementLogger(string path, bool log, bool announce) : base(path)
     {
-        currentLocation = null;
+        this.currentScene = null;
+        this.currentLocation = null;
         this.actions = new();
         this.tags = new();
+        this.gameStates = new();
         this.roomStates = new();
+        this.changingScene = false;
         this.announce = announce;
         this.log = log;
-        this.sceneChange = false;
     }
 
-    public void SetLocation(string location, Vector3 position, bool sceneChange = false)
+    public void SetLocation(string location, string scene, Vector3 position, bool changingScene = false)
     {
+        float realTime = Time.realtimeSinceStartup;
+        if (realTime < 0) realTime = 0;
+        GameplayTime gameplayTime = PseudoSingleton<Helpers>.instance.GetCurrentTimeData();
+        float gameTime = gameplayTime.hours * 60 * 60 + gameplayTime.minutes * 60 + gameplayTime.seconds;
+
         if (this.log)
         {
             ColorNames colour = ColorNames.Yellow;
             if (currentLocation != null && currentLocation != location)
             {
                 colour = ColorNames.Green;
+
+                if (this.changingScene) this.roomStates.Clear();
+
+                List<string> statesList = new(gameStates);
+                statesList.AddRange(this.roomStates);
+
+                string states = string.Join(",", statesList.ToArray());
                 string actions = string.Join(",", this.actions.ToArray());
                 string tags = string.Join(",", this.tags.ToArray());
+                string realTimeDuration = (realTime - this.realTime).ToString();
+                string gameTimeDuration = (gameTime - this.gameTime).ToString();
 
-                List<string> fields = new() { currentLocation, location, actions, tags };
+                List<string> fields = new() { this.currentLocation, location, this.currentScene, scene, this.changingScene.ToString(), states, actions, realTimeDuration, gameTimeDuration, tags };
 
                 stream.WriteLine(string.Join("\t", fields));
                 stream.Flush();
             }
             if (this.announce)
             {
-                List<string> splits = location.Split('_').ToList();
-                string announcement = splits.Select(s => AddSpacesToPascalCase(s)).Join(delimiter: ", ");
+                List<string> locationParts = location.Split('_').ToList();
+                string announcement = locationParts.Select(s => AddSpacesToPascalCase(s)).Join(delimiter: ", ");
                 PseudoSingleton<InGameTextController>.instance.ShowText(announcement, this.GetPositionInCamera(position), color: colour, duration: 2f);
             }
-            currentLocation = location;
+
+            this.currentLocation = location;
         }
-        else
-        {
-            this.currentLocation = null;
-        }
+        else this.currentLocation = null;
+
+        this.currentScene = scene;
+        this.gameTime = gameTime;
+        this.realTime = realTime;
+        this.changingScene = changingScene;
+
         this.actions.Clear();
         this.roomStates.Clear();
         this.tags.Clear();
@@ -82,20 +109,17 @@ public class MovementLogger : Logger
 
     public void AddActions(Vector3 position, params PlayerAction[] actions)
     {
-        if (this.log && !this.sceneChange)
+        List<string> announcements = new();
+        foreach (PlayerAction action in actions)
         {
-            List<string> announcements = new();
-            foreach (PlayerAction action in actions)
+            if (!this.actions.Contains(action))
             {
-                if (!this.actions.Contains(action))
-                {
-                    this.actions.Add(action);
-                    //if (!this.silentActions.Contains(action)) 
-                    announcements.Add(MovementLogger.AddSpacesToPascalCase(action.ToString()));
-                }
+                this.actions.Add(action);
+                //if (!this.silentActions.Contains(action)) 
+                announcements.Add(MovementLogger.AddSpacesToPascalCase(action.ToString()));
             }
-            if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f);
         }
+        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f);
     }
 
     public void AddActions(BasicCharacterController controller, params PlayerAction[] actions)
@@ -110,7 +134,49 @@ public class MovementLogger : Logger
 
     public void AddRoomStates(Vector3 position, params string[] states)
     {
+        List<string> announcements = new();
+        foreach (string state in states)
+        {
+            if (!this.roomStates.Contains(state))
+            {
+                this.roomStates.Add(state);
+                announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
+            }
+        }
+        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Green, color2: ColorNames.Red);
+    }
 
+    public void AddGameStates(Vector3 position, params string[] states)
+    {
+        List<string> announcements = new();
+        foreach (string state in states)
+        {
+            if (!this.gameStates.Contains(state))
+            {
+                this.gameStates.Add(state);
+                announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
+            }
+        }
+        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Green, color2: ColorNames.Red);
+    }
+
+    public void RemoveGameStates(Vector3 position, params string[] states)
+    {
+        List<string> announcements = new();
+        foreach (string state in states)
+        {
+            if (this.gameStates.Contains(state))
+            {
+                this.gameStates.Remove(state);
+                announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
+            }
+        }
+        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Red);
+    }
+
+    public void ClearGameStates()
+    {
+        this.gameStates.Clear();
     }
 
     public void AddTags(string[] tags)
@@ -224,7 +290,7 @@ public class MovementLogger : Logger
     public static void LogEnterScreenTransition(ScreenTransition __instance)
     {
         string location = MovementLogger.GetTransitionName(SceneManager.GetActiveScene().name, __instance);
-        Plugin.Instance.movementLogger.SetLocation(location, MovementLogger.GetCameraPos(), true);
+        Plugin.Instance.movementLogger.SetLocation(location, SceneManager.GetActiveScene().name, MovementLogger.GetCameraPos(), true);
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.EndPlayerScreenTransition)), HarmonyPostfix]
@@ -237,14 +303,14 @@ public class MovementLogger : Logger
         {
             string location = MovementLogger.GetTransitionName(SceneManager.GetActiveScene().name, __instance);
 
-            __result = MovementLogger.AddLocationChangeToEnumerator(__result, location);
+            __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name);
         }
     }
 
-    public static IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string location)
+    public static IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string location, string scene)
     {
         while (original.MoveNext()) yield return original.Current;
-        Plugin.Instance.movementLogger.SetLocation(location, MovementLogger.GetCameraPos(), false);
+        Plugin.Instance.movementLogger.SetLocation(location, scene, MovementLogger.GetCameraPos(), false);
         MovementLogger.PollActions();
     }
 
