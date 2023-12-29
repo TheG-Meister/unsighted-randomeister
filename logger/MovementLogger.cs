@@ -116,55 +116,6 @@ public class MovementLogger : Logger
         this.tags.Clear();
     }
 
-    private void SetLocationPrivate(string location, string scene, Vector3 position, bool changingScene = false)
-    {
-        float realTime = Time.realtimeSinceStartup;
-        if (realTime < 0) realTime = 0;
-        GameplayTime gameplayTime = PseudoSingleton<Helpers>.instance.GetCurrentTimeData();
-        float gameTime = gameplayTime.hours * 60 * 60 + gameplayTime.minutes * 60 + gameplayTime.seconds;
-
-        if (this.log)
-        {
-            ColorNames colour = ColorNames.Yellow;
-            if (currentLocation != null && currentLocation != location)
-            {
-                colour = ColorNames.Green;
-
-                List<string> statesList = new(gameStates);
-                statesList.AddRange(this.roomStates);
-
-                string states = string.Join(",", statesList.ToArray());
-                string actions = string.Join(",", this.actions.ToArray());
-                string realTimeDuration = (realTime - this.realTime).ToString();
-                string gameTimeDuration = (gameTime - this.gameTime).ToString();
-                string tags = string.Join(",", this.tags.ToArray());
-
-                List<string> fields = new() { this.currentLocation, location, this.currentScene, scene, this.changingScene.ToString(), states, actions, realTimeDuration, gameTimeDuration, tags };
-
-                stream.WriteLine(string.Join("\t", fields));
-                stream.Flush();
-            }
-            if (this.announce)
-            {
-                List<string> locationParts = location.Split('_').ToList();
-                string announcement = locationParts.Select(s => AddSpacesToPascalCase(s)).Join(delimiter: ", ");
-                PseudoSingleton<InGameTextController>.instance.ShowText(announcement, this.GetPositionInCamera(position), color: colour, duration: 2f);
-            }
-
-            if (this.changingScene) this.roomStates.Clear();
-            this.currentLocation = location;
-        }
-        else this.currentLocation = null;
-
-        this.currentScene = scene;
-        this.gameTime = gameTime;
-        this.realTime = realTime;
-        this.changingScene = changingScene;
-
-        this.actions.Clear();
-        this.tags.Clear();
-    }
-
     public void ClearLocation()
     {
         this.currentLocation = null;
