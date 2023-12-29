@@ -46,7 +46,77 @@ public class MovementLogger : Logger
         this.log = log;
     }
 
+    public void LogLocation(string location, string scene, Vector3 position)
+    {
+        float realTime = Time.realtimeSinceStartup;
+        if (realTime < 0) realTime = 0;
+        GameplayTime gameplayTime = PseudoSingleton<Helpers>.instance.GetCurrentTimeData();
+        float gameTime = gameplayTime.hours * 60 * 60 + gameplayTime.minutes * 60 + gameplayTime.seconds;
+
+        this.LogLocation(location, scene, position, realTime, gameTime);
+    }
+
+    public void LogLocation(string location, string scene, Vector3 position, float realTime, float gameTime)
+    {
+        if (realTime < 0) realTime = 0;
+        if (gameTime < 0) gameTime = 0;
+
+        if (this.log)
+        {
+            ColorNames colour = ColorNames.Yellow;
+            if (currentLocation != null && currentLocation != location)
+            {
+                colour = ColorNames.Green;
+
+                List<string> statesList = new(gameStates);
+                statesList.AddRange(this.roomStates);
+
+                string states = string.Join(",", statesList.ToArray());
+                string actions = string.Join(",", this.actions.ToArray());
+                string realTimeDuration = (realTime - this.realTime).ToString();
+                string gameTimeDuration = (gameTime - this.gameTime).ToString();
+                string tags = string.Join(",", this.tags.ToArray());
+
+                List<string> fields = new() { this.currentLocation, location, this.currentScene, scene, this.changingScene.ToString(), states, actions, realTimeDuration, gameTimeDuration, tags };
+
+                stream.WriteLine(string.Join("\t", fields));
+                stream.Flush();
+            }
+            if (this.announce)
+            {
+                List<string> locationParts = location.Split('_').ToList();
+                string announcement = locationParts.Select(s => AddSpacesToPascalCase(s)).Join(delimiter: ", ");
+                PseudoSingleton<InGameTextController>.instance.ShowText(announcement, this.GetPositionInCamera(position), color: colour, duration: 2f);
+            }
+        }
+    }
+
     public void SetLocation(string location, string scene, Vector3 position, bool changingScene = false)
+    {
+        float realTime = Time.realtimeSinceStartup;
+        if (realTime < 0) realTime = 0;
+        GameplayTime gameplayTime = PseudoSingleton<Helpers>.instance.GetCurrentTimeData();
+        float gameTime = gameplayTime.hours * 60 * 60 + gameplayTime.minutes * 60 + gameplayTime.seconds;
+
+        this.LogLocation(location, scene, position, realTime, gameTime);
+
+        if (this.log)
+        {
+            if (this.changingScene) this.roomStates.Clear();
+            this.currentLocation = location;
+        }
+        else this.currentLocation = null;
+
+        this.currentScene = scene;
+        this.gameTime = gameTime;
+        this.realTime = realTime;
+        this.changingScene = changingScene;
+
+        this.actions.Clear();
+        this.tags.Clear();
+    }
+
+    private void SetLocationPrivate(string location, string scene, Vector3 position, bool changingScene = false)
     {
         float realTime = Time.realtimeSinceStartup;
         if (realTime < 0) realTime = 0;
@@ -60,16 +130,14 @@ public class MovementLogger : Logger
             {
                 colour = ColorNames.Green;
 
-                if (this.changingScene) this.roomStates.Clear();
-
                 List<string> statesList = new(gameStates);
                 statesList.AddRange(this.roomStates);
 
                 string states = string.Join(",", statesList.ToArray());
                 string actions = string.Join(",", this.actions.ToArray());
-                string tags = string.Join(",", this.tags.ToArray());
                 string realTimeDuration = (realTime - this.realTime).ToString();
                 string gameTimeDuration = (gameTime - this.gameTime).ToString();
+                string tags = string.Join(",", this.tags.ToArray());
 
                 List<string> fields = new() { this.currentLocation, location, this.currentScene, scene, this.changingScene.ToString(), states, actions, realTimeDuration, gameTimeDuration, tags };
 
@@ -83,6 +151,7 @@ public class MovementLogger : Logger
                 PseudoSingleton<InGameTextController>.instance.ShowText(announcement, this.GetPositionInCamera(position), color: colour, duration: 2f);
             }
 
+            if (this.changingScene) this.roomStates.Clear();
             this.currentLocation = location;
         }
         else this.currentLocation = null;
@@ -93,15 +162,12 @@ public class MovementLogger : Logger
         this.changingScene = changingScene;
 
         this.actions.Clear();
-        this.roomStates.Clear();
         this.tags.Clear();
     }
 
     public void ClearLocation()
     {
         this.currentLocation = null;
-        this.actions.Clear();
-        this.tags.Clear();
     }
 
     public void AddActions(Vector3 position, params PlayerAction[] actions)
