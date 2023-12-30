@@ -677,7 +677,7 @@ public class MovementLogger : Logger
         string oreCode = __instance.GetOreCode();
         string state = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Absent");
         string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, oreCode);
-        Plugin.Instance.movementLogger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.gameObject.transform.position, false);
+        Plugin.Instance.movementLogger.LogLocation(location, SceneManager.GetActiveScene().name, __instance.gameObject.transform.position);
         Plugin.Instance.movementLogger.AddRoomStates(__instance.gameObject.transform.position, state);
     }
 
