@@ -28,12 +28,14 @@ public class MovementLogger : Logger
     private bool changingScene;
     private float gameTime;
     private float realTime;
+
     public bool announce;
+    public bool uniqueAnnouncements;
     public bool log;
 
     private HashSet<PlayerAction> silentActions = new() { Walk, Run, StaminaRecharge, Attack, DashAttack, SpinAttack, Parry, SpinnerAttack, JumpOffSpinner, Grind, JumpUp };
 
-    public MovementLogger(string path, bool log, bool announce) : base(path)
+    public MovementLogger(string path, bool log, bool announce, bool uniqueAnnouncements) : base(path)
     {
         this.currentScene = null;
         this.currentLocation = null;
@@ -42,8 +44,10 @@ public class MovementLogger : Logger
         this.gameStates = new();
         this.roomStates = new();
         this.changingScene = false;
+
         this.announce = announce;
         this.log = log;
+        this.uniqueAnnouncements = uniqueAnnouncements;
     }
 
     public void LogLocation(string location, string scene, Vector3 position)
@@ -61,13 +65,12 @@ public class MovementLogger : Logger
         if (realTime < 0) realTime = 0;
         if (gameTime < 0) gameTime = 0;
 
-        if (this.log)
+        ColorNames colour = ColorNames.Yellow;
+        if (currentLocation != null && currentLocation != location)
         {
-            ColorNames colour = ColorNames.Yellow;
-            if (currentLocation != null && currentLocation != location)
+            colour = ColorNames.Green;
+            if (this.log)
             {
-                colour = ColorNames.Green;
-
                 List<string> statesList = new(gameStates);
                 statesList.AddRange(this.roomStates);
 
@@ -82,12 +85,13 @@ public class MovementLogger : Logger
                 stream.WriteLine(string.Join("\t", fields));
                 stream.Flush();
             }
-            if (this.announce)
-            {
-                List<string> locationParts = location.Split('_').ToList();
-                string announcement = locationParts.Select(s => AddSpacesToPascalCase(s)).Join(delimiter: ", ");
-                PseudoSingleton<InGameTextController>.instance.ShowText(announcement, this.GetPositionInCamera(position), color: colour, duration: 2f);
-            }
+        }
+
+        if (this.announce)
+        {
+            List<string> locationParts = location.Split('_').ToList();
+            string announcement = locationParts.Select(s => AddSpacesToPascalCase(s)).Join(delimiter: ", ");
+            PseudoSingleton<InGameTextController>.instance.ShowText(announcement, this.GetPositionInCamera(position), color: colour, duration: 2f);
         }
     }
 
@@ -100,11 +104,9 @@ public class MovementLogger : Logger
 
         this.LogLocation(location, scene, position, realTime, gameTime);
 
-        if (this.log)
-        {
-            if (this.changingScene) this.roomStates.Clear();
-            this.currentLocation = location;
-        }
+        if (this.changingScene) this.roomStates.Clear();
+
+        if (this.log) this.currentLocation = location;
         else this.currentLocation = null;
 
         this.currentScene = scene;
@@ -157,7 +159,7 @@ public class MovementLogger : Logger
                 announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
             }
         }
-        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Green, color2: ColorNames.Red);
+        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Orange, color2: ColorNames.Orange);
     }
 
     public void AddGameStates(Vector3 position, params string[] states)
@@ -171,7 +173,7 @@ public class MovementLogger : Logger
                 announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
             }
         }
-        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Green, color2: ColorNames.Red);
+        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Orange, color2: ColorNames.Orange);
     }
 
     public void RemoveGameStates(Vector3 position, params string[] states)
@@ -185,7 +187,7 @@ public class MovementLogger : Logger
                 announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
             }
         }
-        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Red);
+        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Blue);
     }
 
     public void ClearGameStates()

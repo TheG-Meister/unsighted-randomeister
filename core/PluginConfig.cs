@@ -10,6 +10,7 @@ public class PluginConfig
     public ConfigEntry<bool> chestLogging;
     public ConfigEntry<bool> movementLogging;
     public ConfigEntry<bool> movementLoggingAnnouncements;
+    public ConfigEntry<bool> movementLoggingUniqueAnnouncements;
 
     public const string CATEGORY_GENERAL = "General";
     public ConfigEntry<bool> useRandomeister;
@@ -47,8 +48,9 @@ public class PluginConfig
             Plugin.Instance.movementLogger.log = this.movementLogging.Value;
             if (!this.movementLogging.Value) Plugin.Instance.movementLogger.ClearLocation();
         };
-        this.movementLoggingAnnouncements = configFile.Bind(CATEGORY_DEVELOPER, "Movement logging announcements", true, "If movement logging is enabled, announces various various actions. Try to minimise white announcements, which report actions. Green announcements report new locations, yellow announcements report resets, and blue announcements report other useful information.");
+        this.movementLoggingAnnouncements = configFile.Bind(CATEGORY_DEVELOPER, "Movement logging announcements", true, "Announces various various actions performed by the player. Try to minimise white announcements, which report actions. Other announcement colours include green for a complete movement, yellow for a journey reset, and orange/blue for game and room states added/removed.");
         this.movementLoggingAnnouncements.SettingChanged += (o, e) => { Plugin.Instance.movementLogger.announce = this.movementLoggingAnnouncements.Value; };
+        this.movementLoggingUniqueAnnouncements = configFile.Bind(CATEGORY_DEVELOPER, "Log unique announcements only", true, "If announcements are enabled, this option prevents duplicate actions from appearing. Turn this off if you'd like a better idea of what alma is doing.");
 
         useRandomeister = configFile.Bind(CATEGORY_GENERAL, "Use randomeister", true, "Enable the use of the randomeister plugin. Turning this option off will disable all other randomisation options, and cause new story files to be completely unchanged. It does not disable other tweaks and hacks included in this plugin.");
 
