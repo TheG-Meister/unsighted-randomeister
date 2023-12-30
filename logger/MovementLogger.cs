@@ -128,7 +128,7 @@ public class MovementLogger : Logger
         List<string> announcements = new();
         foreach (PlayerAction action in actions)
         {
-            if (!this.actions.Contains(action))
+            if (!this.uniqueAnnouncements || !this.actions.Contains(action))
             {
                 this.actions.Add(action);
                 //if (!this.silentActions.Contains(action)) 
