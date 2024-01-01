@@ -287,7 +287,12 @@ public class MovementLogger : Logger
 
     public static string GetTransitionName(string scene, ScreenTransition transition)
     {
-        return String.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
+        return String.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), scene, transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
+    }
+
+    public static string GetTerminalName(string scene)
+    {
+        return String.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), scene, typeof(Terminal));
     }
 
     public static void PollActions()
@@ -319,14 +324,28 @@ public class MovementLogger : Logger
         {
             string location = MovementLogger.GetTransitionName(SceneManager.GetActiveScene().name, __instance);
 
-            __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name);
+            __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, MovementLogger.GetCameraPos(), false);
         }
     }
 
-    public static IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string location, string scene)
+    [HarmonyPatch(typeof(Terminal), nameof(Terminal.PlayersEnteredMyTrigger)), HarmonyPostfix]
+    public static void LogEnterTerminalTrigger(Terminal __instance)
+    {
+        string scene = SceneManager.GetActiveScene().name;
+        Plugin.Instance.movementLogger.SetLocation(MovementLogger.GetTerminalName(scene), scene, __instance.transform.position, false);
+    }
+
+    [HarmonyPatch(typeof(LevelController), nameof(LevelController.FinishRestartingPlayers)), HarmonyPostfix]
+    public static void LogTerminalSpawn(Terminal __instance, ref IEnumerator __result)
+    {
+        string scene = SceneManager.GetActiveScene().name;
+        __result = AddLocationChangeToEnumerator(__result, MovementLogger.GetTerminalName(scene), scene, __instance.transform.position, false);
+    }
+
+    public static IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string location, string scene, Vector3 position, bool changingScene)
     {
         while (original.MoveNext()) yield return original.Current;
-        Plugin.Instance.movementLogger.SetLocation(location, scene, MovementLogger.GetCameraPos(), false);
+        Plugin.Instance.movementLogger.SetLocation(location, scene, position, changingScene);
         MovementLogger.PollActions();
     }
 
