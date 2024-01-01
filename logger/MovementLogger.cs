@@ -104,7 +104,7 @@ public class MovementLogger : Logger
 
         this.LogLocation(location, scene, position, realTime, gameTime);
 
-        if (this.changingScene) this.roomStates.Clear();
+        if (this.changingScene && !changingScene) this.roomStates.Clear();
 
         if (this.log) this.currentLocation = location;
         else this.currentLocation = null;
