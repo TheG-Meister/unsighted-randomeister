@@ -46,6 +46,7 @@ internal class Hooks
     {
         Plugin.Instance.GetLogger().LogInfo("Game loaded");
         Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, false);
+        Plugin.Instance.movementLogger.ClearLocation();
     }
 
     [HarmonyPatch(typeof(NewGamePopup), nameof(NewGamePopup.NewGameCoroutine)), HarmonyPrefix]
@@ -53,6 +54,7 @@ internal class Hooks
     {
         Plugin.Instance.GetLogger().LogInfo("New Game");
         Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, true);
+        Plugin.Instance.movementLogger.ClearLocation();
     }
 
     [HarmonyPatch(typeof(RotatingSpiderBossRoom), nameof(RotatingSpiderBossRoom.Start)), HarmonyPrefix]
