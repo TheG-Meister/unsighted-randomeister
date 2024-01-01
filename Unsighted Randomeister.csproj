@@ -5,7 +5,7 @@
     <LangVersion>10.0</LangVersion>
     <RootNamespace>dev.gmeister.unsighted.randomeister</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <Nullable>warnings</Nullable>
     <BaseOutputPath>bin</BaseOutputPath>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
     <SignAssembly>False</SignAssembly>
