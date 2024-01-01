@@ -123,6 +123,12 @@ public class MovementLogger : Logger
         this.currentLocation = null;
     }
 
+    public void SetChangingScene(bool changingScene)
+    {
+        if (this.changingScene && !changingScene) this.roomStates.Clear();
+        this.changingScene = changingScene;
+    }
+
     public void AddActions(Vector3 position, params PlayerAction[] actions)
     {
         List<string> announcements = new();
@@ -335,11 +341,19 @@ public class MovementLogger : Logger
         Plugin.Instance.movementLogger.SetLocation(MovementLogger.GetTerminalName(scene), scene, __instance.transform.position, false);
     }
 
+    /*
     [HarmonyPatch(typeof(LevelController), nameof(LevelController.FinishRestartingPlayers)), HarmonyPostfix]
     public static void LogTerminalSpawn(Terminal __instance, ref IEnumerator __result)
     {
         string scene = SceneManager.GetActiveScene().name;
         __result = AddLocationChangeToEnumerator(__result, MovementLogger.GetTerminalName(scene), scene, __instance.transform.position, false);
+    }
+    */
+
+    [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.TeleportToLastTerminal)), HarmonyPostfix]
+    public static void SetChangingSceneOnTeleport(BasicCharacterController __instance)
+    {
+        Plugin.Instance.movementLogger.SetChangingScene(true);
     }
 
     public static IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string location, string scene, Vector3 position, bool changingScene)
