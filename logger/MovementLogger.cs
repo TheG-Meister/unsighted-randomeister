@@ -215,9 +215,10 @@ public class MovementLogger : Logger
 
     public Vector3 GetPositionInCamera(Vector3 pos)
     {
-        CameraSystem cameraSystem = PseudoSingleton<CameraSystem>.instance;
+        /*CameraSystem cameraSystem = PseudoSingleton<CameraSystem>.instance;
         if (!cameraSystem.PositionInsideCamera(pos, -2f)) return MovementLogger.GetCameraPos();
-        else return pos;
+        else return pos;*/
+        return pos;
     }
 
     public static string SnakeToPascalCase(string text)
@@ -696,12 +697,20 @@ public class MovementLogger : Logger
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Start)), HarmonyPostfix]
     public static void LogOreStart(MetalScrapOre __instance)
     {
+        Debug.Log($"Camera system transform - {PseudoSingleton<CameraSystem>.instance.transform.position}");
+        Debug.Log($"Camera system object transform - {PseudoSingleton<CameraSystem>.instance.gameObject.transform.position}");
+        Debug.Log($"Camera system mytransform - {PseudoSingleton<CameraSystem>.instance.myTransform.position}");
+        Debug.Log($"Camera system camera - {PseudoSingleton<CameraSystem>.instance.cameraView.transform.position}");
+        Debug.Log($"Camera system camera object - {PseudoSingleton<CameraSystem>.instance.cameraView.gameObject.transform.position}");
+        Vector3 p1pos = PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position;
+        Debug.Log($"p1 - {p1pos}");
+        Debug.Log($"p1 clamped - {PseudoSingleton<CameraSystem>.instance.ClampPosition(p1pos)}");
         string oreCode = __instance.GetOreCode();
         if (PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains(oreCode))
         {
-            Plugin.Instance.movementLogger.AddRoomStates(__instance.gameObject.transform.position, string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Absent"));
+            Plugin.Instance.movementLogger.AddRoomStates(PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position, string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Absent"));
         }
-        else Plugin.Instance.movementLogger.AddRoomStates(__instance.gameObject.transform.position, string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Present"));
+        else Plugin.Instance.movementLogger.AddRoomStates(PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position, string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Present"));
     }
 
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Destroyed)), HarmonyPostfix]
@@ -710,8 +719,8 @@ public class MovementLogger : Logger
         string oreCode = __instance.GetOreCode();
         string state = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Absent");
         string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, oreCode);
-        Plugin.Instance.movementLogger.LogLocation(location, SceneManager.GetActiveScene().name, __instance.gameObject.transform.position);
-        Plugin.Instance.movementLogger.AddRoomStates(__instance.gameObject.transform.position, state);
+        Plugin.Instance.movementLogger.LogLocation(location, SceneManager.GetActiveScene().name, PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position);
+        Plugin.Instance.movementLogger.AddRoomStates(PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position, state);
     }
 
 }
