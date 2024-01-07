@@ -39,6 +39,8 @@ internal class Hooks
     private static void AfterListsStart(Lists __instance)
     {
         Plugin.Instance.SetOriginalLists(__instance);
+
+        //foreach (NPCObject npc in __instance.npcDatabase.npcList) Debug.Log($"{npc.npcName}\t{String.Join(",", npc.itemsOnSale)}");
     }
 
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
