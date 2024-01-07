@@ -9,8 +9,8 @@ namespace dev.gmeister.unsighted.randomeister.unsighted;
 public class Items
 {
 
-    private List<ItemObject> itemObjects;
-    private Lists lists;
+    public List<ItemObject> itemObjects;
+    public Lists lists;
 
     public Items(Lists lists)
     {

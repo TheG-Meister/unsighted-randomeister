@@ -38,7 +38,7 @@ internal class Hooks
     [HarmonyPatch(typeof(Lists), nameof(Lists.Start)), HarmonyPostfix]
     private static void AfterListsStart(Lists __instance)
     {
-        Plugin.Instance.SetOriginalChestList(__instance);
+        Plugin.Instance.SetOriginalLists(__instance);
     }
 
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]

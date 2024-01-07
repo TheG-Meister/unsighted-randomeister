@@ -16,10 +16,11 @@ public class Plugin : BaseUnityPlugin
 
     public PluginConfig options;
 
-    public FileData? currentData;
+    public FileData currentData;
 
-    private ChestList? originalChestList;
-    public Items? items;
+    private ChestList originalChestList;
+    private Dictionary<string, float> originalItemPrices;
+    public Items items;
 
     public MovementLogger movementLogger;
     public ChestLogger chestLogger;
@@ -55,7 +56,7 @@ public class Plugin : BaseUnityPlugin
 
     public ManualLogSource GetLogger() { return Logger; }
 
-    public void SetOriginalChestList(Lists lists)
+    public void SetOriginalLists(Lists lists)
     {
         if (originalChestList == null)
         {
@@ -63,6 +64,8 @@ public class Plugin : BaseUnityPlugin
             this.items = new Items(lists);
             itemPools.Add(VANILLA_POOL, originalChestList.areas.SelectMany(areaChestList => areaChestList.chestList).Select(chest => chest.reward).ToList());
         }
+
+        this.originalItemPrices ??= ItemDatabases.GetItemPrices(lists);
     }
 
     public void ResetChestItems()
@@ -81,8 +84,6 @@ public class Plugin : BaseUnityPlugin
     {
         return items.OrderBy(item => random.NextDouble()).ToList();
     }
-
-
 
     public ChestList CreateChestList(Dictionary<string, string> chestItems)
     {
@@ -140,6 +141,12 @@ public class Plugin : BaseUnityPlugin
             {
                 settings.data.enemyDropTables = new EnemyDropRandomiser(enemyDropRandom, EnemyDropRandomiser.ITEM_POOL, EnemyDropRandomiser.ITEM_POOL_LENGTHS).Randomise();
             }
+
+            Random shopPriceRandom = new(random.Next());
+            if (settings.randomiseItemPrices)
+            {
+                settings.data.itemPrices = new ShopRandomiser().RandomiseItemPrices(shopPriceRandom);
+            }
         }
     }
 
@@ -155,6 +162,7 @@ public class Plugin : BaseUnityPlugin
     {
         currentData = data;
         SetChestItems(data.chestItems);
+        ItemDatabases.SetItemPrices(PseudoSingleton<Lists>.instance, data.itemPrices);
     }
 
     public void CreateVanillaStoryFile(FileDataIO fileDataIO)
@@ -167,6 +175,7 @@ public class Plugin : BaseUnityPlugin
     {
         currentData = null;
         ResetChestItems();
+        ItemDatabases.SetItemPrices(PseudoSingleton<Lists>.instance, this.originalItemPrices);
     }
 
     public void LogChestRandomisation(Dictionary<string, string> chestItems)

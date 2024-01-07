@@ -69,5 +69,40 @@ namespace dev.gmeister.unsighted.randomeister.Properties {
                 return ResourceManager.GetString("BasicLogic", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Key	1000	2000
+        ///MetalCog	150	300
+        ///WoodenBranch	30	60
+        ///MetalScrap	30	60
+        ///IronBar	150	300
+        ///Wires	150	300
+        ///IceCrystal	150	300
+        ///EletricCoil	150	300
+        ///FlammableOil	150	300
+        ///MeteorDust	1000	2000
+        ///EngineOil	30	60
+        ///Fuse	150	300
+        ///MeteorShard	8000	12000
+        ///JumpBoots	1000	2000
+        ///RocketBoots	0	0
+        ///Syringe	1000	2000
+        ///DisposableSyringe	150	300
+        ///Research	1000	2000
+        ///DarkEssence	1000	2000
+        ///PetBerry	30	60
+        ///Bolts1	25	25
+        ///Bolts2	100	100
+        ///Bolts3	500	500
+        ///Bolts4	1500	1500
+        ///TreasurePhotos	1000	2000
+        ///Shovel	1000	2000
+        ///GoldenShovel	1000	 [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string ItemPrices {
+            get {
+                return ResourceManager.GetString("ItemPrices", resourceCulture);
+            }
+        }
     }
 }

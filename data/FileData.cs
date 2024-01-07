@@ -20,6 +20,7 @@ public class FileData
     public bool chestRadarMoreOften = false;
 
     public Dictionary<string, DropController> enemyDropTables = new();
+    public Dictionary<string, float> itemPrices = new();
 
     public FileData(Dictionary<string, string> chestItems)
     {
