@@ -21,6 +21,7 @@ public class FileData
 
     public Dictionary<string, DropController> enemyDropTables = new();
     public Dictionary<string, float> itemPrices = new();
+    public Dictionary<string, List<string>> shopListings = new();
 
     public FileData(Dictionary<string, string> chestItems)
     {

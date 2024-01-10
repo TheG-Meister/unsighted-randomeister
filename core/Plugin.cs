@@ -20,6 +20,7 @@ public class Plugin : BaseUnityPlugin
 
     private ChestList originalChestList;
     private Dictionary<string, float> originalItemPrices;
+    private Dictionary<string, List<string>> originalShopListings;
     public Items items;
 
     public MovementLogger movementLogger;
@@ -66,6 +67,7 @@ public class Plugin : BaseUnityPlugin
         }
 
         this.originalItemPrices ??= ItemDatabases.GetItemPrices(lists);
+        this.originalShopListings ??= NPCDataTools.GetNPCShopListings(lists);
     }
 
     public void ResetChestItems()
@@ -147,6 +149,12 @@ public class Plugin : BaseUnityPlugin
             {
                 settings.data.itemPrices = new ShopRandomiser().RandomiseItemPrices(shopPriceRandom);
             }
+
+            Random shopListingsRandom = new(random.Next());
+            if (settings.randomiseShopListings)
+            {
+                settings.data.shopListings = new ShopRandomiser().RandomiseShopListings(shopListingsRandom);
+            }
         }
     }
 
@@ -163,6 +171,7 @@ public class Plugin : BaseUnityPlugin
         currentData = data;
         SetChestItems(data.chestItems);
         ItemDatabases.SetItemPrices(PseudoSingleton<Lists>.instance, data.itemPrices);
+        NPCDataTools.SetNPCShopListings(PseudoSingleton<Lists>.instance, data.shopListings);
     }
 
     public void CreateVanillaStoryFile(FileDataIO fileDataIO)
@@ -176,6 +185,7 @@ public class Plugin : BaseUnityPlugin
         currentData = null;
         ResetChestItems();
         ItemDatabases.SetItemPrices(PseudoSingleton<Lists>.instance, this.originalItemPrices);
+        NPCDataTools.SetNPCShopListings(PseudoSingleton<Lists>.instance, this.originalShopListings);
     }
 
     public void LogChestRandomisation(Dictionary<string, string> chestItems)

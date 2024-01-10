@@ -104,5 +104,15 @@ namespace dev.gmeister.unsighted.randomeister.Properties {
                 return ResourceManager.GetString("ItemPrices", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Blacksmith2NPC	BlasterBlueprint,SpinnerBlueprint,Hookshot1Blueprint,AutomaticBlasterBlueprint,ShotgunBlueprint,FlamethrowerBlueprint,IcethrowerBlueprint,GranadeLauncherBlueprint,IceGranadeBlueprint,GranadeShotgunBlueprint,FlamebladeBlueprint,WarAxeBlueprint,FireAxeBlueprint,IronStarBlueprint,IceStarBlueprint,FireStarBlueprint,ThunderStarBlueprint,JumpBootsBlueprint	3	6
+        ///GeneralShopNPC	Key,MetalCog,WoodenBranch,MetalScrap,IronBar,Wires,IceCrystal,EletricCoil,FlammableOil,EngineOil,Fuse,DisposableSyringe,Dark [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string NPCShops {
+            get {
+                return ResourceManager.GetString("NPCShops", resourceCulture);
+            }
+        }
     }
 }
