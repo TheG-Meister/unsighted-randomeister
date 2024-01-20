@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using dev.gmeister.unsighted.randomeister.core;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,7 +48,14 @@ public class MetalScrapOreHooks
 
     public static string ReplaceMaterialCrystalItem(MetalScrapOre crystal, string item)
     {
-        return item;
+        if (Plugin.Instance == null || Plugin.Instance.currentData == null) return item;
+        else
+        {
+            Dictionary<string, string> crystalItems = Plugin.Instance.currentData.crystalItems;
+            string code = crystal.GetOreCode();
+            if (crystalItems.ContainsKey(code)) return crystalItems[code];
+            else return item;
+        }
     }
 
 }
