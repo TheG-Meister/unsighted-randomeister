@@ -19,10 +19,10 @@ public class FileData
     public bool newChestRadar = false;
     public bool chestRadarMoreOften = false;
 
-    public Dictionary<string, DropController> enemyDropTables = new();
-    public Dictionary<string, float> itemPrices = new();
-    public Dictionary<string, List<string>> shopListings = new();
-    public Dictionary<string, string> crystalItems = new();
+    public Dictionary<string, DropController> enemyDropTables = null;
+    public Dictionary<string, float> itemPrices = null;
+    public Dictionary<string, List<string>> shopListings = null;
+    public Dictionary<string, string> crystalItems = null;
 
     public FileData(Dictionary<string, string> chestItems)
     {

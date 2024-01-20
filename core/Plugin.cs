@@ -149,20 +149,21 @@ public class Plugin : BaseUnityPlugin
             Random shopPriceRandom = new(random.Next());
             if (settings.randomiseItemPrices)
             {
-                settings.data.itemPrices = new ShopRandomiser().RandomiseItemPrices(shopPriceRandom);
+                settings.data.itemPrices = new ShopRandomiser().RandomiseItemPrices(shopPriceRandom, this.originalItemPrices);
             }
 
             Random shopListingsRandom = new(random.Next());
             if (settings.randomiseShopListings)
             {
-                settings.data.shopListings = new ShopRandomiser().RandomiseShopListings(shopListingsRandom);
+                settings.data.shopListings = new ShopRandomiser().RandomiseShopListings(shopListingsRandom, this.originalShopListings);
             }
         }
     }
 
     public void PrepareFileLoad()
     {
-        PseudoSingleton<Helpers>.instance.temporaryBlueprintItemList.Clear();
+        Helpers helpers = PseudoSingleton<Helpers>.instance;
+        helpers.temporaryBlueprintItemList.Clear();
     }
 
     public void CreateStoryFileRandomiser(FileDataIO fileDataIO, FileSettings settings)
@@ -175,11 +176,16 @@ public class Plugin : BaseUnityPlugin
 
     public void LoadStoryFileRandomiser(FileData data)
     {
-        this.PrepareFileLoad();
         currentData = data;
         SetChestItems(data.chestItems);
-        ItemDatabases.SetItemPrices(PseudoSingleton<Lists>.instance, data.itemPrices);
-        NPCDataTools.SetNPCShopListings(PseudoSingleton<Lists>.instance, data.shopListings);
+
+        Dictionary<string, float> itemPrices = data.itemPrices ?? this.originalItemPrices;
+        ItemDatabases.SetItemPrices(PseudoSingleton<Lists>.instance, itemPrices);
+
+        Dictionary<string, List<string>> shopListings = data.shopListings ?? this.originalShopListings;
+        NPCDataTools.SetNPCShopListings(PseudoSingleton<Lists>.instance, shopListings);
+
+        this.PrepareFileLoad();
     }
 
     public void CreateVanillaStoryFile(FileDataIO fileDataIO)
@@ -190,11 +196,11 @@ public class Plugin : BaseUnityPlugin
 
     public void LoadVanillaStoryFile()
     {
-        this.PrepareFileLoad();
         currentData = null;
         ResetChestItems();
         ItemDatabases.SetItemPrices(PseudoSingleton<Lists>.instance, this.originalItemPrices);
         NPCDataTools.SetNPCShopListings(PseudoSingleton<Lists>.instance, this.originalShopListings);
+        this.PrepareFileLoad();
     }
 
     public void LogChestRandomisation(Dictionary<string, string> chestItems)

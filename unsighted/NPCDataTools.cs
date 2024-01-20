@@ -21,12 +21,13 @@ public class NPCDataTools
         return result;
     }
 
-    public static void SetNPCShopListings(Lists lists, Dictionary<string, List<string>> listings)
+    public static void SetNPCShopListings(Lists lists, Dictionary<string, List<string>> listings, Dictionary<string, List<string>> backups = null)
     {
-        foreach (NPCObject npc in lists.npcDatabase.npcList) if (listings.ContainsKey(npc.npcName))
-            {
-                npc.itemsOnSale = listings[npc.npcName];
-            }
+        foreach (NPCObject npc in lists.npcDatabase.npcList)
+        {
+            if (listings.ContainsKey(npc.npcName)) npc.itemsOnSale = listings[npc.npcName];
+            else if (backups != null && backups.ContainsKey(npc.npcName)) npc.itemsOnSale = backups[npc.npcName];
+        }
     }
 
 }

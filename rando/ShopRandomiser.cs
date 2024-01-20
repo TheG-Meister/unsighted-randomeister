@@ -79,28 +79,28 @@ public class ShopRandomiser
         return result;
     }
 
-    public Dictionary<string, float> RandomiseItemPrices(Random random)
+    public Dictionary<string, float> RandomiseItemPrices(Random random, Dictionary<string, float> original)
     {
-        Dictionary<string, float> result = new();
+        Dictionary<string, float> result = new(original);
 
         foreach (ItemPriceRange priceRange in itemPriceRanges)
         {
-            result.Add(priceRange.item, priceRange.minPrice + random.Next(priceRange.maxPrice - priceRange.minPrice + 1));
+            result[priceRange.item] = priceRange.minPrice + random.Next(priceRange.maxPrice - priceRange.minPrice + 1);
         }
 
         return result;
     }
 
-    public Dictionary<string, List<string>> RandomiseShopListings(Random random)
+    public Dictionary<string, List<string>> RandomiseShopListings(Random random, Dictionary<string, List<string>> original)
     {
-        Dictionary<string, List<string>> result = new();
+        Dictionary<string, List<string>> result = new(original);
 
         foreach (NPCShop npc in npcShops)
         {
             Random npcRandom = new(random.Next());
 
             int size = npc.minSize + random.Next(npc.maxSize - npc.minSize + 1);
-            result.Add(npc.name, npc.itemPool.OrderBy(s => npcRandom.NextDouble()).ToList().GetRange(0, size));
+            result[npc.name] = npc.itemPool.OrderBy(s => npcRandom.NextDouble()).ToList().GetRange(0, size);
         }
 
         return result;

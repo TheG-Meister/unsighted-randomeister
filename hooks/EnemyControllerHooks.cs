@@ -20,7 +20,7 @@ public class EnemyControllerHooks
         if (Plugin.Instance != null && Plugin.Instance.currentData != null)
         {
             Dictionary<string, DropController> dropTables = Plugin.Instance.currentData.enemyDropTables;
-            if (dropTables.ContainsKey(__instance.GetType().Name))
+            if (dropTables != null && dropTables.ContainsKey(__instance.GetType().Name))
             {
                 __instance.dropController = dropTables[__instance.GetType().Name];
             }
