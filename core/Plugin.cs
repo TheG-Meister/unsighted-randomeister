@@ -160,6 +160,11 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
+    public void PrepareFileLoad()
+    {
+        PseudoSingleton<Helpers>.instance.temporaryBlueprintItemList.Clear();
+    }
+
     public void CreateStoryFileRandomiser(FileDataIO fileDataIO, FileSettings settings)
     {
         SetDataFromSettings(settings);
@@ -170,6 +175,7 @@ public class Plugin : BaseUnityPlugin
 
     public void LoadStoryFileRandomiser(FileData data)
     {
+        this.PrepareFileLoad();
         currentData = data;
         SetChestItems(data.chestItems);
         ItemDatabases.SetItemPrices(PseudoSingleton<Lists>.instance, data.itemPrices);
@@ -184,6 +190,7 @@ public class Plugin : BaseUnityPlugin
 
     public void LoadVanillaStoryFile()
     {
+        this.PrepareFileLoad();
         currentData = null;
         ResetChestItems();
         ItemDatabases.SetItemPrices(PseudoSingleton<Lists>.instance, this.originalItemPrices);
