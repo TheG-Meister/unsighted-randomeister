@@ -122,6 +122,8 @@ public class Plugin : BaseUnityPlugin
             chestItemPool = options.chestItemPool.Value,
             randomiseChests = options.randomiseChests.Value,
             randomiseEnemyDrops = options.randomiseEnemyDrops.Value,
+            randomiseItemPrices = options.randomiseItemPrices.Value,
+            randomiseShopListings = options.randomiseShopItems.Value,
         };
     }
 
