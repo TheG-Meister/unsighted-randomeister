@@ -37,6 +37,7 @@ public class PluginConfig
     public ConfigEntry<bool> randomiseEnemyDrops;
     public ConfigEntry<bool> randomiseShopItems;
     public ConfigEntry<bool> randomiseItemPrices;
+    public ConfigEntry<bool> randomiseCrystalItems;
 
     public const string CATEGORY_CUSTOMISER = "Customisation";
 
@@ -75,5 +76,6 @@ public class PluginConfig
         this.randomiseEnemyDrops = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise enemy drops", true, "Make each enemy time drop a single, random crafting material after a fixed number of kills");
         this.randomiseShopItems = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise shop items", true, "Make each shopkeeper sell a random number of random items. All shopkeepers have an item theme.");
         this.randomiseItemPrices = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise item prices", true, "Make all items have random prices. Each item has a defined range of possible prices.");
+        this.randomiseCrystalItems = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise material crystal items", true, "Make all material crystal drop random items. All crystals in the same area will drop the same material.");
     }
 }

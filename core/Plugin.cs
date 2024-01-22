@@ -114,6 +114,7 @@ public class Plugin : BaseUnityPlugin
             removeFragileOnJumpBootsChest = options.removeFragileOnJumpBootsChest.Value,
             newChestRadar = options.newChestRadar.Value,
             chestRadarMoreOften = options.chestRadarMoreOften.Value,
+            crystalItemsPerArea = true,
         };
 
         return new(true, data)
@@ -124,6 +125,7 @@ public class Plugin : BaseUnityPlugin
             randomiseEnemyDrops = options.randomiseEnemyDrops.Value,
             randomiseItemPrices = options.randomiseItemPrices.Value,
             randomiseShopListings = options.randomiseShopItems.Value,
+            randomiseCrystalItems = options.randomiseCrystalItems.Value,
         };
     }
 
