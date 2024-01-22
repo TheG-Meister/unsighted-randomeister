@@ -18,6 +18,7 @@ public class FileData
 
     public bool newChestRadar = false;
     public bool chestRadarMoreOften = false;
+    public bool crystalItemsPerArea = true;
 
     public Dictionary<string, DropController> enemyDropTables = null;
     public Dictionary<string, float> itemPrices = null;

@@ -9,7 +9,8 @@ namespace dev.gmeister.unsighted.randomeister.rando;
 public class MaterialCrystalRandomiser
 {
 
-    public static readonly List<string> ITEM_POOL = new List<string>() { "MetalCog", "WoodenBranch", "MetalScrap", "IronBar", "Wires", "IceCrystal", "EletricCoil", "FlammableOil", "EngineOil", "Fuse" };
+    public static readonly List<string> AREAS = new() { "Lab", "Downtown", "CraterTower", "Sewers", "Garden", "GardenCaves", "Aquarium", "Museum", "Suburbs", "SuburbsRails", "Factory" };
+    public static readonly List<string> ITEM_POOL = new() { "MetalCog", "WoodenBranch", "MetalScrap", "IronBar", "Wires", "IceCrystal", "EletricCoil", "FlammableOil", "EngineOil", "Fuse" };
 
     public Dictionary<string, string> RandomiseCrystalItems(Random random, List<string> crystals, List<string> items)
     {

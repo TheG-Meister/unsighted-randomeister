@@ -53,8 +53,21 @@ public class MetalScrapOreHooks
         {
             Dictionary<string, string> crystalItems = Plugin.Instance.currentData.crystalItems;
             string code = crystal.GetOreCode();
-            if (crystalItems != null && crystalItems.ContainsKey(code)) return crystalItems[code];
-            else return item;
+            string area = PseudoSingleton<MapManager>.instance.areaName;
+
+            if (crystalItems != null)
+            {
+                if (Plugin.Instance.currentData.crystalItemsPerArea)
+                {
+                    if (crystalItems.ContainsKey(area)) return crystalItems[area];
+                }
+                else
+                {
+                    if (crystalItems.ContainsKey(code)) return crystalItems[code];
+                }
+            }
+            
+            return item;
         }
     }
 

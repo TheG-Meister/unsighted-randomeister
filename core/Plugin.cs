@@ -157,6 +157,17 @@ public class Plugin : BaseUnityPlugin
             {
                 settings.data.shopListings = new ShopRandomiser().RandomiseShopListings(shopListingsRandom, this.originalShopListings);
             }
+
+            Random crystalRandom = new(random.Next());
+            if (settings.randomiseCrystalItems)
+            {
+                Dictionary<string, string> result;
+
+                if (settings.data.crystalItemsPerArea) result = new MaterialCrystalRandomiser().RandomiseCrystalItems(crystalRandom, MaterialCrystalRandomiser.AREAS, MaterialCrystalRandomiser.ITEM_POOL);
+                else throw new ApplicationException("Individual material crystal item randomisation is currently unsupported.");
+
+                settings.data.crystalItems = result;
+            }
         }
     }
 
