@@ -15,6 +15,7 @@ public class FileData
     public int seed = 0;
     public Dictionary<string, string> chestItems;
     public bool removeFragileOnJumpBootsChest = false;
+    public bool canCraftWithoutBlueprint = true;
 
     public bool newChestRadar = false;
     public bool chestRadarMoreOften = false;

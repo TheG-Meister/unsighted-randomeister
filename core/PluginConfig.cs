@@ -17,6 +17,7 @@ public class PluginConfig
 
     public const string CATEGORY_PATCHES = "Patches";
     public ConfigEntry<bool> removeFragileOnJumpBootsChest;
+    public ConfigEntry<bool> canCraftWithoutBlueprint;
 
     public const string CATEGORY_CHEST_RADAR = "Chest Radar";
     public ConfigEntry<bool> newChestRadar;
@@ -59,6 +60,7 @@ public class PluginConfig
         useRandomeister = configFile.Bind(CATEGORY_GENERAL, "Use randomeister", true, "Enable the use of the randomeister plugin. Turning this option off will disable all other randomisation options, and cause new story files to be completely unchanged. It does not disable other tweaks and hacks included in this plugin.");
 
         removeFragileOnJumpBootsChest = configFile.Bind(CATEGORY_PATCHES, "Fix Jump Boots chest", true, "Prevents the item in the jump boots chest from being removed from the player upon death or quit out. This can delete entire stacks of items but lets the item in the chest be collected over and over.");
+        this.canCraftWithoutBlueprint = configFile.Bind(CATEGORY_PATCHES, "Allow crafting without blueprint", false, "Allows crafting while the player does not own a blueprint. Disable to force a blueprint requirement before crafting.");
 
         newChestRadar = configFile.Bind(CATEGORY_CHEST_RADAR, "Enable chest radar", true, "Every chest now has a radar displaying it's item, similar to the meteor dust radar.");
         chestRadarMoreOften = configFile.Bind(CATEGORY_CHEST_RADAR, "Radar in combat & cutscenes", true, "Enables the chest radar during combat and cutscenes.");

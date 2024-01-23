@@ -115,6 +115,7 @@ public class Plugin : BaseUnityPlugin
             newChestRadar = options.newChestRadar.Value,
             chestRadarMoreOften = options.chestRadarMoreOften.Value,
             crystalItemsPerArea = true,
+            canCraftWithoutBlueprint = options.canCraftWithoutBlueprint.Value,
         };
 
         return new(true, data)
