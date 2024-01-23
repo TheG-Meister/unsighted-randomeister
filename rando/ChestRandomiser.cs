@@ -10,7 +10,7 @@ using static dev.gmeister.unsighted.randomeister.unsighted.AbilityTools;
 
 namespace dev.gmeister.unsighted.randomeister.rando;
 
-public class Randomiser
+public class ChestRandomiser
 {
 
     private readonly Random random;
@@ -27,7 +27,7 @@ public class Randomiser
     Dictionary<HashSet<Ability>, List<ChestObject>> prologueAreas;
     Dictionary<HashSet<Ability>, List<ChestObject>> mainAreas;
 
-    public Randomiser(Random random, ChestList chestList, List<string> itemPool)
+    public ChestRandomiser(Random random, ChestList chestList, List<string> itemPool)
     {
         this.random = new(random.Next());
         this.chestList = Chests.CloneChestList(chestList);

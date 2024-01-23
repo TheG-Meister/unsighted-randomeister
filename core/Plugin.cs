@@ -140,7 +140,7 @@ public class Plugin : BaseUnityPlugin
             Random chestRandom = new(random.Next());
             if (settings.randomiseChests)
             {
-                settings.data.chestItems = new Randomiser(chestRandom, this.originalChestList, GetItemPool(settings.chestItemPool)).Randomise();
+                settings.data.chestItems = new ChestRandomiser(chestRandom, this.originalChestList, GetItemPool(settings.chestItemPool)).Randomise();
             }
 
             Random enemyDropRandom = new(random.Next());
