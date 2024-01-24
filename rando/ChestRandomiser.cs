@@ -98,13 +98,13 @@ public class ChestRandomiser
         {
             if (itemPool.Count < chestPool.Count) throw new InvalidOperationException("There are less items than chests");
 
-            string? nextItem = null;
             List<ChestObject> accessibleEmptyChests = chestPool.FindAll(chest => accessibleChests.Contains(chest)).ToList();
             if (accessibleEmptyChests.Count < 1) throw new InvalidOperationException("No chests are available");
 
             HashSet<Ability> neededAbilities = new(requiredAbilities.Except(currentAbilities).ToList());
             bool nextHookshotMakesDouble = !currentAbilities.Contains(DoubleHook) && currentAbilities.Contains(Hook);
 
+            string nextItem;
             if (neededAbilities.Count < 1) nextItem = itemPool[0];
             else nextItem = itemPool.Find(item => itemAbilities.ContainsKey(item) && (itemAbilities[item].Intersect(neededAbilities).Any() || (nextHookshotMakesDouble && item == "Hookshot1")));
 
