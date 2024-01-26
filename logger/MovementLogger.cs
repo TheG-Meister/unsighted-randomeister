@@ -42,6 +42,8 @@ public class MovementLogger : Logger
     public bool uniqueAnnouncements;
     public bool log;
     public float lastAnnouncementTime;
+    public float announcementDelay;
+    public float cameraPadding;
     public List<Announcement> announcements;
 
     private string currentScene;
@@ -57,7 +59,7 @@ public class MovementLogger : Logger
 
     private HashSet<PlayerAction> silentActions = new() { Walk, Run, StaminaRecharge, Attack, DashAttack, SpinAttack, Parry, SpinnerAttack, JumpOffSpinner, Grind, JumpUp };
 
-    public MovementLogger(string path, bool log, bool announce, bool uniqueAnnouncements) : base(path)
+    public MovementLogger(string path, bool log, bool announce, bool uniqueAnnouncements, float announcementDelay, float cameraPadding) : base(path)
     {
         this.currentScene = null;
         this.currentLocation = null;
@@ -72,6 +74,8 @@ public class MovementLogger : Logger
         this.uniqueAnnouncements = uniqueAnnouncements;
         this.lastAnnouncementTime = float.MinValue;
         this.announcements = new();
+        this.announcementDelay = 0.33333f;
+        this.cameraPadding = -4f;
     }
 
     public void LogLocation(string location, string scene, Vector3 position)
@@ -146,7 +150,7 @@ public class MovementLogger : Logger
     public void Announce()
     {
         float time = Time.realtimeSinceStartup;
-        if (this.announce && !this.changingScene && time - this.lastAnnouncementTime > 0.3333333f && this.announcements.Count > 0)
+        if (this.announce && !this.changingScene && time - this.lastAnnouncementTime > this.announcementDelay && this.announcements.Count > 0)
         {
             Announcement first = this.announcements[0];
             ColorNames colour = this.announcements[0].colour;
@@ -276,10 +280,9 @@ public class MovementLogger : Logger
 
     public Vector3 GetPositionInCamera(Vector3 pos)
     {
-        /*CameraSystem cameraSystem = PseudoSingleton<CameraSystem>.instance;
-        if (!cameraSystem.PositionInsideCamera(pos, -2f)) return MovementLogger.GetCameraPos();
-        else return pos;*/
-        return pos;
+        CameraSystem cameraSystem = PseudoSingleton<CameraSystem>.instance;
+        if (!cameraSystem.PositionInsideCamera(pos, this.cameraPadding)) return MovementLogger.GetCameraPos();
+        else return pos;
     }
 
     public static string SnakeToPascalCase(string text)

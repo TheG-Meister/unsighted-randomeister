@@ -11,6 +11,8 @@ public class PluginConfig
     public ConfigEntry<bool> movementLogging;
     public ConfigEntry<bool> movementLoggingAnnouncements;
     public ConfigEntry<bool> movementLoggingUniqueAnnouncements;
+    public ConfigEntry<float> announcementCameraPadding;
+    public ConfigEntry<float> announcementDelay;
 
     public const string CATEGORY_GENERAL = "General";
     public ConfigEntry<bool> useRandomeister;
@@ -56,6 +58,10 @@ public class PluginConfig
         this.movementLoggingAnnouncements.SettingChanged += (o, e) => { Plugin.Instance.movementLogger.announce = this.movementLoggingAnnouncements.Value; };
         this.movementLoggingUniqueAnnouncements = configFile.Bind(CATEGORY_DEVELOPER, "Log unique announcements only", true, "If announcements are enabled, this option prevents duplicate actions from appearing. Turn this off if you'd like a better idea of what alma is doing.");
         this.movementLoggingUniqueAnnouncements.SettingChanged += (o, e) => { Plugin.Instance.movementLogger.uniqueAnnouncements = this.movementLoggingUniqueAnnouncements.Value; };
+        this.announcementCameraPadding = configFile.Bind(CATEGORY_DEVELOPER, "Announcement camera padding", -4f, "The amount of padding for announcements to keep them on screen. Set to values below zero to move announcements towards the camera.");
+        this.announcementCameraPadding.SettingChanged += (o, e) => { Plugin.Instance.movementLogger.cameraPadding = this.announcementCameraPadding.Value; };
+        this.announcementDelay = configFile.Bind(CATEGORY_DEVELOPER, "Announcement delay", 0.333333f, "Delay between announcements in seconds");
+        this.announcementDelay.SettingChanged += (o, e) => { Plugin.Instance.movementLogger.announcementDelay = this.announcementDelay.Value; };
 
         useRandomeister = configFile.Bind(CATEGORY_GENERAL, "Use randomeister", true, "Enable the use of the randomeister plugin. Turning this option off will disable all other randomisation options, and cause new story files to be completely unchanged. It does not disable other tweaks and hacks included in this plugin.");
 
