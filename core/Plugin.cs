@@ -50,6 +50,11 @@ public class Plugin : BaseUnityPlugin
         new Harmony(GUID).PatchAll();
     }
 
+    public void Update()
+    {
+        this.movementLogger.Announce();
+    }
+
     public void OnDisable()
     {
         this.movementLogger.Dispose();

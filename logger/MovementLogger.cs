@@ -12,6 +12,7 @@ using System.Linq;
 using System.Collections;
 using System.Reflection.Emit;
 using static System.Runtime.CompilerServices.RuntimeHelpers;
+using static dev.gmeister.unsighted.randomeister.logger.MovementLogger;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
@@ -19,9 +20,29 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementLogger : Logger
 {
 
+    public class Announcement
+    {
+        public string text;
+        public ColorNames colour;
+        public Vector3 position;
+
+        public Announcement()
+        {
+        }
+
+        public Announcement(string text, ColorNames colour, Vector3 position)
+        {
+            this.text = text;
+            this.colour = colour;
+            this.position = position;
+        }
+    }
+
     public bool announce;
     public bool uniqueAnnouncements;
     public bool log;
+    public float lastAnnouncementTime;
+    public List<Announcement> announcements;
 
     private string currentScene;
     private string currentLocation;
@@ -49,6 +70,8 @@ public class MovementLogger : Logger
         this.announce = announce;
         this.log = log;
         this.uniqueAnnouncements = uniqueAnnouncements;
+        this.lastAnnouncementTime = float.MinValue;
+        this.announcements = new();
     }
 
     public void LogLocation(string location, string scene, Vector3 position)
@@ -92,7 +115,8 @@ public class MovementLogger : Logger
         {
             List<string> locationParts = location.Split('_').ToList();
             string announcement = locationParts.Select(s => AddSpacesToPascalCase(s)).Join(delimiter: ", ");
-            PseudoSingleton<InGameTextController>.instance.ShowText(announcement, this.GetPositionInCamera(position), color: colour, duration: 2f);
+            this.announcements.Add(new(announcement, colour, position));
+            //PseudoSingleton<InGameTextController>.instance.ShowText(announcement, this.GetPositionInCamera(position), color: colour, duration: 2f);
         }
     }
 
@@ -119,6 +143,30 @@ public class MovementLogger : Logger
         this.tags.Clear();
     }
 
+    public void Announce()
+    {
+        float time = Time.realtimeSinceStartup;
+        if (this.announce && !this.changingScene && time - this.lastAnnouncementTime > 0.3333333f && this.announcements.Count > 0)
+        {
+            Announcement first = this.announcements[0];
+            ColorNames colour = this.announcements[0].colour;
+            List<string> announcements = new();
+            List<Announcement> removed = new();
+
+            foreach (Announcement announcement in this.announcements)
+            {
+                if (!announcement.colour.Equals(colour)) break;
+                announcements.Add(announcement.text);
+                removed.Add(announcement);
+            }
+
+            foreach (Announcement announcement in removed) this.announcements.Remove(announcement);
+
+            this.lastAnnouncementTime = time;
+            PseudoSingleton<InGameTextController>.instance.ShowText(string.Join("\n", announcements.Distinct().ToList()), this.GetPositionInCamera(first.position), color: colour, duration: 2f);
+        }
+    }
+
     public void ClearLocation()
     {
         this.currentLocation = null;
@@ -142,7 +190,10 @@ public class MovementLogger : Logger
                 announcements.Add(MovementLogger.AddSpacesToPascalCase(action.ToString()));
             }
         }
-        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f);
+        if (this.announce && announcements.Count > 0)
+            foreach (string announcement in announcements)
+                this.announcements.Add(new(announcement, ColorNames.White, position));
+            //PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f);
     }
 
     public void AddActions(BasicCharacterController controller, params PlayerAction[] actions)
@@ -166,7 +217,10 @@ public class MovementLogger : Logger
                 announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
             }
         }
-        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Orange, color2: ColorNames.Orange);
+        if (this.announce && announcements.Count > 0)
+            foreach (string announcement in announcements)
+                this.announcements.Add(new(announcement, ColorNames.Orange, position));
+        //PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Orange, color2: ColorNames.Orange);
     }
 
     public void AddGameStates(Vector3 position, params string[] states)
@@ -180,7 +234,10 @@ public class MovementLogger : Logger
                 announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
             }
         }
-        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Orange, color2: ColorNames.Orange);
+        if (this.announce && announcements.Count > 0)
+            foreach (string announcement in announcements)
+                this.announcements.Add(new(announcement, ColorNames.Orange, position));
+        //PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Orange, color2: ColorNames.Orange);
     }
 
     public void RemoveGameStates(Vector3 position, params string[] states)
@@ -194,7 +251,10 @@ public class MovementLogger : Logger
                 announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
             }
         }
-        if (this.announce && announcements.Count > 0) PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Blue);
+        if (this.announce && announcements.Count > 0)
+            foreach (string announcement in announcements)
+                this.announcements.Add(new(announcement, ColorNames.Blue, position));
+        //PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Blue);
     }
 
     public void ClearGameStates()
