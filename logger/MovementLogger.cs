@@ -19,9 +19,12 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementLogger : Logger
 {
 
-    private string? currentScene;
-    private string? currentLocation;
-    private readonly HashSet<PlayerAction> actions;
+    public bool announce;
+    public bool uniqueAnnouncements;
+    public bool log;
+
+    private string currentScene;
+    private string currentLocation;
     private readonly HashSet<string> tags;
     private readonly HashSet<string> gameStates;
     private readonly HashSet<string> roomStates;
@@ -29,9 +32,7 @@ public class MovementLogger : Logger
     private float gameTime;
     private float realTime;
 
-    public bool announce;
-    public bool uniqueAnnouncements;
-    public bool log;
+    private readonly HashSet<PlayerAction> actions;
 
     private HashSet<PlayerAction> silentActions = new() { Walk, Run, StaminaRecharge, Attack, DashAttack, SpinAttack, Parry, SpinnerAttack, JumpOffSpinner, Grind, JumpUp };
 
