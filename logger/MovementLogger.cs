@@ -663,6 +663,7 @@ public class MovementLogger : Logger
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.HookshotCoroutine)), HarmonyPrefix]
     public static void LogHookshot(BasicCharacterController __instance)
     {
+        __instance.CastHookshotRaycast();
         HashSet<PlayerAction> actions = new() { Hookshot };
         if (__instance.hookshotClimbing) actions.Add(HookshotWhileHanging);
         if (__instance.meleeCharging) actions.Add(Telehook);
