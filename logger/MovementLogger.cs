@@ -358,12 +358,22 @@ public class MovementLogger : Logger
 
     public static string GetTransitionName(string scene, ScreenTransition transition)
     {
-        return String.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), scene, transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), scene, transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
     }
 
     public static string GetTerminalName(string scene)
     {
-        return String.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), scene, typeof(Terminal));
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), scene, typeof(Terminal));
+    }
+
+    public string GetHoleName(HoleTeleporter hole)
+    {
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(HoleTeleporter), hole.holeIndex);
+    }
+
+    public string GetElevatorName(Elevator elevator)
+    {
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(Elevator), elevator.elevatorID);
     }
 
     public static void PollActions()
@@ -376,6 +386,13 @@ public class MovementLogger : Logger
             if (player.myCharacter.ridingMecha) actions.Add(Hailee);
             Plugin.Instance.movementLogger.AddActions(player.myCharacter, actions.ToArray());
         }
+    }
+
+    public static IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string location, string scene, Vector3 position, bool changingScene)
+    {
+        while (original.MoveNext()) yield return original.Current;
+        Plugin.Instance.movementLogger.SetLocation(location, scene, position, changingScene);
+        MovementLogger.PollActions();
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
@@ -421,12 +438,94 @@ public class MovementLogger : Logger
         Plugin.Instance.movementLogger.SetChangingScene(true);
     }
 
-    public static IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string location, string scene, Vector3 position, bool changingScene)
+    [HarmonyPatch(typeof(HoleTeleporter), nameof(HoleTeleporter.FallIntoHole)), HarmonyPrefix]
+    public static void LogEnterHole(HoleTeleporter __instance)
     {
-        while (original.MoveNext()) yield return original.Current;
-        Plugin.Instance.movementLogger.SetLocation(location, scene, position, changingScene);
-        MovementLogger.PollActions();
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string location = logger.GetHoleName(__instance);
+        logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
     }
+
+    [HarmonyPatch(typeof(HoleTeleporter), nameof(HoleTeleporter.Start)), HarmonyPostfix]
+    public static void LogExitHole(HoleTeleporter __instance, ref IEnumerator __result)
+    {
+        if (__instance.GetComponent<ElevatedGround>() == null && HoleTeleporter.fallingDownOnHole && HoleTeleporter.lastHoleID == __instance.holeIndex)
+        {
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            string location = logger.GetHoleName(__instance);
+            __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
+        }
+    }
+
+    [HarmonyPatch(typeof(Elevator), nameof(Elevator.PlayerScreenTransition)), HarmonyPrefix]
+    public static void LogEnterElevator(Elevator __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string location = logger.GetElevatorName(__instance);
+        logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
+    }
+
+    [HarmonyPatch(typeof(Elevator), nameof(Elevator.Start)), HarmonyPostfix]
+    public static void LogExitElevator(Elevator __instance, ref IEnumerator __result)
+    {
+        if (__instance.elevatorID == Elevator.lastElevatorID && Elevator.ridingElevator)
+        {
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            string location = logger.GetElevatorName(__instance);
+            __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
+        }
+    }
+
+    [HarmonyPatch(typeof(CrystalAppear), nameof(CrystalAppear.CollectedByPlayer)), HarmonyPrefix]
+    public static void LogEnterCrystal(CrystalAppear __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(CrystalAppear), __instance.myBossName);
+        logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
+    }
+
+    [HarmonyPatch(typeof(CrystalTeleportExit), nameof(CrystalTeleportExit.Start)), HarmonyPostfix]
+    public static void LogExitCrystal(CrystalTeleportExit __instance, ref IEnumerator __result)
+    {
+        if (CrystalTeleportExit.usingCrystalTeleport)
+        {
+            string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(CrystalTeleportExit));
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
+        }
+    }
+
+    /*
+    [HarmonyPatch(typeof(MapManager), nameof(MapManager.LoadPlayerRoom)), HarmonyPrefix]
+    public static void RecordLastTransitionTypeMapManager()
+    {
+        ReenterScene.lastLadder = null;
+        ReenterScene.lastCraterTowerElevator = null;
+
+        if (ScreenTransition.playerTransitioningScreens) ReenterScene.lastTransitionType = typeof(ScreenTransition);
+        else if (HoleTeleporter.fallingDownOnHole) ReenterScene.lastTransitionType = typeof(HoleTeleporter);
+        else if (Elevator.ridingElevator) ReenterScene.lastTransitionType = typeof(Elevator);
+        else if (CrystalTeleportExit.usingCrystalTeleport) ReenterScene.lastTransitionType = typeof(CrystalTeleportExit);
+        else ReenterScene.lastTransitionType = null;
+    }
+
+    [HarmonyPatch(typeof(SceneManager), "LoadSceneAsyncNameIndexInternal"), HarmonyPrefix]
+    public static void RecordLastTransitionTypeSceneManager()
+    {
+        if (!string.IsNullOrEmpty(SceneChangeLadder.currentLadder))
+        {
+            ReenterScene.lastTransitionType = typeof(SceneChangeLadder);
+            ReenterScene.lastLadder = SceneChangeLadder.currentLadder;
+        }
+        else if (!string.IsNullOrEmpty(CraterTowerElevator.currentElevator))
+        {
+            ReenterScene.lastTransitionType = typeof(CraterTowerElevator);
+            ReenterScene.lastCraterTowerElevator = CraterTowerElevator.currentElevator;
+        }
+    }
+    */
+
+    // ----------------------- ACTIONS -------------------------- //
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StaminaChargeCoroutine)), HarmonyPrefix]
     public static void LogStaminaRecharge(BasicCharacterController __instance)
