@@ -476,7 +476,7 @@ public class MovementLogger : Logger
         }
     }
 
-    [HarmonyPatch(typeof(CrystalAppear), nameof(CrystalAppear.CollectedByPlayer)), HarmonyPrefix]
+    [HarmonyPatch(typeof(CrystalAppear), nameof(CrystalAppear.CollectionCoroutine)), HarmonyPrefix]
     public static void LogEnterCrystal(CrystalAppear __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
