@@ -668,13 +668,14 @@ public class MovementLogger : Logger
         if (__instance.hookshotClimbing) actions.Add(HookshotWhileHanging);
         if (__instance.meleeCharging) actions.Add(Telehook);
 
+        CameraSystem camera = PseudoSingleton<CameraSystem>.instance;
         if (__instance.currentWallHit.collider != null)
         {
-            CameraSystem camera = PseudoSingleton<CameraSystem>.instance;
             Vector2 point = __instance.currentWallHit.point + Vector2.up * (__instance.myPhysics.globalHeight + 1f);
             if (!camera.PositionInsideCamera(point, -1f)) actions.Add(LongHookshot);
             if (!camera.PositionInsideCamera(point, 1f)) actions.Add(DoubleHookshot);
         }
+        foreach (Transform transform in camera.targetsList) if (transform.GetComponentInParent<ShurikenController>() != null) actions.Add(ShurikenHookshot);
 
         Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
     }

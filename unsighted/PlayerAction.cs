@@ -28,6 +28,7 @@ public enum PlayerAction
     HookshotWhileHanging,
     LongHookshot,
     DoubleHookshot,
+    ShurikenHookshot,
 
     Spinner,
     SpinnerAttack,
