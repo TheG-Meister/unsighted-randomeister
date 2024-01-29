@@ -732,7 +732,7 @@ public class MovementLogger : Logger
                         }
                         if (character.wallJumping) actions.Add(WallJump);
                         if (character.axis == Vector3.zero) actions.Add(JumpUp);
-                        if (character.hookshotClimbing) actions.Add(JumpWhileHanging);
+                        if (character.hookshotClimbing && character.GetComponentInParent<MovingDrone>() == null) actions.Add(JumpWhileHanging);
                         Plugin.Instance.movementLogger.AddActions(character, actions.ToArray());
                     }
                     else if (character.wallJumping) Plugin.Instance.movementLogger.AddActions(character, Jump, ClimbSlash);
