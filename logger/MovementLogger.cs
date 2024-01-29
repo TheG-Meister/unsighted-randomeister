@@ -666,6 +666,15 @@ public class MovementLogger : Logger
         HashSet<PlayerAction> actions = new() { Hookshot };
         if (__instance.hookshotClimbing) actions.Add(HookshotWhileHanging);
         if (__instance.meleeCharging) actions.Add(Telehook);
+
+        if (__instance.currentWallHit.collider != null)
+        {
+            CameraSystem camera = PseudoSingleton<CameraSystem>.instance;
+            Vector2 point = __instance.currentWallHit.point + Vector2.up * (__instance.myPhysics.globalHeight + 1f);
+            if (!camera.PositionInsideCamera(point, -1f)) actions.Add(LongHookshot);
+            if (!camera.PositionInsideCamera(point, 1f)) actions.Add(DoubleHookshot);
+        }
+
         Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
     }
 
