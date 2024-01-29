@@ -698,7 +698,10 @@ public class MovementLogger : Logger
     {
         if (impulseStrength == 0 && !__instance.climbingDash && !__instance.upwardAttack)
         {
-            if (__instance.hookshotClimbing) Plugin.Instance.movementLogger.AddActions(__instance, JumpWhileHanging);
+            if (__instance.hookshotClimbing)
+            {
+                if (__instance.GetComponentInParent<MovingDrone>() == null) Plugin.Instance.movementLogger.AddActions(__instance, JumpWhileHanging);
+            }
             else if (!__instance.myPhysics.grounded &&
                     !__instance.climbing &&
                     !__instance.climbingDash &&
@@ -732,7 +735,6 @@ public class MovementLogger : Logger
                         }
                         if (character.wallJumping) actions.Add(WallJump);
                         if (character.axis == Vector3.zero) actions.Add(JumpUp);
-                        if (character.hookshotClimbing && character.GetComponentInParent<MovingDrone>() == null) actions.Add(JumpWhileHanging);
                         Plugin.Instance.movementLogger.AddActions(character, actions.ToArray());
                     }
                     else if (character.wallJumping) Plugin.Instance.movementLogger.AddActions(character, Jump, ClimbSlash);
