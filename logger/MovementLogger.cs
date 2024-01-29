@@ -535,36 +535,6 @@ public class MovementLogger : Logger
         }
     }
 
-    /*
-    [HarmonyPatch(typeof(MapManager), nameof(MapManager.LoadPlayerRoom)), HarmonyPrefix]
-    public static void RecordLastTransitionTypeMapManager()
-    {
-        ReenterScene.lastLadder = null;
-        ReenterScene.lastCraterTowerElevator = null;
-
-        if (ScreenTransition.playerTransitioningScreens) ReenterScene.lastTransitionType = typeof(ScreenTransition);
-        else if (HoleTeleporter.fallingDownOnHole) ReenterScene.lastTransitionType = typeof(HoleTeleporter);
-        else if (Elevator.ridingElevator) ReenterScene.lastTransitionType = typeof(Elevator);
-        else if (CrystalTeleportExit.usingCrystalTeleport) ReenterScene.lastTransitionType = typeof(CrystalTeleportExit);
-        else ReenterScene.lastTransitionType = null;
-    }
-
-    [HarmonyPatch(typeof(SceneManager), "LoadSceneAsyncNameIndexInternal"), HarmonyPrefix]
-    public static void RecordLastTransitionTypeSceneManager()
-    {
-        if (!string.IsNullOrEmpty(SceneChangeLadder.currentLadder))
-        {
-            ReenterScene.lastTransitionType = typeof(SceneChangeLadder);
-            ReenterScene.lastLadder = SceneChangeLadder.currentLadder;
-        }
-        else if (!string.IsNullOrEmpty(CraterTowerElevator.currentElevator))
-        {
-            ReenterScene.lastTransitionType = typeof(CraterTowerElevator);
-            ReenterScene.lastCraterTowerElevator = CraterTowerElevator.currentElevator;
-        }
-    }
-    */
-
     // ----------------------- ACTIONS -------------------------- //
 
     public static void PollActions()
