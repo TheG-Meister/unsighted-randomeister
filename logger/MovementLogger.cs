@@ -78,6 +78,30 @@ public class MovementLogger : Logger
         this.cameraPadding = -4f;
     }
 
+    public void Announce()
+    {
+        float time = Time.realtimeSinceStartup;
+        if (this.announce && !this.changingScene && time - this.lastAnnouncementTime > this.announcementDelay && this.announcements.Count > 0)
+        {
+            Announcement first = this.announcements[0];
+            ColorNames colour = this.announcements[0].colour;
+            List<string> announcements = new();
+            List<Announcement> removed = new();
+
+            foreach (Announcement announcement in this.announcements)
+            {
+                if (!announcement.colour.Equals(colour)) break;
+                announcements.Add(announcement.text);
+                removed.Add(announcement);
+            }
+
+            foreach (Announcement announcement in removed) this.announcements.Remove(announcement);
+
+            this.lastAnnouncementTime = time;
+            PseudoSingleton<InGameTextController>.instance.ShowText(string.Join("\n", announcements.Distinct().ToList()), this.GetPositionInCamera(first.position), color: colour, duration: 2f);
+        }
+    }
+
     public void LogLocation(string location, string scene, Vector3 position)
     {
         float realTime = Time.realtimeSinceStartup;
@@ -145,30 +169,6 @@ public class MovementLogger : Logger
 
         this.actions.Clear();
         this.tags.Clear();
-    }
-
-    public void Announce()
-    {
-        float time = Time.realtimeSinceStartup;
-        if (this.announce && !this.changingScene && time - this.lastAnnouncementTime > this.announcementDelay && this.announcements.Count > 0)
-        {
-            Announcement first = this.announcements[0];
-            ColorNames colour = this.announcements[0].colour;
-            List<string> announcements = new();
-            List<Announcement> removed = new();
-
-            foreach (Announcement announcement in this.announcements)
-            {
-                if (!announcement.colour.Equals(colour)) break;
-                announcements.Add(announcement.text);
-                removed.Add(announcement);
-            }
-
-            foreach (Announcement announcement in removed) this.announcements.Remove(announcement);
-
-            this.lastAnnouncementTime = time;
-            PseudoSingleton<InGameTextController>.instance.ShowText(string.Join("\n", announcements.Distinct().ToList()), this.GetPositionInCamera(first.position), color: colour, duration: 2f);
-        }
     }
 
     public void ClearLocation()
@@ -358,34 +358,34 @@ public class MovementLogger : Logger
 
     // ----------------------- IDS -------------------- //
 
-    public static string GetScreenTransitionID(string scene, ScreenTransition transition)
+    public static string GetScreenTransitionID(ScreenTransition transition)
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), scene, transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
     }
 
-    public static string GetTerminalID(string scene)
+    public static string GetTerminalID()
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), scene, typeof(Terminal));
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), typeof(Terminal));
     }
 
     public string GetHoleID(HoleTeleporter hole)
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(HoleTeleporter), hole.holeIndex);
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), hole.GetType(), hole.holeIndex);
     }
 
     public string GetElevatorID(Elevator elevator)
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(Elevator), elevator.elevatorID);
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), elevator.GetType(), elevator.elevatorID);
     }
 
     public string GetLadderID(SceneChangeLadder ladder)
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, "Ladder", ladder.name);
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), "Ladder", ladder.name);
     }
 
     public string GetTowerElevatorID(CraterTowerElevator elevator)
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, "TowerElevator", elevator.name);
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), "TowerElevator", elevator.name);
     }
 
     // ------------------------- ROOM CHANGES --------------------- //
