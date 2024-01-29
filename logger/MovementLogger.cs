@@ -356,37 +356,39 @@ public class MovementLogger : Logger
         }
     }
 
-    public static string GetTransitionName(string scene, ScreenTransition transition)
+    // ----------------------- IDS -------------------- //
+
+    public static string GetScreenTransitionID(string scene, ScreenTransition transition)
     {
         return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), scene, transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
     }
 
-    public static string GetTerminalName(string scene)
+    public static string GetTerminalID(string scene)
     {
         return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), scene, typeof(Terminal));
     }
 
-    public string GetHoleName(HoleTeleporter hole)
+    public string GetHoleID(HoleTeleporter hole)
     {
         return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(HoleTeleporter), hole.holeIndex);
     }
 
-    public string GetElevatorName(Elevator elevator)
+    public string GetElevatorID(Elevator elevator)
     {
         return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(Elevator), elevator.elevatorID);
     }
 
-    public static void PollActions()
+    public string GetLadderID(SceneChangeLadder ladder)
     {
-        List<PlayerInfo> players = PseudoSingleton<PlayersManager>.instance.players;
-        foreach (PlayerInfo player in players)
-        {
-            HashSet<PlayerAction> actions = new();
-            if (player.myCharacter.ridingSpinner) actions.Add(Spinner);
-            if (player.myCharacter.ridingMecha) actions.Add(Hailee);
-            Plugin.Instance.movementLogger.AddActions(player.myCharacter, actions.ToArray());
-        }
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, "Ladder", ladder.name);
     }
+
+    public string GetTowerElevatorID(CraterTowerElevator elevator)
+    {
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, "TowerElevator", elevator.name);
+    }
+
+    // ------------------------- ROOM CHANGES --------------------- //
 
     public static IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string location, string scene, Vector3 position, bool changingScene)
     {
@@ -398,7 +400,7 @@ public class MovementLogger : Logger
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
     public static void LogEnterScreenTransition(ScreenTransition __instance)
     {
-        string location = MovementLogger.GetTransitionName(SceneManager.GetActiveScene().name, __instance);
+        string location = MovementLogger.GetScreenTransitionID(SceneManager.GetActiveScene().name, __instance);
         Plugin.Instance.movementLogger.SetLocation(location, SceneManager.GetActiveScene().name, MovementLogger.GetCameraPos(), true);
     }
 
@@ -410,7 +412,7 @@ public class MovementLogger : Logger
             (ScreenTransition.teleportCheat ||
             ScreenTransition.lastSceneName == PseudoSingleton<MapManager>.instance.GetNextRoomName(__instance.myDirection, __instance.triggerID)))
         {
-            string location = MovementLogger.GetTransitionName(SceneManager.GetActiveScene().name, __instance);
+            string location = MovementLogger.GetScreenTransitionID(SceneManager.GetActiveScene().name, __instance);
 
             __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, MovementLogger.GetCameraPos(), false);
         }
@@ -420,7 +422,7 @@ public class MovementLogger : Logger
     public static void LogEnterTerminalTrigger(Terminal __instance)
     {
         string scene = SceneManager.GetActiveScene().name;
-        Plugin.Instance.movementLogger.SetLocation(MovementLogger.GetTerminalName(scene), scene, __instance.transform.position, false);
+        Plugin.Instance.movementLogger.SetLocation(MovementLogger.GetTerminalID(scene), scene, __instance.transform.position, false);
     }
 
     /*
@@ -442,7 +444,7 @@ public class MovementLogger : Logger
     public static void LogEnterHole(HoleTeleporter __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string location = logger.GetHoleName(__instance);
+        string location = logger.GetHoleID(__instance);
         logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
     }
 
@@ -452,7 +454,7 @@ public class MovementLogger : Logger
         if (__instance.GetComponent<ElevatedGround>() == null && HoleTeleporter.fallingDownOnHole && HoleTeleporter.lastHoleID == __instance.holeIndex)
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
-            string location = logger.GetHoleName(__instance);
+            string location = logger.GetHoleID(__instance);
             __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
         }
     }
@@ -461,7 +463,7 @@ public class MovementLogger : Logger
     public static void LogEnterElevator(Elevator __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string location = logger.GetElevatorName(__instance);
+        string location = logger.GetElevatorID(__instance);
         logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
     }
 
@@ -471,7 +473,7 @@ public class MovementLogger : Logger
         if (__instance.elevatorID == Elevator.lastElevatorID && Elevator.ridingElevator)
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
-            string location = logger.GetElevatorName(__instance);
+            string location = logger.GetElevatorID(__instance);
             __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
         }
     }
@@ -492,6 +494,44 @@ public class MovementLogger : Logger
             string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(CrystalTeleportExit));
             MovementLogger logger = Plugin.Instance.movementLogger;
             logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
+        }
+    }
+
+    [HarmonyPatch(typeof(SceneChangeLadder), nameof(SceneChangeLadder.LadderCoroutine)), HarmonyPrefix]
+    public static void LogEnterLadder(SceneChangeLadder __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string location = logger.GetLadderID(__instance);
+        logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
+    }
+
+    [HarmonyPatch(typeof(SceneChangeLadder), nameof(SceneChangeLadder.Start)), HarmonyPrefix]
+    public static void LogExitLadder(SceneChangeLadder __instance)
+    {
+        if (SceneChangeLadder.currentLadder == __instance.name)
+        {
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            string location = logger.GetLadderID(__instance);
+            logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
+        }
+    }
+
+    [HarmonyPatch(typeof(CraterTowerElevator), nameof(CraterTowerElevator.ElevatorCoroutine)), HarmonyPrefix]
+    public static void LogEnterTowerElevator(CraterTowerElevator __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string location = logger.GetTowerElevatorID(__instance);
+        logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
+    }
+
+    [HarmonyPatch(typeof(CraterTowerElevator), nameof(CraterTowerElevator.Start)), HarmonyPostfix]
+    public static void LogExitTowerElevator(CraterTowerElevator __instance, ref IEnumerator __result)
+    {
+        if (CraterTowerElevator.currentElevator == __instance.name)
+        {
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            string location = logger.GetTowerElevatorID(__instance);
+            __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
         }
     }
 
@@ -526,6 +566,18 @@ public class MovementLogger : Logger
     */
 
     // ----------------------- ACTIONS -------------------------- //
+
+    public static void PollActions()
+    {
+        List<PlayerInfo> players = PseudoSingleton<PlayersManager>.instance.players;
+        foreach (PlayerInfo player in players)
+        {
+            HashSet<PlayerAction> actions = new();
+            if (player.myCharacter.ridingSpinner) actions.Add(Spinner);
+            if (player.myCharacter.ridingMecha) actions.Add(Hailee);
+            Plugin.Instance.movementLogger.AddActions(player.myCharacter, actions.ToArray());
+        }
+    }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StaminaChargeCoroutine)), HarmonyPrefix]
     public static void LogStaminaRecharge(BasicCharacterController __instance)
