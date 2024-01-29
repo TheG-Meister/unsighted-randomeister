@@ -29,6 +29,7 @@ public enum PlayerAction
     LongHookshot,
     DoubleHookshot,
     ShurikenHookshot,
+    HookshotStraightIntoMyPantsDaddy,
 
     Spinner,
     SpinnerAttack,
