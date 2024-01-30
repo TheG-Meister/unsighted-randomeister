@@ -47,6 +47,9 @@ public class MovementLogger : Logger
     public float cameraPadding;
     public List<Announcement> announcements;
 
+    public List<MovementNode> nodes;
+    public List<MovementEdge> edges;
+
     private string currentScene;
     private string currentLocation;
     private readonly HashSet<string> tags;
