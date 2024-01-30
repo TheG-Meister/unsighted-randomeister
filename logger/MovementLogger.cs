@@ -142,9 +142,8 @@ public class MovementLogger : Logger
         if (this.announce)
         {
             List<string> locationParts = location.Split('_').ToList();
-            string announcement = locationParts.Select(s => AddSpacesToPascalCase(s)).Join(delimiter: ", ");
+            string announcement = locationParts.Select(s => ReplaceSpecialCharsInPascal(s)).Join(delimiter: ", ");
             this.announcements.Add(new(announcement, colour, position));
-            //PseudoSingleton<InGameTextController>.instance.ShowText(announcement, this.GetPositionInCamera(position), color: colour, duration: 2f);
         }
     }
 
@@ -191,13 +190,12 @@ public class MovementLogger : Logger
             {
                 this.actions.Add(action);
                 //if (!this.silentActions.Contains(action)) 
-                announcements.Add(MovementLogger.AddSpacesToPascalCase(action.ToString()));
+                announcements.Add(MovementLogger.ReplaceSpecialCharsInPascal(action.ToString()));
             }
         }
         if (this.announce && announcements.Count > 0)
             foreach (string announcement in announcements)
                 this.announcements.Add(new(announcement, ColorNames.White, position));
-            //PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f);
     }
 
     public void AddActions(BasicCharacterController controller, params PlayerAction[] actions)
@@ -218,13 +216,12 @@ public class MovementLogger : Logger
             if (!this.roomStates.Contains(state))
             {
                 this.roomStates.Add(state);
-                announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
+                announcements.Add(MovementLogger.ReplaceSpecialCharsInPascal(state));
             }
         }
         if (this.announce && announcements.Count > 0)
             foreach (string announcement in announcements)
                 this.announcements.Add(new(announcement, ColorNames.Orange, position));
-        //PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Orange, color2: ColorNames.Orange);
     }
 
     public void AddGameStates(Vector3 position, params string[] states)
@@ -235,13 +232,12 @@ public class MovementLogger : Logger
             if (!this.gameStates.Contains(state))
             {
                 this.gameStates.Add(state);
-                announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
+                announcements.Add(MovementLogger.ReplaceSpecialCharsInPascal(state));
             }
         }
         if (this.announce && announcements.Count > 0)
             foreach (string announcement in announcements)
                 this.announcements.Add(new(announcement, ColorNames.Orange, position));
-        //PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Orange, color2: ColorNames.Orange);
     }
 
     public void RemoveGameStates(Vector3 position, params string[] states)
@@ -252,13 +248,12 @@ public class MovementLogger : Logger
             if (this.gameStates.Contains(state))
             {
                 this.gameStates.Remove(state);
-                announcements.Add(MovementLogger.AddSpacesToPascalCase(state));
+                announcements.Add(MovementLogger.ReplaceSpecialCharsInPascal(state));
             }
         }
         if (this.announce && announcements.Count > 0)
             foreach (string announcement in announcements)
                 this.announcements.Add(new(announcement, ColorNames.Blue, position));
-        //PseudoSingleton<InGameTextController>.instance.ShowText(announcements.Join(delimiter: "\n"), this.GetPositionInCamera(position), duration: 2f, color: ColorNames.Blue);
     }
 
     public void ClearGameStates()
@@ -312,44 +307,38 @@ public class MovementLogger : Logger
         }
     }
 
-    public static string AddSpacesToPascalCase(string text)
+    public static string ReplaceSpecialCharsInPascal(string text)
     {
         if (string.IsNullOrEmpty(text)) return text;
         else
         {
             StringBuilder builder = new();
 
-            bool lastSpecial = false;
+            bool firstChar = true;
+            char lastChar = ' ';
             foreach (char c in text)
             {
                 if (char.IsLetter(c))
                 {
-                    if (lastSpecial)
+                    if (!firstChar && !char.IsLetter(lastChar))
                     {
                         builder.Append(' ');
                         builder.Append(char.ToUpperInvariant(c));
-                        lastSpecial = false;
                     }
                     else
                     {
-                        if (char.IsUpper(c))
-                        {
-                            if (builder.Length > 0) builder.Append(' ');
-                            builder.Append(c);
-                        }
-                        else builder.Append(c);
-                    }
-                }
-                else
-                {
-                    if (lastSpecial) builder.Append(c);
-                    else
-                    {
-                        if (builder.Length > 0) builder.Append(' ');
+                        if (!firstChar && char.IsUpper(c)) builder.Append(' ');
                         builder.Append(c);
-                        lastSpecial = true;
                     }
                 }
+                else if (char.IsNumber(c))
+                {
+                    if (!firstChar && !char.IsNumber(lastChar)) builder.Append(' ');
+                    builder.Append(c);
+                }
+
+                firstChar = false;
+                lastChar = c;
             }
 
             return builder.ToString();
@@ -400,7 +389,7 @@ public class MovementLogger : Logger
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
     public static void LogEnterScreenTransition(ScreenTransition __instance)
     {
-        string location = MovementLogger.GetScreenTransitionID(SceneManager.GetActiveScene().name, __instance);
+        string location = MovementLogger.GetScreenTransitionID(__instance);
         Plugin.Instance.movementLogger.SetLocation(location, SceneManager.GetActiveScene().name, MovementLogger.GetCameraPos(), true);
     }
 
@@ -412,7 +401,7 @@ public class MovementLogger : Logger
             (ScreenTransition.teleportCheat ||
             ScreenTransition.lastSceneName == PseudoSingleton<MapManager>.instance.GetNextRoomName(__instance.myDirection, __instance.triggerID)))
         {
-            string location = MovementLogger.GetScreenTransitionID(SceneManager.GetActiveScene().name, __instance);
+            string location = MovementLogger.GetScreenTransitionID(__instance);
 
             __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, MovementLogger.GetCameraPos(), false);
         }
@@ -422,7 +411,7 @@ public class MovementLogger : Logger
     public static void LogEnterTerminalTrigger(Terminal __instance)
     {
         string scene = SceneManager.GetActiveScene().name;
-        Plugin.Instance.movementLogger.SetLocation(MovementLogger.GetTerminalID(scene), scene, __instance.transform.position, false);
+        Plugin.Instance.movementLogger.SetLocation(MovementLogger.GetTerminalID(), scene, __instance.transform.position, false);
     }
 
     /*
@@ -902,14 +891,6 @@ public class MovementLogger : Logger
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Start)), HarmonyPostfix]
     public static void LogOreStart(MetalScrapOre __instance)
     {
-        Debug.Log($"Camera system transform - {PseudoSingleton<CameraSystem>.instance.transform.position}");
-        Debug.Log($"Camera system object transform - {PseudoSingleton<CameraSystem>.instance.gameObject.transform.position}");
-        Debug.Log($"Camera system mytransform - {PseudoSingleton<CameraSystem>.instance.myTransform.position}");
-        Debug.Log($"Camera system camera - {PseudoSingleton<CameraSystem>.instance.cameraView.transform.position}");
-        Debug.Log($"Camera system camera object - {PseudoSingleton<CameraSystem>.instance.cameraView.gameObject.transform.position}");
-        Vector3 p1pos = PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position;
-        Debug.Log($"p1 - {p1pos}");
-        Debug.Log($"p1 clamped - {PseudoSingleton<CameraSystem>.instance.ClampPosition(p1pos)}");
         string oreCode = __instance.GetOreCode();
         if (PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains(oreCode))
         {
