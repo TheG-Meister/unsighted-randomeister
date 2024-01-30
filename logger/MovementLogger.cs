@@ -141,7 +141,7 @@ public class MovementLogger : Logger
 
         if (this.announce)
         {
-            List<string> locationParts = location.Split('_').ToList();
+            List<string> locationParts = location.Split(Constants.MOVEMENT_LOGGER_ID_SEPARATOR).ToList();
             string announcement = locationParts.Select(s => ReplaceSpecialCharsInPascal(s)).Join(delimiter: ", ");
             this.announcements.Add(new(announcement, colour, position));
         }
@@ -375,6 +375,16 @@ public class MovementLogger : Logger
     public string GetTowerElevatorID(CraterTowerElevator elevator)
     {
         return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), "TowerElevator", elevator.name);
+    }
+
+    public string GetMetalScrapOreStateID(MetalScrapOre ore, bool present)
+    {
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, ore.name, ore.transform.GetSiblingIndex(), present ? "Present" : "Absent");
+    }
+
+    public string GetMetalScrapOreLocationID(MetalScrapOre ore)
+    {
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex());
     }
 
     // ------------------------- ROOM CHANGES --------------------- //
@@ -891,12 +901,13 @@ public class MovementLogger : Logger
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Start)), HarmonyPostfix]
     public static void LogOreStart(MetalScrapOre __instance)
     {
-        string oreCode = __instance.GetOreCode();
-        if (PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains(oreCode))
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        Vector3 position = __instance.transform.position;
+        if (PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains(__instance.GetOreCode()))
         {
-            Plugin.Instance.movementLogger.AddRoomStates(PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position, string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Absent"));
+            logger.AddRoomStates(position, logger.GetMetalScrapOreStateID(__instance, false));
         }
-        else Plugin.Instance.movementLogger.AddRoomStates(PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position, string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Present"));
+        else logger.AddRoomStates(position, logger.GetMetalScrapOreStateID(__instance, true));
     }
 
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Destroyed)), HarmonyPostfix]
