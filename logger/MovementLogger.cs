@@ -13,6 +13,7 @@ using System.Collections;
 using System.Reflection.Emit;
 using static System.Runtime.CompilerServices.RuntimeHelpers;
 using static dev.gmeister.unsighted.randomeister.logger.MovementLogger;
+using static TopdownPhysics;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
@@ -369,17 +370,17 @@ public class MovementLogger : Logger
 
     public string GetLadderID(SceneChangeLadder ladder)
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), "Ladder", ladder.name);
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ladder.GetType(), ladder.name);
     }
 
     public string GetTowerElevatorID(CraterTowerElevator elevator)
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), "TowerElevator", elevator.name);
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), elevator.GetType(), elevator.name);
     }
 
     public string GetMetalScrapOreStateID(MetalScrapOre ore, bool present)
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, ore.name, ore.transform.GetSiblingIndex(), present ? "Present" : "Absent");
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex(), present ? "Present" : "Absent");
     }
 
     public string GetMetalScrapOreLocationID(MetalScrapOre ore)
