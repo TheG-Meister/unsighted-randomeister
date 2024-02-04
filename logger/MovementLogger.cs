@@ -52,7 +52,9 @@ public class MovementLogger : Logger
 
     public List<MovementNode> nodes;
     public List<MovementEdge> edges;
+    public List<MovementState> states;
     public int largestNodeID;
+    public int largestStateID;
     public MovementNode currentNode;
 
     private readonly HashSet<string> tags;
@@ -83,6 +85,7 @@ public class MovementLogger : Logger
 
         this.nodes = new();
         this.edges = new();
+        this.states = new();
         this.largestNodeID = -1;
         this.currentNode = null;
 
