@@ -47,26 +47,26 @@ public class MovementLogger : Logger
     public float cameraPadding;
     public List<Announcement> announcements;
 
+    public Logger nodeLogger;
+    public Logger edgeLogger;
+
     public List<MovementNode> nodes;
     public List<MovementEdge> edges;
+    public int largestNodeID;
+    public MovementNode currentNode;
 
-    private string currentScene;
-    private string currentLocation;
     private readonly HashSet<string> tags;
+    private readonly HashSet<PlayerAction> actions;
     private readonly HashSet<string> gameStates;
     private readonly HashSet<string> roomStates;
     private bool changingScene;
     private float gameTime;
     private float realTime;
 
-    private readonly HashSet<PlayerAction> actions;
-
     private HashSet<PlayerAction> silentActions = new() { Walk, Run, StaminaRecharge, Attack, DashAttack, SpinAttack, Parry, SpinnerAttack, JumpOffSpinner, Grind, JumpUp };
 
     public MovementLogger(string path, bool log, bool announce, bool uniqueAnnouncements, float announcementDelay, float cameraPadding) : base(path)
     {
-        this.currentScene = null;
-        this.currentLocation = null;
         this.actions = new();
         this.tags = new();
         this.gameStates = new();
@@ -80,6 +80,50 @@ public class MovementLogger : Logger
         this.announcements = new();
         this.announcementDelay = 0.33333f;
         this.cameraPadding = -4f;
+
+        this.nodes = new();
+        this.edges = new();
+        this.largestNodeID = -1;
+        this.currentNode = null;
+
+        foreach (MovementNode node in this.nodes) if (node.id > this.largestNodeID) this.largestNodeID = node.id;
+
+        this.nodeLogger = new Logger(Constants.PATH_DEFAULT + Constants.PATH_LOGS + "nodes.tsv");
+        this.edgeLogger = new Logger(Constants.PATH_DEFAULT + Constants.PATH_LOGS + "edges.tsv");
+    }
+
+    public MovementNode GetNode(string scene, string location, HashSet<PlayerAction> actions = null, HashSet<string> states = null)
+    {
+        bool intermediate = (actions != null && actions.Count > 0) || (states != null && states.Count > 0);
+
+        MovementNode node = this.nodes.Find(n => n.scene == scene && n.location == location && (!intermediate || (n.actions.SetEquals(actions) && n.states.SetEquals(states))));
+        if (node == null)
+        {
+            this.largestNodeID++;
+            node = new MovementNode(this.largestNodeID, scene, location);
+            string actionsString = "";
+            string statesString = "";
+
+            if (intermediate)
+            {
+                if (actions != null)
+                {
+                    foreach (PlayerAction action in actions) node.actions.Add(action);
+                    actionsString = string.Join(",", actions);
+                }
+                if (states != null)
+                {
+                    foreach (string state in states) node.states.Add(state);
+                    statesString = string.Join(",", states);
+                }
+            }
+            this.nodes.Add(node);
+
+            this.nodeLogger.stream.WriteLine(string.Join("\t", node.id, node.scene, node.location, actionsString, statesString));
+            this.nodeLogger.stream.Flush();
+        }
+
+        return node;
     }
 
     public void Announce()
@@ -106,23 +150,13 @@ public class MovementLogger : Logger
         }
     }
 
-    public void LogLocation(string location, string scene, Vector3 position)
-    {
-        float realTime = Time.realtimeSinceStartup;
-        if (realTime < 0) realTime = 0;
-        GameplayTime gameplayTime = PseudoSingleton<Helpers>.instance.GetCurrentTimeData();
-        float gameTime = gameplayTime.hours * 60 * 60 + gameplayTime.minutes * 60 + gameplayTime.seconds;
-
-        this.LogLocation(location, scene, position, realTime, gameTime);
-    }
-
-    public void LogLocation(string location, string scene, Vector3 position, float realTime, float gameTime)
+    public void LogLocation(MovementNode node, Vector3 position, bool sceneChange, float realTime, float gameTime)
     {
         if (realTime < 0) realTime = 0;
         if (gameTime < 0) gameTime = 0;
 
         ColorNames colour = ColorNames.Yellow;
-        if (currentLocation != null && currentLocation != location)
+        if (this.currentNode != null && (this.currentNode.scene != node.scene || this.currentNode.location != node.location))
         {
             colour = ColorNames.Green;
             if (this.log)
@@ -130,42 +164,48 @@ public class MovementLogger : Logger
                 List<string> statesList = new(gameStates);
                 statesList.AddRange(this.roomStates);
 
+                MovementEdge edge = new MovementEdge(this.currentNode.id, node.id, sceneChange, (realTime - this.realTime), (gameTime - this.gameTime));
+                    this.edges.Add(edge);
+
                 string states = string.Join(",", statesList.ToArray());
                 string actions = string.Join(",", this.actions.ToArray());
                 string realTimeDuration = (realTime - this.realTime).ToString();
                 string gameTimeDuration = (gameTime - this.gameTime).ToString();
-                string tags = string.Join(",", this.tags.ToArray());
 
-                List<string> fields = new() { this.currentLocation, location, this.currentScene, scene, this.changingScene.ToString(), states, actions, realTimeDuration, gameTimeDuration, tags };
-
-                stream.WriteLine(string.Join("\t", fields));
-                stream.Flush();
+                this.edgeLogger.stream.WriteLine(string.Join("\t", edge.source, edge.target, actions, states, edge.sceneChange, edge.realTime, edge.gameTime));
+                this.edgeLogger.stream.Flush();
             }
         }
 
         if (this.announce)
         {
-            List<string> locationParts = location.Split(Constants.MOVEMENT_LOGGER_ID_SEPARATOR).ToList();
+            List<string> locationParts = node.location.Split(Constants.MOVEMENT_LOGGER_ID_SEPARATOR).ToList();
             string announcement = locationParts.Select(s => ReplaceSpecialCharsInPascal(s)).Join(delimiter: ", ");
             this.announcements.Add(new(announcement, colour, position));
         }
     }
 
-    public void SetLocation(string location, string scene, Vector3 position, bool changingScene = false)
+    public void SetLocation(string scene, string location, Vector3 position, bool intermediate, bool changingScene)
     {
         float realTime = Time.realtimeSinceStartup;
         if (realTime < 0) realTime = 0;
         GameplayTime gameplayTime = PseudoSingleton<Helpers>.instance.GetCurrentTimeData();
         float gameTime = gameplayTime.hours * 60 * 60 + gameplayTime.minutes * 60 + gameplayTime.seconds;
 
-        this.LogLocation(location, scene, position, realTime, gameTime);
+        HashSet<string> statesList = new(gameStates);
+        foreach (string state in this.roomStates) statesList.Add(state);
+
+        MovementNode target;
+        if (intermediate) target = this.GetNode(scene, location, this.actions, statesList);
+        else target = this.GetNode(scene, location);
+
+        this.LogLocation(target, position, this.changingScene, realTime, gameTime);
 
         if (this.changingScene && !changingScene) this.roomStates.Clear();
 
-        if (this.log) this.currentLocation = location;
-        else this.currentLocation = null;
+        if (this.log) this.currentNode = target;
+        else this.currentNode = null;
 
-        this.currentScene = scene;
         this.gameTime = gameTime;
         this.realTime = realTime;
         this.changingScene = changingScene;
@@ -176,7 +216,7 @@ public class MovementLogger : Logger
 
     public void ClearLocation()
     {
-        this.currentLocation = null;
+        this.currentNode = null;
     }
 
     public void SetChangingScene(bool changingScene)
@@ -351,12 +391,12 @@ public class MovementLogger : Logger
 
     // ----------------------- IDS -------------------- //
 
-    public static string GetScreenTransitionID(ScreenTransition transition)
+    public string GetScreenTransitionID(ScreenTransition transition)
     {
         return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
     }
 
-    public static string GetTerminalID()
+    public string GetTerminalID()
     {
         return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), typeof(Terminal));
     }
@@ -393,39 +433,42 @@ public class MovementLogger : Logger
 
     // ------------------------- ROOM CHANGES --------------------- //
 
-    public static IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string location, string scene, Vector3 position, bool changingScene)
+    public IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string scene, string location, Vector3 position, bool intermediate, bool changingScene)
     {
         while (original.MoveNext()) yield return original.Current;
-        Plugin.Instance.movementLogger.SetLocation(location, scene, position, changingScene);
+        Plugin.Instance.movementLogger.SetLocation(scene, location, position, intermediate, changingScene);
         MovementLogger.PollActions();
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
     public static void LogEnterScreenTransition(ScreenTransition __instance)
     {
-        string location = MovementLogger.GetScreenTransitionID(__instance);
-        Plugin.Instance.movementLogger.SetLocation(location, SceneManager.GetActiveScene().name, MovementLogger.GetCameraPos(), true);
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string location = logger.GetScreenTransitionID(__instance);
+        logger.SetLocation(SceneManager.GetActiveScene().name, location, MovementLogger.GetCameraPos(), false, true);
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.EndPlayerScreenTransition)), HarmonyPostfix]
     public static void LogExitScreenTransition(ScreenTransition __instance, ref IEnumerator __result)
     {
+        MovementLogger logger = Plugin.Instance.movementLogger;
         if (ScreenTransition.playerTransitioningScreens &&
             ScreenTransition.currentDoorName == __instance.gameObject.name &&
             (ScreenTransition.teleportCheat ||
             ScreenTransition.lastSceneName == PseudoSingleton<MapManager>.instance.GetNextRoomName(__instance.myDirection, __instance.triggerID)))
         {
-            string location = MovementLogger.GetScreenTransitionID(__instance);
+            string location = logger.GetScreenTransitionID(__instance);
 
-            __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, MovementLogger.GetCameraPos(), false);
+            __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, MovementLogger.GetCameraPos(), false, false);
         }
     }
 
     [HarmonyPatch(typeof(Terminal), nameof(Terminal.PlayersEnteredMyTrigger)), HarmonyPostfix]
     public static void LogEnterTerminalTrigger(Terminal __instance)
     {
+        MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
-        Plugin.Instance.movementLogger.SetLocation(MovementLogger.GetTerminalID(), scene, __instance.transform.position, false);
+        logger.SetLocation(scene, logger.GetTerminalID(), __instance.transform.position, false, false);
     }
 
     /*
@@ -438,7 +481,7 @@ public class MovementLogger : Logger
     */
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.TeleportToLastTerminal)), HarmonyPostfix]
-    public static void SetChangingSceneOnTeleport(BasicCharacterController __instance)
+    public static void SetChangingSceneOnTeleport()
     {
         Plugin.Instance.movementLogger.SetChangingScene(true);
     }
@@ -448,7 +491,7 @@ public class MovementLogger : Logger
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string location = logger.GetHoleID(__instance);
-        logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
+        logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
     }
 
     [HarmonyPatch(typeof(HoleTeleporter), nameof(HoleTeleporter.Start)), HarmonyPostfix]
@@ -458,7 +501,7 @@ public class MovementLogger : Logger
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string location = logger.GetHoleID(__instance);
-            __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
+            __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
         }
     }
 
@@ -467,7 +510,7 @@ public class MovementLogger : Logger
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string location = logger.GetElevatorID(__instance);
-        logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
+        logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
     }
 
     [HarmonyPatch(typeof(Elevator), nameof(Elevator.Start)), HarmonyPostfix]
@@ -477,7 +520,7 @@ public class MovementLogger : Logger
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string location = logger.GetElevatorID(__instance);
-            __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
+            __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
         }
     }
 
@@ -486,7 +529,7 @@ public class MovementLogger : Logger
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(CrystalAppear), __instance.myBossName);
-        logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
+        logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
     }
 
     [HarmonyPatch(typeof(CrystalTeleportExit), nameof(CrystalTeleportExit.Start)), HarmonyPostfix]
@@ -496,7 +539,7 @@ public class MovementLogger : Logger
         {
             string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(CrystalTeleportExit));
             MovementLogger logger = Plugin.Instance.movementLogger;
-            logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
+            logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
         }
     }
 
@@ -505,7 +548,7 @@ public class MovementLogger : Logger
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string location = logger.GetLadderID(__instance);
-        logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
+        logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
     }
 
     [HarmonyPatch(typeof(SceneChangeLadder), nameof(SceneChangeLadder.Start)), HarmonyPrefix]
@@ -515,7 +558,7 @@ public class MovementLogger : Logger
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string location = logger.GetLadderID(__instance);
-            logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
+            logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
         }
     }
 
@@ -524,7 +567,7 @@ public class MovementLogger : Logger
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string location = logger.GetTowerElevatorID(__instance);
-        logger.SetLocation(location, SceneManager.GetActiveScene().name, __instance.transform.position, true);
+        logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
     }
 
     [HarmonyPatch(typeof(CraterTowerElevator), nameof(CraterTowerElevator.Start)), HarmonyPostfix]
@@ -534,7 +577,7 @@ public class MovementLogger : Logger
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string location = logger.GetTowerElevatorID(__instance);
-            __result = MovementLogger.AddLocationChangeToEnumerator(__result, location, SceneManager.GetActiveScene().name, __instance.transform.position, false);
+            __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
         }
     }
 
@@ -920,7 +963,7 @@ public class MovementLogger : Logger
         string oreCode = __instance.GetOreCode();
         string state = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Absent");
         string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, oreCode);
-        Plugin.Instance.movementLogger.LogLocation(location, SceneManager.GetActiveScene().name, PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position);
+        Plugin.Instance.movementLogger.SetLocation(SceneManager.GetActiveScene().name, location, PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position, true, false);
         Plugin.Instance.movementLogger.AddRoomStates(PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position, state);
     }
 
