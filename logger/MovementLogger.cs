@@ -18,7 +18,7 @@ using static TopdownPhysics;
 namespace dev.gmeister.unsighted.randomeister.logger;
 
 [Harmony]
-public class MovementLogger : Logger
+public class MovementLogger : IDisposable
 {
 
     public class Announcement
@@ -49,57 +49,147 @@ public class MovementLogger : Logger
 
     public Logger nodeLogger;
     public Logger edgeLogger;
+    public Logger stateLogger;
 
-    public List<MovementNode> nodes;
+    public Dictionary<int, MovementNode> nodes;
     public List<MovementEdge> edges;
-    public List<MovementState> states;
+    public Dictionary<int, MovementState> states;
     public int largestNodeID;
     public int largestStateID;
     public MovementNode currentNode;
 
-    private readonly HashSet<string> tags;
     private readonly HashSet<PlayerAction> actions;
-    private readonly HashSet<string> gameStates;
-    private readonly HashSet<string> roomStates;
+    private readonly HashSet<MovementState> currentStates;
     private bool changingScene;
     private float gameTime;
     private float realTime;
 
     private HashSet<PlayerAction> silentActions = new() { Walk, Run, StaminaRecharge, Attack, DashAttack, SpinAttack, Parry, SpinnerAttack, JumpOffSpinner, Grind, JumpUp };
 
-    public MovementLogger(string path, bool log, bool announce, bool uniqueAnnouncements, float announcementDelay, float cameraPadding) : base(path)
+    public MovementLogger(string nodePath, string edgePath, string statePath)
     {
         this.actions = new();
-        this.tags = new();
-        this.gameStates = new();
-        this.roomStates = new();
+        this.currentStates = new();
         this.changingScene = false;
 
-        this.announce = announce;
-        this.log = log;
-        this.uniqueAnnouncements = uniqueAnnouncements;
+        this.announce = false;
+        this.log = false;
+        this.uniqueAnnouncements = true;
         this.lastAnnouncementTime = float.MinValue;
         this.announcements = new();
         this.announcementDelay = 0.33333f;
         this.cameraPadding = -4f;
 
-        this.nodes = new();
-        this.edges = new();
-        this.states = new();
         this.largestNodeID = -1;
         this.currentNode = null;
 
-        foreach (MovementNode node in this.nodes) if (node.id > this.largestNodeID) this.largestNodeID = node.id;
-
-        this.nodeLogger = new Logger(Constants.PATH_DEFAULT + Constants.PATH_LOGS + "nodes.tsv");
-        this.edgeLogger = new Logger(Constants.PATH_DEFAULT + Constants.PATH_LOGS + "edges.tsv");
+        this.nodeLogger = new Logger(nodePath);
+        this.edgeLogger = new Logger(edgePath);
+        this.stateLogger = new Logger(statePath);
     }
 
-    public MovementNode GetNode(string scene, string location, HashSet<PlayerAction> actions = null, HashSet<string> states = null)
+    public void Dispose()
+    {
+        this.nodeLogger.Dispose();
+        this.edgeLogger.Dispose();
+        this.stateLogger.Dispose();
+    }
+
+    public void InitLoggers(string nodePath, string edgePath, string statePath)
+    {
+        this.nodes = new();
+        this.edges = new();
+        this.states = new();
+
+        if (File.Exists(statePath))
+        {
+            List<string> lines = new(File.ReadAllLines(statePath));
+
+            List<string> headers = null;
+            foreach (string line in lines)
+            {
+                if (!string.IsNullOrEmpty(line) && !line.StartsWith("#"))
+                {
+                    if (headers == null) headers = new(line.Split('\t'));
+                    else
+                    {
+                        List<string> split = new(line.Split('\t'));
+                        int id = int.Parse(split[headers.IndexOf("id")]);
+                        MovementState state = new(id, split[headers.IndexOf("name")], split[headers.IndexOf("scene")]);
+                        this.states.Add(state.id, state);
+                    }
+                }
+            }
+
+            this.stateLogger = new Logger(statePath);
+            foreach (MovementState state in this.states.Values) if (state.id > this.largestStateID) this.largestStateID = state.id;
+        }
+        else
+        {
+            Logger logger = new Logger(statePath);
+            logger.stream.WriteLine(string.Join("\t", "id", "name", "scene"));
+            logger.stream.Flush();
+        }
+
+        if (File.Exists(nodePath))
+        {
+            List<string> lines = new(File.ReadAllLines(nodePath));
+
+            List<string> headers = null;
+            foreach (string line in lines)
+            {
+                if (!string.IsNullOrEmpty(line) && !line.StartsWith("#"))
+                {
+                    if (headers == null) headers = new(line.Split('\t'));
+                    else
+                    {
+                        List<string> split = new(line.Split('\t'));
+
+                        int id = int.Parse(split[headers.IndexOf("id")]);
+                        MovementNode node = new(id, split[headers.IndexOf("scene")], split[headers.IndexOf("location")]);
+
+                        List<string> actionsSplit = new(split[headers.IndexOf("actions")].Split(','));
+                        foreach (string action in actionsSplit) if (Enum.IsDefined(typeof(PlayerAction), action)) node.actions.Add((PlayerAction) Enum.Parse(typeof(PlayerAction), action));
+
+                        List<string> statesSplit = new(split[headers.IndexOf("states")].Split(','));
+                        foreach (string state in statesSplit) node.states.Add(int.Parse(state));
+
+                        this.nodes.Add(node.id, node);
+                    }
+                }
+            }
+
+            this.nodeLogger = new Logger(nodePath);
+            foreach (MovementNode node in this.nodes.Values) if (node.id > this.largestNodeID) this.largestNodeID = node.id;
+        }
+        else
+        {
+            Logger logger = new Logger(nodePath);
+            logger.stream.WriteLine(string.Join("\t", "id", "scene", "location", "actions", "states"));
+            logger.stream.Flush();
+
+            this.largestNodeID = -1;
+            this.nodeLogger = logger;
+        }
+
+        if (!File.Exists(edgePath))
+        {
+            Logger logger = new Logger(edgePath);
+            logger.stream.WriteLine(string.Join("\t", "source", "target", "actions", "states", "scene change", "real time", "game time"));
+            logger.stream.Flush();
+
+            this.edgeLogger = logger;
+        }
+        else this.edgeLogger = new Logger(edgePath);
+
+    }
+
+    public MovementNode GetNode(string scene, string location, HashSet<PlayerAction> actions = null, HashSet<MovementState> states = null)
     {
         bool intermediate = (actions != null && actions.Count > 0) || (states != null && states.Count > 0);
+        HashSet<int> stateIds = new(states.Select(s => s.id).ToList());
 
-        MovementNode node = this.nodes.Find(n => n.scene == scene && n.location == location && (!intermediate || (n.actions.SetEquals(actions) && n.states.SetEquals(states))));
+        MovementNode node = this.nodes.Values.ToList().Find(n => n.scene == scene && n.location == location && (!intermediate || (n.actions.SetEquals(actions) && n.states.SetEquals(stateIds))));
         if (node == null)
         {
             this.largestNodeID++;
@@ -116,17 +206,33 @@ public class MovementLogger : Logger
                 }
                 if (states != null)
                 {
-                    foreach (string state in states) node.states.Add(state);
-                    statesString = string.Join(",", states);
+                    foreach (MovementState state in states) node.states.Add(state.id);
+                    statesString = string.Join(",", states.Select(s => s.scene + Constants.MOVEMENT_LOGGER_ID_SEPARATOR + s.name));
                 }
             }
-            this.nodes.Add(node);
+            this.nodes.Add(node.id, node);
 
             this.nodeLogger.stream.WriteLine(string.Join("\t", node.id, node.scene, node.location, actionsString, statesString));
             this.nodeLogger.stream.Flush();
         }
 
         return node;
+    }
+
+    public MovementState GetState(string name, string scene = "")
+    {
+        MovementState state = this.states.Values.ToList().Find(s => s.name == name && s.scene == scene);
+        if (state == null)
+        {
+            this.largestStateID++;
+            state = new MovementState(this.largestStateID, name, scene);
+            this.states[this.largestStateID] = state;
+
+            this.stateLogger.stream.WriteLine(string.Join("\t", state.id, state.name, state.scene));
+            this.stateLogger.stream.Flush();
+        }
+
+        return state;
     }
 
     public void Announce()
@@ -164,13 +270,10 @@ public class MovementLogger : Logger
             colour = ColorNames.Green;
             if (this.log)
             {
-                List<string> statesList = new(gameStates);
-                statesList.AddRange(this.roomStates);
-
                 MovementEdge edge = new MovementEdge(this.currentNode.id, node.id, sceneChange, (realTime - this.realTime), (gameTime - this.gameTime));
                     this.edges.Add(edge);
 
-                string states = string.Join(",", statesList.ToArray());
+                string states = string.Join(",", this.currentStates.Select(s => s.id).ToArray());
                 string actions = string.Join(",", this.actions.ToArray());
                 string realTimeDuration = (realTime - this.realTime).ToString();
                 string gameTimeDuration = (gameTime - this.gameTime).ToString();
@@ -195,16 +298,13 @@ public class MovementLogger : Logger
         GameplayTime gameplayTime = PseudoSingleton<Helpers>.instance.GetCurrentTimeData();
         float gameTime = gameplayTime.hours * 60 * 60 + gameplayTime.minutes * 60 + gameplayTime.seconds;
 
-        HashSet<string> statesList = new(gameStates);
-        foreach (string state in this.roomStates) statesList.Add(state);
-
         MovementNode target;
-        if (intermediate) target = this.GetNode(scene, location, this.actions, statesList);
+        if (intermediate) target = this.GetNode(scene, location, this.actions, this.currentStates);
         else target = this.GetNode(scene, location);
 
         this.LogLocation(target, position, this.changingScene, realTime, gameTime);
 
-        if (this.changingScene && !changingScene) this.roomStates.Clear();
+        this.SetChangingScene(changingScene);
 
         if (this.log) this.currentNode = target;
         else this.currentNode = null;
@@ -214,7 +314,6 @@ public class MovementLogger : Logger
         this.changingScene = changingScene;
 
         this.actions.Clear();
-        this.tags.Clear();
     }
 
     public void ClearLocation()
@@ -224,7 +323,7 @@ public class MovementLogger : Logger
 
     public void SetChangingScene(bool changingScene)
     {
-        if (this.changingScene && !changingScene) this.roomStates.Clear();
+        if (this.changingScene && !changingScene) this.currentStates.RemoveWhere(s => s.scene == this.currentNode.scene);
         this.changingScene = changingScene;
     }
 
@@ -255,62 +354,45 @@ public class MovementLogger : Logger
         this.AddActions(controller.transform.position + Vector3.up * (controller.myPhysics.globalHeight), actions);
     }
 
-    public void AddRoomStates(Vector3 position, params string[] states)
+    public void AddStates(Vector3 position, string scene, params string[] states)
     {
-        List<string> announcements = new();
-        foreach (string state in states)
+        foreach (string name in states)
         {
-            if (!this.roomStates.Contains(state))
+            MovementState state = this.GetState(name, scene);
+            if (!this.currentStates.Contains(state))
             {
-                this.roomStates.Add(state);
-                announcements.Add(MovementLogger.ReplaceSpecialCharsInPascal(state));
+                this.currentStates.Add(state);
+                this.announcements.Add(new(MovementLogger.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Orange, position));
             }
         }
-        if (this.announce && announcements.Count > 0)
-            foreach (string announcement in announcements)
-                this.announcements.Add(new(announcement, ColorNames.Orange, position));
     }
 
-    public void AddGameStates(Vector3 position, params string[] states)
+    public void RemoveStates(Vector3 position, string scene, params string[] states)
     {
-        List<string> announcements = new();
-        foreach (string state in states)
+        foreach (string name in states)
         {
-            if (!this.gameStates.Contains(state))
+            MovementState state = this.GetState(name, scene);
+            if (this.currentStates.Contains(state))
             {
-                this.gameStates.Add(state);
-                announcements.Add(MovementLogger.ReplaceSpecialCharsInPascal(state));
+                this.currentStates.Remove(state);
+                this.announcements.Add(new(MovementLogger.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
             }
         }
-        if (this.announce && announcements.Count > 0)
-            foreach (string announcement in announcements)
-                this.announcements.Add(new(announcement, ColorNames.Orange, position));
     }
 
-    public void RemoveGameStates(Vector3 position, params string[] states)
+    public void ClearStates(Vector3 position, string scene = "")
     {
-        List<string> announcements = new();
-        foreach (string state in states)
+        List<MovementState> toRemove = new();
+        foreach (MovementState state in this.currentStates)
         {
-            if (this.gameStates.Contains(state))
+            if (state.scene == scene)
             {
-                this.gameStates.Remove(state);
-                announcements.Add(MovementLogger.ReplaceSpecialCharsInPascal(state));
+                toRemove.Add(state);
+                this.announcements.Add(new(MovementLogger.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
             }
         }
-        if (this.announce && announcements.Count > 0)
-            foreach (string announcement in announcements)
-                this.announcements.Add(new(announcement, ColorNames.Blue, position));
-    }
 
-    public void ClearGameStates()
-    {
-        this.gameStates.Clear();
-    }
-
-    public void AddTags(string[] tags)
-    {
-        foreach (string tag in tags) this.tags.Add(tag);
+        foreach (MovementState state in toRemove) this.currentStates.Remove(state);
     }
 
     public static Vector3 GetCameraPos()
@@ -951,23 +1033,25 @@ public class MovementLogger : Logger
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Start)), HarmonyPostfix]
     public static void LogOreStart(MetalScrapOre __instance)
     {
+        string scene = SceneManager.GetActiveScene().name;
         MovementLogger logger = Plugin.Instance.movementLogger;
         Vector3 position = __instance.transform.position;
         if (PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains(__instance.GetOreCode()))
         {
-            logger.AddRoomStates(position, logger.GetMetalScrapOreStateID(__instance, false));
+            logger.AddStates(position, scene, logger.GetMetalScrapOreStateID(__instance, false));
         }
-        else logger.AddRoomStates(position, logger.GetMetalScrapOreStateID(__instance, true));
+        else logger.AddStates(position, scene, logger.GetMetalScrapOreStateID(__instance, true));
     }
 
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Destroyed)), HarmonyPostfix]
     public static void LogOreDestroy(MetalScrapOre __instance)
     {
-        string oreCode = __instance.GetOreCode();
-        string state = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), oreCode, "Absent");
-        string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, oreCode);
-        Plugin.Instance.movementLogger.SetLocation(SceneManager.GetActiveScene().name, location, PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position, true, false);
-        Plugin.Instance.movementLogger.AddRoomStates(PseudoSingleton<PlayersManager>.instance.players[0].myCharacter.transform.position, state);
-    }
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+        Vector3 position = __instance.transform.position;
 
+        logger.SetLocation(scene, logger.GetMetalScrapOreLocationID(__instance), position, true, false);
+        logger.RemoveStates(position, scene, logger.GetMetalScrapOreStateID(__instance, true));
+        logger.AddStates(position, scene, logger.GetMetalScrapOreStateID(__instance, false));
+    }
 }

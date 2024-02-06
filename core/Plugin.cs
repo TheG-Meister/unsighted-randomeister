@@ -41,7 +41,14 @@ public class Plugin : BaseUnityPlugin
             { ALMOST_ALL_ITEMS_POOL, new() { "Key", "JumpBoots", "DisposableSyringe", "Bolts1", "Bolts2", "Bolts3", "Bolts4", "AncientClockGear", "AncientClockPendulum", "AncientClockHands", "AncientClockFace", "AttackCogBlueprint", "DefenseCogBlueprint", "ReloadCogBlueprint", "StaminaCogBlueprint", "SpeedCogBlueprint", "SyringeCogBlueprint", "ReviveCogBlueprint", "HealthChip", "StaminaChip", "StrengthChip", "DefenseChip", "InvincibilityChip", "SpinnerChip", "SteadyChip", "ShurikenChip", "SwordChip", "AxeChip", "RiskChip", "PowerChip", "VirusChip", "FatigueChip", "SpinChipA", "SpinChipB", "JumperChip", "RunnerChip", "SpeedChipA", "ReloadChip", "BulletChip", "DrifterChip", "SpeedChipB", "BoltChip", "WalletChip", "FasterHealChip", "VigorChip", "VampireChip", "ComboChipA", "ComboChipB", "SyringeChip", "AutoSyringeChip", "DoubleBarrelChip", "OffenseChip", "DogChip", "MerchantChip", "ScavengerChip", "AnimaChip", "ParryMasterChip", "CogChip", "BigHeartChip", "GlitchChip", "Blaster", "DoctorsGun", "Spinner", "Hookshot1", "AutomaticBlaster", "Shotgun", "Flamethrower", "Icethrower", "GranadeLauncher", "IceGranade", "GranadeShotgun", "IronEdge", "ThunderEdge", "Frostbite", "Flameblade", "ElementalBlade", "WarAxe", "IceAxe", "FireAxe", "ThunderAxe", "RaquelAxe", "IronStar", "IceStar", "FireStar", "ThunderStar", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Hookshot1", "AttackCog", "DefenseCog", "ReloadCog", "StaminaCog", "SpeedCog", "SyringeCog", "ReviveCog", "HealthChip", "StaminaChip", "HealthChip", "StaminaChip", "HealthChip", "StaminaChip", "HealthChip", "StaminaChip", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust" } }
         };
 
-        movementLogger = new MovementLogger("unsighted-randomeister/logs/movement-log.tsv", this.options.movementLogging.Value, this.options.movementLoggingAnnouncements.Value, this.options.movementLoggingUniqueAnnouncements.Value, this.options.announcementDelay.Value, this.options.announcementCameraPadding.Value);
+        this.movementLogger = new MovementLogger("unsighted-randomeister/logs/nodes.tsv", "unsighted-randomeister/logs/edges.tsv", "unsighted-randomeister/logs/states.tsv")
+        {
+            log = this.options.movementLogging.Value,
+            announce = this.options.movementLoggingAnnouncements.Value,
+            uniqueAnnouncements = this.options.movementLoggingUniqueAnnouncements.Value,
+            announcementDelay = this.options.announcementDelay.Value,
+            cameraPadding = this.options.announcementCameraPadding.Value,
+        };
         this.chestLogger = new ChestLogger(Path.Combine(Constants.PATH_DEFAULT, PATH_LOGS, Constants.PATH_CHEST_LOGS));
 
         Instance = this;
