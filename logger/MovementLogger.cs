@@ -98,8 +98,8 @@ public class MovementLogger : IDisposable
         this.edges = new();
         this.states = new();
 
-        this.largestStateID = -1;
-        this.largestNodeID = -1;
+        this.largestStateID = 0;
+        this.largestNodeID = 0;
 
         if (File.Exists(statePath))
         {
