@@ -82,9 +82,7 @@ public class MovementLogger : IDisposable
 
         this.currentNode = null;
 
-        this.nodeLogger = new Logger(nodePath);
-        this.edgeLogger = new Logger(edgePath);
-        this.stateLogger = new Logger(statePath);
+        this.InitLoggers(nodePath, edgePath, statePath);
     }
 
     public void Dispose()
