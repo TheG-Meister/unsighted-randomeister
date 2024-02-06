@@ -289,7 +289,7 @@ public class MovementLogger : IDisposable
 
         if (this.announce)
         {
-            List<string> locationParts = node.location.Split(Constants.MOVEMENT_LOGGER_ID_SEPARATOR).ToList();
+            List<string> locationParts = node.GetStringID().Split(Constants.MOVEMENT_LOGGER_ID_SEPARATOR).ToList();
             string announcement = locationParts.Select(s => ReplaceSpecialCharsInPascal(s)).Join(delimiter: ", ");
             this.announcements.Add(new(announcement, colour, position));
         }
