@@ -80,7 +80,6 @@ public class MovementLogger : IDisposable
         this.announcementDelay = 0.33333f;
         this.cameraPadding = -4f;
 
-        this.largestNodeID = -1;
         this.currentNode = null;
 
         this.nodeLogger = new Logger(nodePath);
@@ -100,6 +99,9 @@ public class MovementLogger : IDisposable
         this.nodes = new();
         this.edges = new();
         this.states = new();
+
+        this.largestStateID = -1;
+        this.largestNodeID = -1;
 
         if (File.Exists(statePath))
         {
@@ -121,14 +123,16 @@ public class MovementLogger : IDisposable
                 }
             }
 
-            this.stateLogger = new Logger(statePath);
+            this.stateLogger = new(statePath);
             foreach (MovementState state in this.states.Values) if (state.id > this.largestStateID) this.largestStateID = state.id;
         }
         else
         {
-            Logger logger = new Logger(statePath);
+            Logger logger = new(statePath);
             logger.stream.WriteLine(string.Join("\t", "id", "name", "scene"));
             logger.stream.Flush();
+
+            this.stateLogger = logger;
         }
 
         if (File.Exists(nodePath))
@@ -159,35 +163,34 @@ public class MovementLogger : IDisposable
                 }
             }
 
-            this.nodeLogger = new Logger(nodePath);
+            this.nodeLogger = new(nodePath);
             foreach (MovementNode node in this.nodes.Values) if (node.id > this.largestNodeID) this.largestNodeID = node.id;
         }
         else
         {
-            Logger logger = new Logger(nodePath);
+            Logger logger = new(nodePath);
             logger.stream.WriteLine(string.Join("\t", "id", "scene", "location", "actions", "states"));
             logger.stream.Flush();
 
-            this.largestNodeID = -1;
             this.nodeLogger = logger;
         }
 
         if (!File.Exists(edgePath))
         {
-            Logger logger = new Logger(edgePath);
+            Logger logger = new(edgePath);
             logger.stream.WriteLine(string.Join("\t", "source", "target", "actions", "states", "scene change", "real time", "game time"));
             logger.stream.Flush();
 
             this.edgeLogger = logger;
         }
-        else this.edgeLogger = new Logger(edgePath);
+        else this.edgeLogger = new(edgePath);
 
     }
 
     public MovementNode GetNode(string scene, string location, HashSet<PlayerAction> actions = null, HashSet<MovementState> states = null)
     {
-        if (actions == null) actions = new();
-        if (states == null) states = new();
+        actions ??= new();
+        states ??= new();
 
         bool intermediate = actions.Count > 0 || states.Count > 0;
         HashSet<int> stateIds = new(states.Select(s => s.id).ToList());
