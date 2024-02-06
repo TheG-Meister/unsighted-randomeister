@@ -150,11 +150,19 @@ public class MovementLogger : IDisposable
                         int id = int.Parse(split[headers.IndexOf("id")]);
                         MovementNode node = new(id, split[headers.IndexOf("scene")], split[headers.IndexOf("location")]);
 
-                        List<string> actionsSplit = new(split[headers.IndexOf("actions")].Split(','));
-                        foreach (string action in actionsSplit) if (Enum.IsDefined(typeof(PlayerAction), action)) node.actions.Add((PlayerAction) Enum.Parse(typeof(PlayerAction), action));
+                        string actionsString = split[headers.IndexOf("actions")];
+                        if (!string.IsNullOrEmpty(actionsString))
+                        {
+                            List<string> actionsSplit = new(actionsString.Split(','));
+                            foreach (string action in actionsSplit) if (Enum.IsDefined(typeof(PlayerAction), action)) node.actions.Add((PlayerAction)Enum.Parse(typeof(PlayerAction), action));
+                        }
 
-                        List<string> statesSplit = new(split[headers.IndexOf("states")].Split(','));
-                        foreach (string state in statesSplit) node.states.Add(int.Parse(state));
+                        string statesString = split[headers.IndexOf("states")];
+                        if (!string.IsNullOrEmpty(statesString))
+                        {
+                            List<string> statesSplit = new(statesString.Split(','));
+                            foreach (string state in statesSplit) if (int.TryParse(state, out int stateInt)) node.states.Add(stateInt);
+                        }
 
                         this.nodes.Add(node.id, node);
                     }
