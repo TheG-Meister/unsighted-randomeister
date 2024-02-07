@@ -338,7 +338,7 @@ public class MovementLogger : IDisposable
 
     public void SetChangingScene(bool changingScene)
     {
-        if (this.changingScene && !changingScene) this.currentStates.RemoveWhere(s => s.scene == this.currentNode.scene);
+        if (this.changingScene && !changingScene && this.currentNode != null) this.currentStates.RemoveWhere(s => s.scene == this.currentNode.scene);
         this.changingScene = changingScene;
     }
 
