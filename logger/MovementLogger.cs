@@ -282,7 +282,7 @@ public class MovementLogger : IDisposable
             colour = ColorNames.Green;
             if (this.log)
             {
-                MovementEdge edge = new MovementEdge(this.currentNode.id, node.id, sceneChange, (realTime - this.realTime), (gameTime - this.gameTime));
+                MovementEdge edge = new(this.currentNode.id, node.id, sceneChange, (realTime - this.realTime), (gameTime - this.gameTime));
                     this.edges.Add(edge);
 
                 string states = string.Join(",", this.currentStates.Select(s => s.id).ToArray());
@@ -325,7 +325,10 @@ public class MovementLogger : IDisposable
         this.realTime = realTime;
         this.changingScene = changingScene;
 
-        this.actions.Clear();
+        if (!intermediate)
+        {
+            this.actions.Clear();
+        }
     }
 
     public void ClearLocation()
