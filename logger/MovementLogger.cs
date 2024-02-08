@@ -329,7 +329,6 @@ public class MovementLogger : IDisposable
 
         this.gameTime = gameTime;
         this.realTime = realTime;
-        this.changingScene = changingScene;
 
         if (!intermediate)
         {
