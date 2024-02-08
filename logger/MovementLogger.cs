@@ -322,10 +322,10 @@ public class MovementLogger : IDisposable
 
         this.LogMovement(target, position, this.changingScene, realTime, gameTime);
 
-        this.SetChangingScene(changingScene);
-
         if (this.log) this.currentNode = target;
         else this.currentNode = null;
+
+        this.SetChangingScene(changingScene);
 
         this.gameTime = gameTime;
         this.realTime = realTime;
