@@ -295,7 +295,7 @@ public class MovementLogger : IDisposable
                 string realTimeDuration = (realTime - this.realTime).ToString();
                 string gameTimeDuration = (gameTime - this.gameTime).ToString();
 
-                this.edgeLogger.stream.WriteLine(string.Join("\t", edge.source, edge.target, actions, states, edge.sceneChange, edge.realTime, edge.gameTime));
+                this.edgeLogger.stream.WriteLine(string.Join("\t", edge.source, edge.target, actions, states, edge.sceneChange ? "1" : "0", edge.realTime, edge.gameTime));
                 this.edgeLogger.stream.Flush();
             }
         }
@@ -1069,8 +1069,8 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Start)), HarmonyPostfix]
     public static void LogOreStart(MetalScrapOre __instance)
     {
-        string scene = SceneManager.GetActiveScene().name;
         MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
         Vector3 position = __instance.transform.position;
         if (PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains(__instance.GetOreCode()))
         {
