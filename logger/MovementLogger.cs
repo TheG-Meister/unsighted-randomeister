@@ -271,7 +271,7 @@ public class MovementLogger : IDisposable
         }
     }
 
-    public void LogLocation(MovementNode node, Vector3 position, bool sceneChange, float realTime, float gameTime)
+    public void LogMovement(MovementNode node, Vector3 position, bool sceneChange, float realTime, float gameTime)
     {
         if (realTime < 0) realTime = 0;
         if (gameTime < 0) gameTime = 0;
@@ -283,7 +283,12 @@ public class MovementLogger : IDisposable
             if (this.log)
             {
                 MovementEdge edge = new(this.currentNode.id, node.id, sceneChange, (realTime - this.realTime), (gameTime - this.gameTime));
-                    this.edges.Add(edge);
+                this.edges.Add(edge);
+                if (!sceneChange)
+                {
+                    foreach (PlayerAction action in this.actions) edge.actions.Add(action);
+                    foreach (MovementState state in this.currentStates) edge.states.Add(state.id);
+                }
 
                 string states = string.Join(",", this.currentStates.Select(s => s.id).ToArray());
                 string actions = string.Join(",", this.actions.ToArray());
@@ -306,15 +311,16 @@ public class MovementLogger : IDisposable
     public void SetLocation(string scene, string location, Vector3 position, bool intermediate, bool changingScene)
     {
         float realTime = Time.realtimeSinceStartup;
-        if (realTime < 0) realTime = 0;
         GameplayTime gameplayTime = PseudoSingleton<Helpers>.instance.GetCurrentTimeData();
         float gameTime = gameplayTime.hours * 60 * 60 + gameplayTime.minutes * 60 + gameplayTime.seconds;
+        if (realTime < 0) realTime = 0;
+        if (gameTime < 0) gameTime = 0;
 
         MovementNode target;
         if (intermediate) target = this.GetNode(scene, location, this.actions, this.currentStates);
         else target = this.GetNode(scene, location);
 
-        this.LogLocation(target, position, this.changingScene, realTime, gameTime);
+        this.LogMovement(target, position, this.changingScene, realTime, gameTime);
 
         this.SetChangingScene(changingScene);
 
@@ -338,7 +344,7 @@ public class MovementLogger : IDisposable
 
     public void SetChangingScene(bool changingScene)
     {
-        if (this.changingScene && !changingScene && this.currentNode != null) this.currentStates.RemoveWhere(s => s.scene == this.currentNode.scene);
+        if (this.changingScene && !changingScene && this.currentNode != null) this.RemoveRoomStatesInverse(this.GetCameraPos(), this.currentNode.scene);
         this.changingScene = changingScene;
     }
 
@@ -395,12 +401,12 @@ public class MovementLogger : IDisposable
         }
     }
 
-    public void ClearStates(Vector3 position, string scene = "")
+    public void RemoveRoomStates(Vector3 position, string scene = "")
     {
         List<MovementState> toRemove = new();
         foreach (MovementState state in this.currentStates)
         {
-            if (state.scene == scene)
+            if (state.scene != "" && (string.IsNullOrEmpty(scene) || state.scene == scene))
             {
                 toRemove.Add(state);
                 this.announcements.Add(new(MovementLogger.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
@@ -410,7 +416,22 @@ public class MovementLogger : IDisposable
         foreach (MovementState state in toRemove) this.currentStates.Remove(state);
     }
 
-    public static Vector3 GetCameraPos()
+    public void RemoveRoomStatesInverse(Vector3 position, string scene)
+    {
+        List<MovementState> toRemove = new();
+        foreach (MovementState state in this.currentStates)
+        {
+            if (state.scene != "" && state.scene != scene)
+            {
+                toRemove.Add(state);
+                this.announcements.Add(new(MovementLogger.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
+            }
+        }
+
+        foreach (MovementState state in toRemove) this.currentStates.Remove(state);
+    }
+
+    public Vector3 GetCameraPos()
     {
         Vector3 pos = PseudoSingleton<CameraSystem>.instance.myTransform.position;
         pos.z = 0;
@@ -420,7 +441,7 @@ public class MovementLogger : IDisposable
     public Vector3 GetPositionInCamera(Vector3 pos)
     {
         CameraSystem cameraSystem = PseudoSingleton<CameraSystem>.instance;
-        if (!cameraSystem.PositionInsideCamera(pos, this.cameraPadding)) return MovementLogger.GetCameraPos();
+        if (!cameraSystem.PositionInsideCamera(pos, this.cameraPadding)) return this.GetCameraPos();
         else return pos;
     }
 
@@ -545,7 +566,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string location = logger.GetScreenTransitionID(__instance);
-        logger.SetLocation(SceneManager.GetActiveScene().name, location, MovementLogger.GetCameraPos(), false, true);
+        logger.SetLocation(SceneManager.GetActiveScene().name, location, logger.GetCameraPos(), false, true);
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.EndPlayerScreenTransition)), HarmonyPostfix]
@@ -559,7 +580,7 @@ public class MovementLogger : IDisposable
         {
             string location = logger.GetScreenTransitionID(__instance);
 
-            __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, MovementLogger.GetCameraPos(), false, false);
+            __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, logger.GetCameraPos(), false, false);
         }
     }
 

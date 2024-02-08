@@ -46,7 +46,6 @@ internal class Hooks
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
     public static void BeforeGameLoaded()
     {
-        Plugin.Instance.GetLogger().LogInfo("Game loaded");
         Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, false);
         Plugin.Instance.movementLogger.ClearLocation();
     }
@@ -54,7 +53,6 @@ internal class Hooks
     [HarmonyPatch(typeof(NewGamePopup), nameof(NewGamePopup.NewGameCoroutine)), HarmonyPrefix]
     public static void BeforeNewGame()
     {
-        Plugin.Instance.GetLogger().LogInfo("New Game");
         Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, true);
         Plugin.Instance.movementLogger.ClearLocation();
     }
