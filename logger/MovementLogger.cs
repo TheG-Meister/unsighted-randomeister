@@ -557,7 +557,7 @@ public class MovementLogger : IDisposable
 
     public string GetCheckpointID(TemporaryCheckpointLocation checkpoint)
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), checkpoint.position.x, checkpoint.position.y);
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), "Checkpoint", checkpoint.position.x, checkpoint.position.y);
     }
 
     // ------------------------- ROOM CHANGES --------------------- //
