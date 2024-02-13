@@ -40,6 +40,8 @@ public class MovementLogger : IDisposable
         }
     }
 
+    public List<char> charsToKeepInAnnouncements = new() { '.' };
+
     public bool announce;
     public bool uniqueAnnouncements;
     public bool log;
@@ -357,7 +359,7 @@ public class MovementLogger : IDisposable
             {
                 this.actions.Add(action);
                 //if (!this.silentActions.Contains(action)) 
-                announcements.Add(MovementLogger.ReplaceSpecialCharsInPascal(action.ToString()));
+                announcements.Add(this.ReplaceSpecialCharsInPascal(action.ToString()));
             }
         }
         if (this.announce && announcements.Count > 0)
@@ -383,7 +385,7 @@ public class MovementLogger : IDisposable
             if (!this.currentStates.Contains(state))
             {
                 this.currentStates.Add(state);
-                this.announcements.Add(new(MovementLogger.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Orange, position));
+                this.announcements.Add(new(this.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Orange, position));
             }
         }
     }
@@ -396,7 +398,7 @@ public class MovementLogger : IDisposable
             if (this.currentStates.Contains(state))
             {
                 this.currentStates.Remove(state);
-                this.announcements.Add(new(MovementLogger.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
+                this.announcements.Add(new(this.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
             }
         }
     }
@@ -409,7 +411,7 @@ public class MovementLogger : IDisposable
             if (state.scene != "" && (string.IsNullOrEmpty(scene) || state.scene == scene))
             {
                 toRemove.Add(state);
-                this.announcements.Add(new(MovementLogger.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
+                this.announcements.Add(new(this.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
             }
         }
 
@@ -424,7 +426,7 @@ public class MovementLogger : IDisposable
             if (state.scene != "" && state.scene != scene)
             {
                 toRemove.Add(state);
-                this.announcements.Add(new(MovementLogger.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
+                this.announcements.Add(new(this.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
             }
         }
 
@@ -445,7 +447,7 @@ public class MovementLogger : IDisposable
         else return pos;
     }
 
-    public static string SnakeToPascalCase(string text)
+    public string SnakeToPascalCase(string text)
     {
         if (string.IsNullOrEmpty(text)) return text;
         else
@@ -472,7 +474,7 @@ public class MovementLogger : IDisposable
         }
     }
 
-    public static string ReplaceSpecialCharsInPascal(string text)
+    public string ReplaceSpecialCharsInPascal(string text)
     {
         if (string.IsNullOrEmpty(text)) return text;
         else
@@ -498,9 +500,10 @@ public class MovementLogger : IDisposable
                 }
                 else if (char.IsNumber(c))
                 {
-                    if (!firstChar && !char.IsNumber(lastChar)) builder.Append(' ');
+                    if (!firstChar && (!char.IsNumber(lastChar) && lastChar != '.')) builder.Append(' ');
                     builder.Append(c);
                 }
+                else if (this.charsToKeepInAnnouncements.Contains(c)) builder.Append(c);
 
                 firstChar = false;
                 lastChar = c;
@@ -514,7 +517,7 @@ public class MovementLogger : IDisposable
 
     public string GetScreenTransitionID(ScreenTransition transition)
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), transition.GetType(), MovementLogger.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), transition.GetType(), this.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
     }
 
     public string GetTerminalID()
