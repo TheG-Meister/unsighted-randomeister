@@ -14,6 +14,7 @@ using System.Reflection.Emit;
 using static System.Runtime.CompilerServices.RuntimeHelpers;
 using static dev.gmeister.unsighted.randomeister.logger.MovementLogger;
 using static TopdownPhysics;
+using System.Runtime.CompilerServices;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
@@ -551,6 +552,11 @@ public class MovementLogger : IDisposable
         return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex());
     }
 
+    public string GetCheckpointID(TemporaryCheckpointLocation checkpoint)
+    {
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), checkpoint.position.x, checkpoint.position.y);
+    }
+
     // ------------------------- ROOM CHANGES --------------------- //
 
     public IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string scene, string location, Vector3 position, bool intermediate, bool changingScene)
@@ -558,6 +564,30 @@ public class MovementLogger : IDisposable
         while (original.MoveNext()) yield return original.Current;
         Plugin.Instance.movementLogger.SetLocation(scene, location, position, intermediate, changingScene);
         MovementLogger.PollActions();
+    }
+
+    [HarmonyPatch(typeof(NewGamePopup), nameof(NewGamePopup.NewGameCoroutine)), HarmonyPrefix]
+    public static void ResetLocationOnNewGame()
+    {
+        Plugin.Instance.movementLogger.ClearLocation();
+    }
+
+    [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
+    public static void ResetLocationOnLoadGame()
+    {
+        Plugin.Instance.movementLogger.ClearLocation();
+    }
+
+    [HarmonyPatch(typeof(LevelController), nameof(LevelController.FinishRestartingPlayers)), HarmonyPostfix]
+    public static void LogExitCheckpoint(ref IEnumerator __result)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+
+        GlobalGameData data = PseudoSingleton<GlobalGameData>.instance;
+        TemporaryCheckpointLocation checkpoint = data.currentData.playerDataSlots[data.loadedSlot].lastCheckpoint;
+        string location = logger.GetCheckpointID(checkpoint);
+        __result = logger.AddLocationChangeToEnumerator(__result, scene, location, checkpoint.position, false, false);
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
