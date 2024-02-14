@@ -541,9 +541,9 @@ public class MovementLogger : IDisposable
 
     public string GetEagleBossEntranceID(Eagle eagle) => this.GetID(eagle.GetType().Name);
 
-    public string GetEagleBossExitID(EaglesController controller) => "Eagle Boss Exit";
+    public string GetEagleBossExitID(EaglesController controller) => this.GetID(controller.GetType(), "Exit");
 
-    public string GetCrashSiteEntranceID(AfterEagleBossCutscene cutscene) => "Crash Site Spawn";
+    public string GetCrashSiteEntranceID(AfterEagleBossCutscene cutscene) => this.GetID(cutscene.GetType());
 
     // ------------------------- ROOM CHANGES --------------------- //
 
