@@ -515,6 +515,11 @@ public class MovementLogger : IDisposable
 
     // ----------------------- IDS -------------------- //
 
+    public string GetNewGameID()
+    {
+        return "New Game";
+    }
+
     public string GetScreenTransitionID(ScreenTransition transition)
     {
         return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), transition.GetType(), this.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
@@ -573,6 +578,15 @@ public class MovementLogger : IDisposable
     public static void ResetLocationOnNewGame()
     {
         Plugin.Instance.movementLogger.ClearLocation();
+    }
+
+    [HarmonyPatch(typeof(LabCutscene1), nameof(LabCutscene1.AfterCutscene)), HarmonyPrefix]
+    public static void LogNewGame()
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+        string location = logger.GetNewGameID();
+        logger.SetLocation(scene, location, logger.GetCameraPos(), false, false);
     }
 
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
