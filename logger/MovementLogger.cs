@@ -515,70 +515,35 @@ public class MovementLogger : IDisposable
 
     // ----------------------- IDS -------------------- //
 
-    public string GetID(params string[] ids)
-    {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ids);
-    }
+    public string GetID(params object[] ids) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ids);
 
-    public string GetNewGameID()
-    {
-        return "New Game";
-    }
+    public string GetNewGameID() => "New Game";
 
-    public string GetScreenTransitionID(ScreenTransition transition)
-    {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), transition.GetType(), this.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
-    }
+    public string GetScreenTransitionID(ScreenTransition transition) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), transition.GetType(), this.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
 
-    public string GetTerminalID()
-    {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), typeof(Terminal));
-    }
+    public string GetTerminalID() => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), typeof(Terminal));
 
-    public string GetHoleID(HoleTeleporter hole)
-    {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), hole.GetType(), hole.holeIndex);
-    }
+    public string GetHoleID(HoleTeleporter hole) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), hole.GetType(), hole.holeIndex);
 
-    public string GetElevatorID(Elevator elevator)
-    {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), elevator.GetType(), elevator.elevatorID);
-    }
+    public string GetElevatorID(Elevator elevator) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), elevator.GetType(), elevator.elevatorID);
 
-    public string GetLadderID(SceneChangeLadder ladder)
-    {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ladder.GetType(), ladder.name);
-    }
+    public string GetLadderID(SceneChangeLadder ladder) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ladder.GetType(), ladder.name);
 
-    public string GetTowerElevatorID(CraterTowerElevator elevator)
-    {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), elevator.GetType(), elevator.name);
-    }
+    public string GetTowerElevatorID(CraterTowerElevator elevator) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), elevator.GetType(), elevator.name);
 
-    public string GetMetalScrapOreStateID(MetalScrapOre ore, bool present)
-    {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex(), present ? "Present" : "Absent");
-    }
+    public string GetMetalScrapOreStateID(MetalScrapOre ore, bool present) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex(), present ? "Present" : "Absent");
 
-    public string GetMetalScrapOreLocationID(MetalScrapOre ore)
-    {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex());
-    }
+    public string GetMetalScrapOreLocationID(MetalScrapOre ore) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex());
 
-    public string GetCheckpointID(TemporaryCheckpointLocation checkpoint)
-    {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), "Checkpoint", checkpoint.position.x, checkpoint.position.y);
-    }
+    public string GetCheckpointID(TemporaryCheckpointLocation checkpoint) => this.GetID("Checkpoint", checkpoint.position.x, checkpoint.position.y);
 
-    public string GetEagleExitID(EagleRideTrigger trigger)
-    {
-        return this.GetID(trigger.GetType().Name);
-    }
+    public string GetEagleExitID(EagleRideTrigger trigger) => this.GetID(trigger.GetType().Name);
 
-    public string GetEagleEntranceID(Eagle eagle)
-    {
-        return this.GetID(eagle.GetType().Name);
-    }
+    public string GetEagleBossEntranceID(Eagle eagle) => this.GetID(eagle.GetType().Name);
+
+    public string GetEagleBossExitID(EaglesController controller) => "Eagle Boss Exit";
+
+    public string GetCrashSiteEntranceID(AfterEagleBossCutscene cutscene) => "Crash Site Spawn";
 
     // ------------------------- ROOM CHANGES --------------------- //
 
@@ -779,9 +744,27 @@ public class MovementLogger : IDisposable
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string scene = SceneManager.GetActiveScene().name;
-            string location = logger.GetEagleEntranceID(__instance);
+            string location = logger.GetEagleBossEntranceID(__instance);
             __result = logger.AddLocationChangeToEnumerator(__result, scene, location, __instance.transform.position, false, false);
         }
+    }
+
+    [HarmonyPatch(typeof(EaglesController), nameof(EaglesController.Death)), HarmonyPrefix]
+    public static void LogEnterEagleBossDeath(EaglesController __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+        string location = logger.GetEagleBossExitID(__instance);
+        logger.SetLocation(scene, location, __instance.transform.position, false, true);
+    }
+
+    [HarmonyPatch(typeof(AfterEagleBossCutscene), nameof(AfterEagleBossCutscene.Start)), HarmonyPrefix]
+    public static void LogSpawnInCrashSite(AfterEagleBossCutscene __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+        string location = logger.GetCrashSiteEntranceID(__instance);
+        logger.SetLocation(scene, location, __instance.transform.position, false, false);
     }
 
     // ----------------------- ACTIONS -------------------------- //
