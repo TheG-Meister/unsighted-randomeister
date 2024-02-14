@@ -515,6 +515,11 @@ public class MovementLogger : IDisposable
 
     // ----------------------- IDS -------------------- //
 
+    public string GetID(params string[] ids)
+    {
+        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ids);
+    }
+
     public string GetNewGameID()
     {
         return "New Game";
@@ -563,6 +568,16 @@ public class MovementLogger : IDisposable
     public string GetCheckpointID(TemporaryCheckpointLocation checkpoint)
     {
         return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), "Checkpoint", checkpoint.position.x, checkpoint.position.y);
+    }
+
+    public string GetEagleExitID(EagleRideTrigger trigger)
+    {
+        return this.GetID(trigger.GetType().Name);
+    }
+
+    public string GetEagleEntranceID(Eagle eagle)
+    {
+        return this.GetID(eagle.GetType().Name);
     }
 
     // ------------------------- ROOM CHANGES --------------------- //
@@ -700,7 +715,7 @@ public class MovementLogger : IDisposable
     }
 
     [HarmonyPatch(typeof(CrystalTeleportExit), nameof(CrystalTeleportExit.Start)), HarmonyPostfix]
-    public static void LogExitCrystal(CrystalTeleportExit __instance, ref IEnumerator __result)
+    public static void LogExitCrystal(CrystalTeleportExit __instance)
     {
         if (CrystalTeleportExit.usingCrystalTeleport)
         {
@@ -745,6 +760,27 @@ public class MovementLogger : IDisposable
             MovementLogger logger = Plugin.Instance.movementLogger;
             string location = logger.GetTowerElevatorID(__instance);
             __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
+        }
+    }
+
+    [HarmonyPatch(typeof(EagleRideTrigger), nameof(EagleRideTrigger.CutsceneCoroutine)), HarmonyPrefix]
+    public static void LogEnterEagleFlight(EagleRideTrigger __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+        string location = logger.GetEagleExitID(__instance);
+        logger.SetLocation(scene, location, __instance.transform.position, false, true);
+    }
+
+    [HarmonyPatch(typeof(Eagle), nameof(Eagle.Start)), HarmonyPostfix]
+    public static void LogExitEagleFlight(Eagle __instance, ref IEnumerator __result)
+    {
+        if (__instance.firstEagle)
+        {
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            string scene = SceneManager.GetActiveScene().name;
+            string location = logger.GetEagleEntranceID(__instance);
+            __result = logger.AddLocationChangeToEnumerator(__result, scene, location, __instance.transform.position, false, false);
         }
     }
 
