@@ -761,10 +761,14 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(AfterEagleBossCutscene), nameof(AfterEagleBossCutscene.Start)), HarmonyPrefix]
     public static void LogSpawnInCrashSite(AfterEagleBossCutscene __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
-        string location = logger.GetCrashSiteEntranceID(__instance);
-        logger.SetLocation(scene, location, __instance.transform.position, false, false);
+        GlobalGameData data = PseudoSingleton<GlobalGameData>.instance;
+        if (!data.currentData.playerDataSlots[data.loadedSlot].dataStrings.Contains("AfterEagleBossCutscene"))
+        {
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            string scene = SceneManager.GetActiveScene().name;
+            string location = logger.GetCrashSiteEntranceID(__instance);
+            logger.SetLocation(scene, location, __instance.transform.position, false, false);
+        }
     }
 
     // ----------------------- ACTIONS -------------------------- //
