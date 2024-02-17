@@ -516,34 +516,24 @@ public class MovementLogger : IDisposable
     // ----------------------- IDS -------------------- //
 
     public string GetID(params object[] ids) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ids);
-
     public string GetNewGameID() => "New Game";
-
     public string GetScreenTransitionID(ScreenTransition transition) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), transition.GetType(), this.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
-
     public string GetTerminalID() => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), typeof(Terminal));
-
     public string GetHoleID(HoleTeleporter hole) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), hole.GetType(), hole.holeIndex);
-
     public string GetElevatorID(Elevator elevator) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), elevator.GetType(), elevator.elevatorID);
-
     public string GetLadderID(SceneChangeLadder ladder) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ladder.GetType(), ladder.name);
-
     public string GetTowerElevatorID(CraterTowerElevator elevator) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), elevator.GetType(), elevator.name);
-
     public string GetMetalScrapOreStateID(MetalScrapOre ore, bool present) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex(), present ? "Present" : "Absent");
-
     public string GetMetalScrapOreLocationID(MetalScrapOre ore) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex());
-
     public string GetCheckpointID(TemporaryCheckpointLocation checkpoint) => this.GetID("Checkpoint", checkpoint.position.x, checkpoint.position.y);
-
-    public string GetEagleExitID(EagleRideTrigger trigger) => this.GetID(trigger.GetType().Name);
-
-    public string GetEagleBossEntranceID(Eagle eagle) => this.GetID(eagle.GetType().Name);
-
+    public string GetEagleExitID(EagleRideTrigger trigger) => this.GetID(trigger.GetType());
+    public string GetEagleBossEntranceID(Eagle eagle) => this.GetID(eagle.GetType());
     public string GetEagleBossExitID(EaglesController controller) => this.GetID(controller.GetType(), "Exit");
-
     public string GetCrashSiteEntranceID(AfterEagleBossCutscene cutscene) => this.GetID(cutscene.GetType());
+    public string GetEagleCrystalID(EagleBossCrystal crystal) => this.GetID(crystal.GetType());
+    public string GetFlashbackRoomEntranceID(int layout) => this.GetID("Flashback", layout, "Entrance");
+    public string GetFlashbackRoomExitID(int layout) => this.GetID("Flashback", layout, "Exit");
+    public string GetMeteorCrystalItemLoc(string boss) => this.GetID(boss, "MeteorShard");
 
     // ------------------------- ROOM CHANGES --------------------- //
 
@@ -769,6 +759,56 @@ public class MovementLogger : IDisposable
             string location = logger.GetCrashSiteEntranceID(__instance);
             logger.SetLocation(scene, location, __instance.transform.position, false, false);
         }
+    }
+
+    [HarmonyPatch(typeof(EagleBossCrystal), nameof(EagleBossCrystal.CollectionCoroutine)), HarmonyPrefix]
+    public static void LogEnterEagleCrystal(EagleBossCrystal __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+        string location = logger.GetEagleCrystalID(__instance);
+        logger.SetLocation(scene, location, __instance.transform.position, false, true);
+    }
+
+    [HarmonyPatch(typeof(EagleBossCrystal), nameof(EagleBossCrystal.AfterCrystalCoroutine)), HarmonyPostfix]
+    public static void LogExitEagleCrystal(EagleBossCrystal __instance, ref IEnumerator __result)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+        string location = logger.GetEagleCrystalID(__instance);
+        __result = logger.AddLocationChangeToEnumerator(__result, scene, location, __instance.transform.position, false, false);
+    }
+
+    public static int GetFlashbackRoomLayout(FlashbackRoomController controller)
+    {
+        if (controller.layout1.activeSelf) return 1;
+        else if (controller.layout2.activeSelf) return 2;
+        else if (controller.layout3.activeSelf) return 3;
+        else if (controller.layout4.activeSelf) return 4;
+        else if (controller.layout5.activeSelf) return 5;
+        return -1;
+    }
+
+    [HarmonyPatch(typeof(FlashbackRoomController), nameof(FlashbackRoomController.Start)), HarmonyPostfix]
+    public static void LogEnterFlashbackRoom(FlashbackRoomController __instance, ref IEnumerator __result)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+        string location = logger.GetFlashbackRoomEntranceID(GetFlashbackRoomLayout(__instance));
+        __result = logger.AddLocationChangeToEnumerator(__result, scene, location, __instance.transform.position, false, false);
+    }
+
+    [HarmonyPatch(typeof(FlashbackRoomController), nameof(FlashbackRoomController.ExitCutscene)), HarmonyPrefix]
+    public static void LogEnterFlashbackRoom(FlashbackRoomController __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+
+        string exitLoc = logger.GetFlashbackRoomEntranceID(GetFlashbackRoomLayout(__instance));
+        logger.SetLocation(scene, exitLoc, __instance.transform.position, false, true);
+
+        string itemLoc = logger.GetMeteorCrystalItemLoc(FlashbackRoomController.myBossName);
+        logger.SetLocation(scene, itemLoc, __instance.transform.position, false, true);
     }
 
     // ----------------------- ACTIONS -------------------------- //
