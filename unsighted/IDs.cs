@@ -37,5 +37,7 @@ public class IDs
     public static string GetNPCID(NPCCharacter npc) => IDs.GetID(npc.npcName);
     public static string GetKeyCardID() => IDs.GetID(typeof(KeyCard));
     public static string GetAbilityCollectableID(AbilityCollectable ability) => IDs.GetID(ability.name);
+    public static string GetDarkMonsterFightExitID() => IDs.GetID(typeof(DarkMonsterCraterCutscene));
+    public static string GetVanaFlamebladeID() => IDs.GetID("Vana", "Flameblade");
 
 }

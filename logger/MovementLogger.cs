@@ -762,6 +762,26 @@ public class MovementLogger : IDisposable
         logger.SetLocation(scene, itemLoc, __instance.transform.position, false, true);
     }
 
+    [HarmonyPatch(typeof(DarkMonsterCraterCutscene), nameof(DarkMonsterCraterCutscene.SkipCutsceneInput)), HarmonyPrefix]
+    public static void LogWinDarkMonsterFight(DarkMonsterCraterCutscene __instance)
+    {
+        MovementLogger.LogExitDarkMonsterFight(__instance);
+
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+        string location = IDs.GetVanaFlamebladeID();
+        logger.SetLocation(scene, location, __instance.transform.position, false, true);
+    }
+
+    [HarmonyPatch(typeof(DarkMonsterCraterCutscene), nameof(DarkMonsterCraterCutscene.DeathCutsceneCoroutine)), HarmonyPrefix]
+    public static void LogExitDarkMonsterFight(DarkMonsterCraterCutscene __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+        string location = IDs.GetDarkMonsterFightExitID();
+        logger.SetLocation(scene, location, __instance.transform.position, false, true);
+    }
+
     // ----------------------- ACTIONS -------------------------- //
 
     public static void PollActions()
