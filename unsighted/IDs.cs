@@ -34,5 +34,6 @@ public class IDs
     public static string GetFlashbackRoomExitID(int layout) => IDs.GetID("Flashback", layout, "Exit");
     public static string GetMeteorCrystalItemLocID(string boss) => IDs.GetID(boss, "MeteorShard");
     public static string GetChestID(ItemChest chest) => IDs.GetID(chest.name);
+    public static string GetNPCID(NPCCharacter npc) => IDs.GetID(npc.npcName);
 
 }

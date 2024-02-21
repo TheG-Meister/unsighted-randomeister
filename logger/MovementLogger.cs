@@ -40,6 +40,8 @@ public class MovementLogger : IDisposable
         }
     }
 
+    private static readonly List<string> loggedNonShopNPCs = new() { "BlacksmithNPC", "OlgaNPC", "ElisaNPC", "ClaraNPC", "GrimReaperNPC" };
+
     public bool announce;
     public bool uniqueAnnouncements;
     public bool log;
@@ -445,8 +447,6 @@ public class MovementLogger : IDisposable
         else return pos;
     }
 
-    // ----------------------- IDS -------------------- //
-
     // ------------------------- ROOM CHANGES --------------------- //
 
     public IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string scene, string location, Vector3 position, bool intermediate, bool changingScene)
@@ -724,15 +724,20 @@ public class MovementLogger : IDisposable
     }
 
     [HarmonyPatch(typeof(InteractionTrigger), nameof(InteractionTrigger.PlayersEnteredMyTrigger)), HarmonyPrefix]
-    public static void LogChestEnter(InteractionTrigger __instance)
+    public static void LogEnterInteractionTrigger(InteractionTrigger __instance)
     {
-        ItemChest chest = __instance.messageReciever.GetComponent<ItemChest>();
-        if (!ScreenTransition.playerTransitioningScreens && chest != null)
+        if (!ScreenTransition.playerTransitioningScreens)
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string scene = SceneManager.GetActiveScene().name;
-            string location = IDs.GetChestID(chest);
-            logger.SetLocation(scene, location, chest.transform.position, false, false);
+
+            ItemChest chest = __instance.messageReciever.GetComponent<ItemChest>();
+            if (chest != null)  logger.SetLocation(scene, IDs.GetChestID(chest), chest.transform.position, false, false);
+
+            StoreNPC shop = __instance.messageReciever.GetComponent<StoreNPC>();
+            NPCCharacter npc = __instance.messageReciever.GetComponent<NPCCharacter>();
+            if (shop != null && shop.npcName != "JoanaNPC") logger.SetLocation(scene, IDs.GetNPCID(shop), shop.transform.position, false, false);
+            else if (npc != null && loggedNonShopNPCs.Contains(npc.npcName)) logger.SetLocation(scene, IDs.GetNPCID(npc), npc.transform.position, false, false);
         }
     }
 
