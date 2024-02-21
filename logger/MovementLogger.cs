@@ -459,7 +459,9 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(NewGamePopup), nameof(NewGamePopup.NewGameCoroutine)), HarmonyPrefix]
     public static void ResetLocationOnNewGame()
     {
-        Plugin.Instance.movementLogger.ClearLocation();
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        logger.ClearLocation();
+        logger.currentStates.Clear();
     }
 
     [HarmonyPatch(typeof(LabCutscene1), nameof(LabCutscene1.AfterCutscene)), HarmonyPrefix]
@@ -467,6 +469,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
+
         string location = IDs.GetNewGameID();
         logger.SetLocation(scene, location, logger.GetCameraPos(), false, false);
     }
@@ -474,7 +477,9 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
     public static void ResetLocationOnLoadGame()
     {
-        Plugin.Instance.movementLogger.ClearLocation();
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        logger.ClearLocation();
+        logger.currentStates.Clear();
     }
 
     [HarmonyPatch(typeof(LevelController), nameof(LevelController.FinishRestartingPlayers)), HarmonyPostfix]
