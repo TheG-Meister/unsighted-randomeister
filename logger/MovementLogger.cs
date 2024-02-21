@@ -488,10 +488,14 @@ public class MovementLogger : IDisposable
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
 
-        GlobalGameData data = PseudoSingleton<GlobalGameData>.instance;
-        TemporaryCheckpointLocation checkpoint = data.currentData.playerDataSlots[data.loadedSlot].lastCheckpoint;
-        string location = IDs.GetCheckpointID(checkpoint);
-        __result = logger.AddLocationChangeToEnumerator(__result, scene, location, checkpoint.position, false, false);
+        PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
+
+        if (data.lastTerminalData == null || string.IsNullOrEmpty(data.lastTerminalData.areaName))
+        {
+            TemporaryCheckpointLocation checkpoint = data.lastCheckpoint;
+            string location = IDs.GetCheckpointID(checkpoint);
+            __result = logger.AddLocationChangeToEnumerator(__result, scene, location, checkpoint.position, false, false);
+        }
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
