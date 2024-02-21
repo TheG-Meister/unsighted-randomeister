@@ -39,5 +39,6 @@ public class IDs
     public static string GetAbilityCollectableID(AbilityCollectable ability) => IDs.GetID(ability.name);
     public static string GetDarkMonsterFightExitID() => IDs.GetID(typeof(DarkMonsterCraterCutscene));
     public static string GetVanaFlamebladeID() => IDs.GetID("Vana", "Flameblade");
+    public static string GetBlacksmithCutsceneID() => IDs.GetID(typeof(BlacksmithCutscene));
 
 }

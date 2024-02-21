@@ -782,6 +782,18 @@ public class MovementLogger : IDisposable
         logger.SetLocation(scene, location, __instance.transform.position, false, true);
     }
 
+    [HarmonyPatch(typeof(BlacksmithCutscene), nameof(BlacksmithCutscene.Start)), HarmonyPrefix]
+    public static void LogEnterBlacksmithCutscene(BlacksmithCutscene __instance)
+    {
+        if (!PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains("BlacksmithCutscene"))
+        {
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            string scene = SceneManager.GetActiveScene().name;
+            string location = IDs.GetBlacksmithCutsceneID();
+            logger.SetLocation(scene, location, __instance.transform.position, false, false);
+        }
+    }
+
     // ----------------------- ACTIONS -------------------------- //
 
     public static void PollActions()
