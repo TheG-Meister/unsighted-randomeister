@@ -35,5 +35,7 @@ public class IDs
     public static string GetMeteorCrystalItemLocID(string boss) => IDs.GetID(boss, "MeteorShard");
     public static string GetChestID(ItemChest chest) => IDs.GetID(chest.name);
     public static string GetNPCID(NPCCharacter npc) => IDs.GetID(npc.npcName);
+    public static string GetKeyCardID() => IDs.GetID(typeof(KeyCard));
+    public static string GetAbilityCollectableID(AbilityCollectable ability) => IDs.GetID(ability.name);
 
 }

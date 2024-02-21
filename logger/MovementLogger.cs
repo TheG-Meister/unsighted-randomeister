@@ -498,6 +498,36 @@ public class MovementLogger : IDisposable
         }
     }
 
+    [HarmonyPatch(typeof(InteractionTrigger), nameof(InteractionTrigger.PlayersEnteredMyTrigger)), HarmonyPrefix]
+    public static void LogEnterInteractionTrigger(InteractionTrigger __instance)
+    {
+        if (!ScreenTransition.playerTransitioningScreens)
+        {
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            string scene = SceneManager.GetActiveScene().name;
+
+            ItemChest chest = __instance.messageReciever.GetComponent<ItemChest>();
+            if (chest != null) logger.SetLocation(scene, IDs.GetChestID(chest), chest.transform.position, false, false);
+
+            StoreNPC shop = __instance.messageReciever.GetComponent<StoreNPC>();
+            NPCCharacter npc = __instance.messageReciever.GetComponent<NPCCharacter>();
+            if (shop != null && shop.npcName != "JoanaNPC") logger.SetLocation(scene, IDs.GetNPCID(shop), shop.transform.position, false, false);
+            else if (npc != null && loggedNonShopNPCs.Contains(npc.npcName)) logger.SetLocation(scene, IDs.GetNPCID(npc), npc.transform.position, false, false);
+
+            KeyCard keyCard = __instance.messageReciever.GetComponent<KeyCard>();
+            if (keyCard != null) logger.SetLocation(scene, IDs.GetKeyCardID(), keyCard.transform.position, false, false);
+        }
+    }
+
+    [HarmonyPatch(typeof(AbilityCollectable), nameof(AbilityCollectable.ItemCollected)), HarmonyPrefix]
+    public static void LogCollectAbility(AbilityCollectable __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        string scene = SceneManager.GetActiveScene().name;
+        string location = IDs.GetAbilityCollectableID(__instance);
+        logger.SetLocation(scene, location, __instance.transform.position, false, false);
+    }
+
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
     public static void LogEnterScreenTransition(ScreenTransition __instance)
     {
@@ -730,24 +760,6 @@ public class MovementLogger : IDisposable
 
         string itemLoc = IDs.GetMeteorCrystalItemLocID(FlashbackRoomController.myBossName);
         logger.SetLocation(scene, itemLoc, __instance.transform.position, false, true);
-    }
-
-    [HarmonyPatch(typeof(InteractionTrigger), nameof(InteractionTrigger.PlayersEnteredMyTrigger)), HarmonyPrefix]
-    public static void LogEnterInteractionTrigger(InteractionTrigger __instance)
-    {
-        if (!ScreenTransition.playerTransitioningScreens)
-        {
-            MovementLogger logger = Plugin.Instance.movementLogger;
-            string scene = SceneManager.GetActiveScene().name;
-
-            ItemChest chest = __instance.messageReciever.GetComponent<ItemChest>();
-            if (chest != null)  logger.SetLocation(scene, IDs.GetChestID(chest), chest.transform.position, false, false);
-
-            StoreNPC shop = __instance.messageReciever.GetComponent<StoreNPC>();
-            NPCCharacter npc = __instance.messageReciever.GetComponent<NPCCharacter>();
-            if (shop != null && shop.npcName != "JoanaNPC") logger.SetLocation(scene, IDs.GetNPCID(shop), shop.transform.position, false, false);
-            else if (npc != null && loggedNonShopNPCs.Contains(npc.npcName)) logger.SetLocation(scene, IDs.GetNPCID(npc), npc.transform.position, false, false);
-        }
     }
 
     // ----------------------- ACTIONS -------------------------- //
@@ -1138,4 +1150,5 @@ public class MovementLogger : IDisposable
         logger.RemoveStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, true));
         logger.AddStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, false));
     }
+
 }
