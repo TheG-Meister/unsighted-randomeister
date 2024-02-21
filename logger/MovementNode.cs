@@ -28,7 +28,7 @@ public class MovementNode
 
     public string GetStringID()
     {
-        return string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), this.scene, this.location);
+        return string.Join(Constants.ID_SEPARATOR.ToString(), this.scene, this.location);
     }
 
 }

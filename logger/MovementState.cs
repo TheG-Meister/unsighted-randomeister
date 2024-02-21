@@ -24,7 +24,7 @@ public class MovementState
 
     public string GetStringID()
     {
-        return string.IsNullOrEmpty(scene) ? this.name : string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), this.scene, this.name);
+        return string.IsNullOrEmpty(scene) ? this.name : string.Join(Constants.ID_SEPARATOR.ToString(), this.scene, this.name);
     }
 
 }

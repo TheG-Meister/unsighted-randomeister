@@ -40,8 +40,6 @@ public class MovementLogger : IDisposable
         }
     }
 
-    public List<char> charsToKeepInAnnouncements = new() { '.' };
-
     public bool announce;
     public bool uniqueAnnouncements;
     public bool log;
@@ -67,7 +65,7 @@ public class MovementLogger : IDisposable
     private float gameTime;
     private float realTime;
 
-    private HashSet<PlayerAction> silentActions = new() { Walk, Run, StaminaRecharge, Attack, DashAttack, SpinAttack, Parry, SpinnerAttack, JumpOffSpinner, Grind, JumpUp };
+    private readonly HashSet<PlayerAction> silentActions = new() { Walk, Run, StaminaRecharge, Attack, DashAttack, SpinAttack, Parry, SpinnerAttack, JumpOffSpinner, Grind, JumpUp };
 
     public MovementLogger(string nodePath, string edgePath, string statePath)
     {
@@ -222,7 +220,7 @@ public class MovementLogger : IDisposable
                 if (states != null)
                 {
                     foreach (MovementState state in states) node.states.Add(state.id);
-                    statesString = string.Join(",", states.Select(s => s.scene + Constants.MOVEMENT_LOGGER_ID_SEPARATOR + s.name));
+                    statesString = string.Join(",", states.Select(s => s.scene + Constants.ID_SEPARATOR + s.name));
                 }
             }
             this.nodes.Add(node.id, node);
@@ -305,8 +303,8 @@ public class MovementLogger : IDisposable
 
         if (this.announce)
         {
-            List<string> locationParts = node.GetStringID().Split(Constants.MOVEMENT_LOGGER_ID_SEPARATOR).ToList();
-            string announcement = locationParts.Select(s => ReplaceSpecialCharsInPascal(s)).Join(delimiter: ", ");
+            List<string> locationParts = node.GetStringID().Split(Constants.ID_SEPARATOR).ToList();
+            string announcement = locationParts.Select(s => Strings.ReplaceSpecialCharsInPascal(s)).Join(delimiter: ", ");
             this.announcements.Add(new(announcement, colour, position));
         }
     }
@@ -359,7 +357,7 @@ public class MovementLogger : IDisposable
             {
                 this.actions.Add(action);
                 //if (!this.silentActions.Contains(action)) 
-                announcements.Add(this.ReplaceSpecialCharsInPascal(action.ToString()));
+                announcements.Add(Strings.ReplaceSpecialCharsInPascal(action.ToString()));
             }
         }
         if (this.announce && announcements.Count > 0)
@@ -385,7 +383,7 @@ public class MovementLogger : IDisposable
             if (!this.currentStates.Contains(state))
             {
                 this.currentStates.Add(state);
-                this.announcements.Add(new(this.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Orange, position));
+                this.announcements.Add(new(Strings.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Orange, position));
             }
         }
     }
@@ -398,7 +396,7 @@ public class MovementLogger : IDisposable
             if (this.currentStates.Contains(state))
             {
                 this.currentStates.Remove(state);
-                this.announcements.Add(new(this.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
+                this.announcements.Add(new(Strings.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
             }
         }
     }
@@ -411,7 +409,7 @@ public class MovementLogger : IDisposable
             if (state.scene != "" && (string.IsNullOrEmpty(scene) || state.scene == scene))
             {
                 toRemove.Add(state);
-                this.announcements.Add(new(this.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
+                this.announcements.Add(new(Strings.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
             }
         }
 
@@ -426,7 +424,7 @@ public class MovementLogger : IDisposable
             if (state.scene != "" && state.scene != scene)
             {
                 toRemove.Add(state);
-                this.announcements.Add(new(this.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
+                this.announcements.Add(new(Strings.ReplaceSpecialCharsInPascal(state.GetStringID()), ColorNames.Blue, position));
             }
         }
 
@@ -447,93 +445,7 @@ public class MovementLogger : IDisposable
         else return pos;
     }
 
-    public string SnakeToPascalCase(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return text;
-        else
-        {
-            StringBuilder builder = new();
-
-            bool lastUnderscore = true;
-            foreach (char c in text)
-            {
-                if (c == '_') lastUnderscore = true;
-                else if (char.IsLetter(c))
-                {
-                    if (lastUnderscore)
-                    {
-                        builder.Append(char.ToUpperInvariant(c));
-                        lastUnderscore = false;
-                    }
-                    else builder.Append(char.ToLowerInvariant(c));
-                }
-                else builder.Append(c);
-            }
-
-            return builder.ToString();
-        }
-    }
-
-    public string ReplaceSpecialCharsInPascal(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return text;
-        else
-        {
-            StringBuilder builder = new();
-
-            bool firstChar = true;
-            char lastChar = ' ';
-            foreach (char c in text)
-            {
-                if (char.IsLetter(c))
-                {
-                    if (!firstChar && !char.IsLetter(lastChar))
-                    {
-                        builder.Append(' ');
-                        builder.Append(char.ToUpperInvariant(c));
-                    }
-                    else
-                    {
-                        if (!firstChar && char.IsUpper(c)) builder.Append(' ');
-                        builder.Append(c);
-                    }
-                }
-                else if (char.IsNumber(c))
-                {
-                    if (!firstChar && (!char.IsNumber(lastChar) && lastChar != '.')) builder.Append(' ');
-                    builder.Append(c);
-                }
-                else if (this.charsToKeepInAnnouncements.Contains(c)) builder.Append(c);
-
-                firstChar = false;
-                lastChar = c;
-            }
-
-            return builder.ToString();
-        }
-    }
-
     // ----------------------- IDS -------------------- //
-
-    public string GetID(params object[] ids) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ids);
-    public string GetNewGameID() => "New Game";
-    public string GetScreenTransitionID(ScreenTransition transition) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), transition.GetType(), this.SnakeToPascalCase(transition.myDirection.ToString()), transition.triggerID);
-    public string GetTerminalID() => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), typeof(Terminal));
-    public string GetHoleID(HoleTeleporter hole) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), hole.GetType(), hole.holeIndex);
-    public string GetElevatorID(Elevator elevator) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), elevator.GetType(), elevator.elevatorID);
-    public string GetLadderID(SceneChangeLadder ladder) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ladder.GetType(), ladder.name);
-    public string GetTowerElevatorID(CraterTowerElevator elevator) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), elevator.GetType(), elevator.name);
-    public string GetMetalScrapOreStateID(MetalScrapOre ore, bool present) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex(), present ? "Present" : "Absent");
-    public string GetMetalScrapOreLocationID(MetalScrapOre ore) => string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex());
-    public string GetCheckpointID(TemporaryCheckpointLocation checkpoint) => this.GetID("Checkpoint", checkpoint.position.x, checkpoint.position.y);
-    public string GetEagleExitID(EagleRideTrigger trigger) => this.GetID(trigger.GetType());
-    public string GetEagleBossEntranceID(Eagle eagle) => this.GetID(eagle.GetType());
-    public string GetEagleBossExitID(EaglesController controller) => this.GetID(controller.GetType(), "Exit");
-    public string GetCrashSiteEntranceID(AfterEagleBossCutscene cutscene) => this.GetID(cutscene.GetType());
-    public string GetEagleCrystalID(EagleBossCrystal crystal) => this.GetID(crystal.GetType());
-    public string GetFlashbackRoomEntranceID(int layout) => this.GetID("Flashback", layout, "Entrance");
-    public string GetFlashbackRoomExitID(int layout) => this.GetID("Flashback", layout, "Exit");
-    public string GetMeteorCrystalItemLoc(string boss) => this.GetID(boss, "MeteorShard");
 
     // ------------------------- ROOM CHANGES --------------------- //
 
@@ -555,7 +467,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
-        string location = logger.GetNewGameID();
+        string location = IDs.GetNewGameID();
         logger.SetLocation(scene, location, logger.GetCameraPos(), false, false);
     }
 
@@ -573,7 +485,7 @@ public class MovementLogger : IDisposable
 
         GlobalGameData data = PseudoSingleton<GlobalGameData>.instance;
         TemporaryCheckpointLocation checkpoint = data.currentData.playerDataSlots[data.loadedSlot].lastCheckpoint;
-        string location = logger.GetCheckpointID(checkpoint);
+        string location = IDs.GetCheckpointID(checkpoint);
         __result = logger.AddLocationChangeToEnumerator(__result, scene, location, checkpoint.position, false, false);
     }
 
@@ -581,7 +493,7 @@ public class MovementLogger : IDisposable
     public static void LogEnterScreenTransition(ScreenTransition __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string location = logger.GetScreenTransitionID(__instance);
+        string location = IDs.GetScreenTransitionID(__instance);
         logger.SetLocation(SceneManager.GetActiveScene().name, location, logger.GetCameraPos(), false, true);
     }
 
@@ -594,7 +506,7 @@ public class MovementLogger : IDisposable
             (ScreenTransition.teleportCheat ||
             ScreenTransition.lastSceneName == PseudoSingleton<MapManager>.instance.GetNextRoomName(__instance.myDirection, __instance.triggerID)))
         {
-            string location = logger.GetScreenTransitionID(__instance);
+            string location = IDs.GetScreenTransitionID(__instance);
 
             __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, logger.GetCameraPos(), false, false);
         }
@@ -605,7 +517,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
-        logger.SetLocation(scene, logger.GetTerminalID(), __instance.transform.position, false, false);
+        logger.SetLocation(scene, IDs.GetTerminalID(), __instance.transform.position, false, false);
     }
 
     /*
@@ -627,7 +539,7 @@ public class MovementLogger : IDisposable
     public static void LogEnterHole(HoleTeleporter __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string location = logger.GetHoleID(__instance);
+        string location = IDs.GetHoleID(__instance);
         logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
     }
 
@@ -637,7 +549,7 @@ public class MovementLogger : IDisposable
         if (__instance.GetComponent<ElevatedGround>() == null && HoleTeleporter.fallingDownOnHole && HoleTeleporter.lastHoleID == __instance.holeIndex)
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
-            string location = logger.GetHoleID(__instance);
+            string location = IDs.GetHoleID(__instance);
             __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
         }
     }
@@ -646,7 +558,7 @@ public class MovementLogger : IDisposable
     public static void LogEnterElevator(Elevator __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string location = logger.GetElevatorID(__instance);
+        string location = IDs.GetElevatorID(__instance);
         logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
     }
 
@@ -656,7 +568,7 @@ public class MovementLogger : IDisposable
         if (__instance.elevatorID == Elevator.lastElevatorID && Elevator.ridingElevator)
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
-            string location = logger.GetElevatorID(__instance);
+            string location = IDs.GetElevatorID(__instance);
             __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
         }
     }
@@ -665,7 +577,7 @@ public class MovementLogger : IDisposable
     public static void LogEnterCrystal(CrystalAppear __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(CrystalAppear), __instance.myBossName);
+        string location = string.Join(Constants.ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(CrystalAppear), __instance.myBossName);
         logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
     }
 
@@ -674,7 +586,7 @@ public class MovementLogger : IDisposable
     {
         if (CrystalTeleportExit.usingCrystalTeleport)
         {
-            string location = string.Join(Constants.MOVEMENT_LOGGER_ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(CrystalTeleportExit));
+            string location = string.Join(Constants.ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(CrystalTeleportExit));
             MovementLogger logger = Plugin.Instance.movementLogger;
             logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
         }
@@ -684,7 +596,7 @@ public class MovementLogger : IDisposable
     public static void LogEnterLadder(SceneChangeLadder __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string location = logger.GetLadderID(__instance);
+        string location = IDs.GetLadderID(__instance);
         logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
     }
 
@@ -694,7 +606,7 @@ public class MovementLogger : IDisposable
         if (SceneChangeLadder.currentLadder == __instance.name)
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
-            string location = logger.GetLadderID(__instance);
+            string location = IDs.GetLadderID(__instance);
             logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
         }
     }
@@ -703,7 +615,7 @@ public class MovementLogger : IDisposable
     public static void LogEnterTowerElevator(CraterTowerElevator __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string location = logger.GetTowerElevatorID(__instance);
+        string location = IDs.GetTowerElevatorID(__instance);
         logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
     }
 
@@ -713,7 +625,7 @@ public class MovementLogger : IDisposable
         if (CraterTowerElevator.currentElevator == __instance.name)
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
-            string location = logger.GetTowerElevatorID(__instance);
+            string location = IDs.GetTowerElevatorID(__instance);
             __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
         }
     }
@@ -723,7 +635,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
-        string location = logger.GetEagleExitID(__instance);
+        string location = IDs.GetEagleExitID(__instance);
         logger.SetLocation(scene, location, __instance.transform.position, false, true);
     }
 
@@ -734,7 +646,7 @@ public class MovementLogger : IDisposable
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string scene = SceneManager.GetActiveScene().name;
-            string location = logger.GetEagleBossEntranceID(__instance);
+            string location = IDs.GetEagleBossEntranceID(__instance);
             __result = logger.AddLocationChangeToEnumerator(__result, scene, location, __instance.transform.position, false, false);
         }
     }
@@ -744,7 +656,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
-        string location = logger.GetEagleBossExitID(__instance);
+        string location = IDs.GetEagleBossExitID(__instance);
         logger.SetLocation(scene, location, __instance.transform.position, false, true);
     }
 
@@ -756,7 +668,7 @@ public class MovementLogger : IDisposable
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string scene = SceneManager.GetActiveScene().name;
-            string location = logger.GetCrashSiteEntranceID(__instance);
+            string location = IDs.GetCrashSiteEntranceID(__instance);
             logger.SetLocation(scene, location, __instance.transform.position, false, false);
         }
     }
@@ -766,7 +678,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
-        string location = logger.GetEagleCrystalID(__instance);
+        string location = IDs.GetEagleCrystalID(__instance);
         logger.SetLocation(scene, location, __instance.transform.position, false, true);
     }
 
@@ -775,7 +687,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
-        string location = logger.GetEagleCrystalID(__instance);
+        string location = IDs.GetEagleCrystalID(__instance);
         __result = logger.AddLocationChangeToEnumerator(__result, scene, location, __instance.transform.position, false, false);
     }
 
@@ -794,7 +706,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
-        string location = logger.GetFlashbackRoomEntranceID(GetFlashbackRoomLayout(__instance));
+        string location = IDs.GetFlashbackRoomEntranceID(GetFlashbackRoomLayout(__instance));
         __result = logger.AddLocationChangeToEnumerator(__result, scene, location, __instance.transform.position, false, false);
     }
 
@@ -804,11 +716,24 @@ public class MovementLogger : IDisposable
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
 
-        string exitLoc = logger.GetFlashbackRoomEntranceID(GetFlashbackRoomLayout(__instance));
+        string exitLoc = IDs.GetFlashbackRoomExitID(GetFlashbackRoomLayout(__instance));
         logger.SetLocation(scene, exitLoc, __instance.transform.position, false, true);
 
-        string itemLoc = logger.GetMeteorCrystalItemLoc(FlashbackRoomController.myBossName);
+        string itemLoc = IDs.GetMeteorCrystalItemLocID(FlashbackRoomController.myBossName);
         logger.SetLocation(scene, itemLoc, __instance.transform.position, false, true);
+    }
+
+    [HarmonyPatch(typeof(InteractionTrigger), nameof(InteractionTrigger.PlayersEnteredMyTrigger)), HarmonyPrefix]
+    public static void LogChestEnter(InteractionTrigger __instance)
+    {
+        ItemChest chest = __instance.messageReciever.GetComponent<ItemChest>();
+        if (!ScreenTransition.playerTransitioningScreens && chest != null)
+        {
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            string scene = SceneManager.GetActiveScene().name;
+            string location = IDs.GetChestID(chest);
+            logger.SetLocation(scene, location, chest.transform.position, false, false);
+        }
     }
 
     // ----------------------- ACTIONS -------------------------- //
@@ -1183,9 +1108,9 @@ public class MovementLogger : IDisposable
         Vector3 position = __instance.transform.position;
         if (PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains(__instance.GetOreCode()))
         {
-            logger.AddStates(position, scene, logger.GetMetalScrapOreStateID(__instance, false));
+            logger.AddStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, false));
         }
-        else logger.AddStates(position, scene, logger.GetMetalScrapOreStateID(__instance, true));
+        else logger.AddStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, true));
     }
 
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Destroyed)), HarmonyPostfix]
@@ -1195,8 +1120,8 @@ public class MovementLogger : IDisposable
         string scene = SceneManager.GetActiveScene().name;
         Vector3 position = __instance.transform.position;
 
-        logger.SetLocation(scene, logger.GetMetalScrapOreLocationID(__instance), position, true, false);
-        logger.RemoveStates(position, scene, logger.GetMetalScrapOreStateID(__instance, true));
-        logger.AddStates(position, scene, logger.GetMetalScrapOreStateID(__instance, false));
+        logger.SetLocation(scene, IDs.GetMetalScrapOreLocationID(__instance), position, true, false);
+        logger.RemoveStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, true));
+        logger.AddStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, false));
     }
 }
