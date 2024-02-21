@@ -516,6 +516,9 @@ public class MovementLogger : IDisposable
 
             KeyCard keyCard = __instance.messageReciever.GetComponent<KeyCard>();
             if (keyCard != null) logger.SetLocation(scene, IDs.GetKeyCardID(), keyCard.transform.position, false, false);
+
+            CraftingTable table = __instance.messageReciever.GetComponent<CraftingTable>();
+            if (table != null) logger.SetLocation(scene, IDs.GetCraftingTableID(table), table.transform.position, false, false);
         }
     }
 
