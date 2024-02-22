@@ -54,6 +54,7 @@ public class MovementLogger : IDisposable
     public Logger stateLogger;
     public Logger nodeLogger;
     public Logger edgeLogger;
+    public Logger objectLogger;
 
     public Dictionary<PlayerAction, int> actionIDs;
     public List<MovementState> states;
@@ -111,6 +112,7 @@ public class MovementLogger : IDisposable
         this.states = new();
         this.nodes = new();
         this.edges = new();
+        this.objects = new();
 
         this.largestActionID = -1;
         this.largestStateID = -1;
@@ -237,6 +239,28 @@ public class MovementLogger : IDisposable
         }
         else this.edgeLogger = new(edgesPath);
 
+        if (File.Exists(objectsPath))
+        {
+            List<string> headers = new() { "type", "scene", "name" };
+
+            List<List<string>> parsedObjectsFile = DelimitedFileReader.ReadDelimitedFile(objectsPath, '\t', headers.ToArray());
+
+            foreach (List<string> parsedObject in parsedObjectsFile)
+            {
+                this.objects.Add(new MovementObject(parsedObject[headers.IndexOf("type")], parsedObject[headers.IndexOf("scene")], parsedObject[headers.IndexOf("name")]));
+            }
+
+            this.objectLogger = new(objectsPath);
+        }
+        else
+        {
+            Logger logger = new(objectsPath);
+            logger.stream.WriteLine(string.Join("\t", "type", "scene", "name"));
+            logger.stream.Flush();
+
+            this.objectLogger = logger;
+        }
+
     }
 
     public MovementNode GetNode(string scene, string location, HashSet<PlayerAction> actions = null, HashSet<MovementState> states = null)
@@ -311,6 +335,17 @@ public class MovementLogger : IDisposable
     {
         if (!this.actionIDs.ContainsValue(id)) throw new Exception("There is no action corresponding to this ID");
         return this.actionIDs.First(k => k.Value == id).Key;
+    }
+
+    public void LogObject(string type, string scene, string name)
+    {
+        MovementObject obj = new(type, scene, name);
+        if (!this.objects.Contains(obj))
+        {
+            this.objects.Add(obj);
+            this.objectLogger.stream.WriteLine(string.Join("\t", obj.type, obj.scene, obj.name));
+            this.objectLogger.stream.Flush();
+        }
     }
 
     public void Announce()

@@ -23,4 +23,12 @@ public class MovementObject
         this.scene = scene;
         this.name = name;
     }
+
+    public override bool Equals(object obj)
+    {
+        return obj is MovementObject @object &&
+               type == @object.type &&
+               scene == @object.scene &&
+               name == @object.name;
+    }
 }
