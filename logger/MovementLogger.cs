@@ -202,9 +202,9 @@ public class MovementLogger : IDisposable
         states ??= new();
 
         bool intermediate = actions.Count > 0 || states.Count > 0;
-        HashSet<int> stateIds = new(states.Select(s => s.id).ToList());
+        HashSet<int> stateIDs = new(states.Select(s => s.id).ToList());
 
-        MovementNode node = this.nodes.Values.ToList().Find(n => n.scene == scene && n.location == location && (!intermediate || (n.actions.SetEquals(actions) && n.states.SetEquals(stateIds))));
+        MovementNode node = this.nodes.Values.ToList().Find(n => n.scene == scene && n.location == location && (!intermediate || (n.actions.SetEquals(actions) && n.states.SetEquals(stateIDs))));
         if (node == null)
         {
             this.largestNodeID++;
@@ -222,7 +222,7 @@ public class MovementLogger : IDisposable
                 if (states.Count > 0)
                 {
                     foreach (MovementState state in states) node.states.Add(state.id);
-                    statesString = string.Join(",", states.Select(s => s.id));
+                    statesString = string.Join(",", stateIDs);
                 }
             }
             this.nodes.Add(node.id, node);
