@@ -61,7 +61,7 @@ public class MovementLogger : IDisposable
     public int largestStateID;
     public MovementNode currentNode;
 
-    private readonly HashSet<PlayerAction> actions;
+    private readonly HashSet<PlayerAction> currentActions;
     private readonly HashSet<MovementState> currentStates;
     private bool changingScene;
     private float gameTime;
@@ -71,7 +71,7 @@ public class MovementLogger : IDisposable
 
     public MovementLogger(string nodePath, string edgePath, string statePath)
     {
-        this.actions = new();
+        this.currentActions = new();
         this.currentStates = new();
         this.changingScene = false;
 
@@ -214,15 +214,15 @@ public class MovementLogger : IDisposable
 
             if (intermediate)
             {
-                if (actions != null)
+                if (actions.Count > 0)
                 {
                     foreach (PlayerAction action in actions) node.actions.Add(action);
                     actionsString = string.Join(",", actions);
                 }
-                if (states != null)
+                if (states.Count > 0)
                 {
                     foreach (MovementState state in states) node.states.Add(state.id);
-                    statesString = string.Join(",", states.Select(s => s.scene + Constants.ID_SEPARATOR + s.name));
+                    statesString = string.Join(",", states.Select(s => s.id));
                 }
             }
             this.nodes.Add(node.id, node);
@@ -289,12 +289,12 @@ public class MovementLogger : IDisposable
                 this.edges.Add(edge);
                 if (!sceneChange)
                 {
-                    foreach (PlayerAction action in this.actions) edge.actions.Add(action);
+                    foreach (PlayerAction action in this.currentActions) edge.actions.Add(action);
                     foreach (MovementState state in this.currentStates) edge.states.Add(state.id);
                 }
 
                 string states = string.Join(",", this.currentStates.Select(s => s.id).ToArray());
-                string actions = string.Join(",", this.actions.ToArray());
+                string actions = string.Join(",", this.currentActions.ToArray());
                 string realTimeDuration = (realTime - this.realTime).ToString();
                 string gameTimeDuration = (gameTime - this.gameTime).ToString();
 
@@ -320,7 +320,7 @@ public class MovementLogger : IDisposable
         if (gameTime < 0) gameTime = 0;
 
         MovementNode target;
-        if (intermediate) target = this.GetNode(scene, location, this.actions, this.currentStates);
+        if (intermediate) target = this.GetNode(scene, location, this.currentActions, this.currentStates);
         else target = this.GetNode(scene, location);
 
         this.LogMovement(target, position, this.changingScene, realTime, gameTime);
@@ -335,7 +335,7 @@ public class MovementLogger : IDisposable
 
         if (!intermediate)
         {
-            this.actions.Clear();
+            this.currentActions.Clear();
         }
     }
 
@@ -355,9 +355,9 @@ public class MovementLogger : IDisposable
         List<string> announcements = new();
         foreach (PlayerAction action in actions)
         {
-            if (!this.uniqueAnnouncements || !this.actions.Contains(action))
+            if (!this.uniqueAnnouncements || !this.currentActions.Contains(action))
             {
-                this.actions.Add(action);
+                this.currentActions.Add(action);
                 //if (!this.silentActions.Contains(action)) 
                 announcements.Add(Strings.ReplaceSpecialCharsInPascal(action.ToString()));
             }
