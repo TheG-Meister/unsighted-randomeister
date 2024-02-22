@@ -9,8 +9,10 @@ namespace dev.gmeister.unsighted.randomeister.core;
 public class DelimitedFileReader
 {
 
-    public static IEnumerator<List<string>> ReadDelimitedFile(string path, char delim, string[] headers)
+    public static List<List<string>> ReadDelimitedFile(string path, char delim, params string[] headers)
     {
+        List<List<string>> output = new();
+
         if (File.Exists(path))
         {
             List<string> lines = new(File.ReadAllLines(path));
@@ -29,17 +31,19 @@ public class DelimitedFileReader
                     }
                     else
                     {
-                        List<string> output = new();
+                        List<string> fields = new();
                         foreach (string header in headers)
                         {
-                            if (split.Length <= fileHeaders.IndexOf(header)) throw new IOException("A line did not have enough fields");
-                            output.Add(split[fileHeaders.IndexOf(header)]);
+                            if (split.Length <= fileHeaders.IndexOf(header)) fields.Add("");
+                            else fields.Add(split[fileHeaders.IndexOf(header)]);
                         }
-                        yield return output;
+                        output.Add(fields);
                     }
                 }
             }
         }
+
+        return output;
     }
 
 }
