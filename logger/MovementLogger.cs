@@ -137,8 +137,6 @@ public class MovementLogger : IDisposable
         {
             Logger logger = new(actionsPath);
             logger.stream.WriteLine(string.Join("\t", "id", "action"));
-
-            foreach (PlayerAction action in Enum.GetValues(typeof(PlayerAction))) logger.stream.WriteLine(string.Join("\t", this.GetActionID(action), action));
             logger.stream.Flush();
 
             this.actionLogger = logger;
