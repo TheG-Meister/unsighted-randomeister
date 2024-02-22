@@ -232,7 +232,7 @@ public class MovementLogger : IDisposable
         if (!File.Exists(edgesPath))
         {
             Logger logger = new(edgesPath);
-            logger.stream.WriteLine(string.Join("\t", "source", "target", "actions", "states", "scene change", "real time", "game time"));
+            logger.stream.WriteLine(string.Join("\t", "source", "target", "actions", "states", "scene change", "real time", "game time", "timestamp"));
             logger.stream.Flush();
 
             this.edgeLogger = logger;
@@ -372,7 +372,7 @@ public class MovementLogger : IDisposable
         }
     }
 
-    public void LogMovement(MovementNode node, Vector3 position, bool sceneChange, float realTime, float gameTime)
+    public void LogMovement(MovementNode node, Vector3 position, bool sceneChange, float realTime, float gameTime, long timestamp)
     {
         if (realTime < 0) realTime = 0;
         if (gameTime < 0) gameTime = 0;
@@ -383,7 +383,7 @@ public class MovementLogger : IDisposable
             colour = ColorNames.Green;
             if (this.log)
             {
-                MovementEdge edge = new(this.currentNode.id, node.id, sceneChange, (realTime - this.realTime), (gameTime - this.gameTime));
+                MovementEdge edge = new(this.currentNode.id, node.id, sceneChange, (realTime - this.realTime), (gameTime - this.gameTime), timestamp);
                 this.edges.Add(edge);
                 if (!sceneChange)
                 {
@@ -396,7 +396,7 @@ public class MovementLogger : IDisposable
                 string realTimeDuration = (realTime - this.realTime).ToString();
                 string gameTimeDuration = (gameTime - this.gameTime).ToString();
 
-                this.edgeLogger.stream.WriteLine(string.Join("\t", edge.source, edge.target, actions, states, edge.sceneChange ? "1" : "0", edge.realTime, edge.gameTime));
+                this.edgeLogger.stream.WriteLine(string.Join("\t", edge.source, edge.target, actions, states, edge.sceneChange ? "1" : "0", edge.realTime, edge.gameTime, edge.timestamp));
                 this.edgeLogger.stream.Flush();
             }
         }
@@ -421,7 +421,7 @@ public class MovementLogger : IDisposable
         if (intermediate) target = this.GetNode(scene, location, this.currentActions, this.currentStates);
         else target = this.GetNode(scene, location);
 
-        this.LogMovement(target, position, this.changingScene, realTime, gameTime);
+        this.LogMovement(target, position, this.changingScene, realTime, gameTime, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds());
 
         if (this.log) this.currentNode = target;
         else this.currentNode = null;
