@@ -50,15 +50,19 @@ public class MovementLogger : IDisposable
     public float cameraPadding;
     public List<Announcement> announcements;
 
+    public Logger actionLogger;
+    public Logger stateLogger;
     public Logger nodeLogger;
     public Logger edgeLogger;
-    public Logger stateLogger;
 
-    public Dictionary<int, MovementNode> nodes;
+    public Dictionary<PlayerAction, int> actionIDs;
+    public List<MovementState> states;
+    public List<MovementNode> nodes;
     public List<MovementEdge> edges;
-    public Dictionary<int, MovementState> states;
-    public int largestNodeID;
+    public HashSet<MovementObject> objects;
+    public int largestActionID;
     public int largestStateID;
+    public int largestNodeID;
     public MovementNode currentNode;
 
     private readonly HashSet<PlayerAction> currentActions;
@@ -69,7 +73,7 @@ public class MovementLogger : IDisposable
 
     private readonly HashSet<PlayerAction> silentActions = new() { Walk, Run, StaminaRecharge, Attack, DashAttack, SpinAttack, Parry, SpinnerAttack, JumpOffSpinner, Grind, JumpUp };
 
-    public MovementLogger(string nodePath, string edgePath, string statePath)
+    public MovementLogger(string dir)
     {
         this.currentActions = new();
         this.currentStates = new();
@@ -80,12 +84,12 @@ public class MovementLogger : IDisposable
         this.uniqueAnnouncements = true;
         this.lastAnnouncementTime = float.MinValue;
         this.announcements = new();
-        this.announcementDelay = 0.33333f;
+        this.announcementDelay = 0.2f;
         this.cameraPadding = -4f;
 
         this.currentNode = null;
 
-        this.InitLoggers(nodePath, edgePath, statePath);
+        this.InitLoggers(dir);
     }
 
     public void Dispose()
@@ -95,18 +99,54 @@ public class MovementLogger : IDisposable
         this.stateLogger.Dispose();
     }
 
-    public void InitLoggers(string nodePath, string edgePath, string statePath)
+    public void InitLoggers(string dir)
     {
+        string actionsPath = Path.Combine(dir, "actions.tsv");
+        string statesPath = Path.Combine(dir, "states.tsv");
+        string nodesPath = Path.Combine(dir, "nodes.tsv");
+        string edgesPath = Path.Combine(dir, "edges.tsv");
+        string objectsPath = Path.Combine(dir, "objects.tsv");
+
+        this.actionIDs = new();
+        this.states = new();
         this.nodes = new();
         this.edges = new();
-        this.states = new();
 
+        this.largestActionID = 0;
         this.largestStateID = 0;
         this.largestNodeID = 0;
 
-        if (File.Exists(statePath))
+        if (File.Exists(actionsPath))
         {
-            List<string> lines = new(File.ReadAllLines(statePath));
+            List<string> headers = new() { "id", "action" };
+
+            List<List<string>> parsedActionsFile = DelimitedFileReader.ReadDelimitedFile(actionsPath, '\t', headers.ToArray());
+
+            foreach (List<string> parsedAction in parsedActionsFile)
+            {
+                if (int.TryParse(parsedAction[headers.IndexOf("id")], out int id) && Enum.TryParse(parsedAction[headers.IndexOf("action")], out PlayerAction action))
+                {
+                    this.actionIDs[action] = id;
+                    if (id > this.largestActionID) this.largestActionID = id;
+                }
+            }
+
+            this.actionLogger = new(actionsPath);
+        }
+        else
+        {
+            Logger logger = new(actionsPath);
+            logger.stream.WriteLine(string.Join("\t", "id", "action"));
+
+            foreach (PlayerAction action in Enum.GetValues(typeof(PlayerAction))) logger.stream.WriteLine(string.Join("\t", this.GetActionID(action), action));
+            logger.stream.Flush();
+
+            this.actionLogger = logger;
+        }
+
+        if (File.Exists(statesPath))
+        {
+            List<string> lines = new(File.ReadAllLines(statesPath));
 
             List<string> headers = null;
             foreach (string line in lines)
@@ -119,26 +159,29 @@ public class MovementLogger : IDisposable
                         List<string> split = new(line.Split('\t'));
                         int id = int.Parse(split[headers.IndexOf("id")]);
                         MovementState state = new(id, split[headers.IndexOf("name")], split[headers.IndexOf("scene")]);
-                        this.states.Add(state.id, state);
+
+                        while (this.states.Count <= state.id) this.states.Add(null);
+                        this.states[state.id] = state;
+
+                        if (state.id > this.largestStateID) this.largestStateID = state.id;
                     }
                 }
             }
 
-            this.stateLogger = new(statePath);
-            foreach (MovementState state in this.states.Values) if (state.id > this.largestStateID) this.largestStateID = state.id;
+            this.stateLogger = new(statesPath);
         }
         else
         {
-            Logger logger = new(statePath);
+            Logger logger = new(statesPath);
             logger.stream.WriteLine(string.Join("\t", "id", "name", "scene"));
             logger.stream.Flush();
 
             this.stateLogger = logger;
         }
 
-        if (File.Exists(nodePath))
+        if (File.Exists(nodesPath))
         {
-            List<string> lines = new(File.ReadAllLines(nodePath));
+            List<string> lines = new(File.ReadAllLines(nodesPath));
 
             List<string> headers = null;
             foreach (string line in lines)
@@ -167,32 +210,34 @@ public class MovementLogger : IDisposable
                             foreach (string state in statesSplit) if (int.TryParse(state, out int stateInt)) node.states.Add(stateInt);
                         }
 
-                        this.nodes.Add(node.id, node);
+                        while (this.nodes.Count <= node.id) this.nodes.Add(null);
+                        this.nodes[node.id] = node;
+
+                        if (node.id > this.largestNodeID) this.largestNodeID = node.id;
                     }
                 }
             }
 
-            this.nodeLogger = new(nodePath);
-            foreach (MovementNode node in this.nodes.Values) if (node.id > this.largestNodeID) this.largestNodeID = node.id;
+            this.nodeLogger = new(nodesPath);
         }
         else
         {
-            Logger logger = new(nodePath);
+            Logger logger = new(nodesPath);
             logger.stream.WriteLine(string.Join("\t", "id", "scene", "location", "actions", "states"));
             logger.stream.Flush();
 
             this.nodeLogger = logger;
         }
 
-        if (!File.Exists(edgePath))
+        if (!File.Exists(edgesPath))
         {
-            Logger logger = new(edgePath);
+            Logger logger = new(edgesPath);
             logger.stream.WriteLine(string.Join("\t", "source", "target", "actions", "states", "scene change", "real time", "game time"));
             logger.stream.Flush();
 
             this.edgeLogger = logger;
         }
-        else this.edgeLogger = new(edgePath);
+        else this.edgeLogger = new(edgesPath);
 
     }
 
@@ -204,7 +249,7 @@ public class MovementLogger : IDisposable
         bool intermediate = actions.Count > 0 || states.Count > 0;
         HashSet<int> stateIDs = new(states.Select(s => s.id).ToList());
 
-        MovementNode node = this.nodes.Values.ToList().Find(n => n.scene == scene && n.location == location && (!intermediate || (n.actions.SetEquals(actions) && n.states.SetEquals(stateIDs))));
+        MovementNode node = this.nodes.ToList().Find(n => n.scene == scene && n.location == location && (!intermediate || (n.actions.SetEquals(actions) && n.states.SetEquals(stateIDs))));
         if (node == null)
         {
             this.largestNodeID++;
@@ -225,7 +270,9 @@ public class MovementLogger : IDisposable
                     statesString = string.Join(",", stateIDs);
                 }
             }
-            this.nodes.Add(node.id, node);
+
+            while (this.nodes.Count <= node.id) this.nodes.Add(null);
+            this.nodes[node.id] = node;
 
             this.nodeLogger.stream.WriteLine(string.Join("\t", node.id, node.scene, node.location, actionsString, statesString));
             this.nodeLogger.stream.Flush();
@@ -236,11 +283,13 @@ public class MovementLogger : IDisposable
 
     public MovementState GetState(string name, string scene = "")
     {
-        MovementState state = this.states.Values.ToList().Find(s => s.name == name && s.scene == scene);
+        MovementState state = this.states.ToList().Find(s => s.name == name && s.scene == scene);
         if (state == null)
         {
             this.largestStateID++;
             state = new MovementState(this.largestStateID, name, scene);
+
+            while (this.states.Count <= state.id) this.states.Add(null);
             this.states[this.largestStateID] = state;
 
             this.stateLogger.stream.WriteLine(string.Join("\t", state.id, state.name, state.scene));
@@ -248,6 +297,17 @@ public class MovementLogger : IDisposable
         }
 
         return state;
+    }
+
+    public int GetActionID(PlayerAction action)
+    {
+        if (!this.actionIDs.ContainsKey(action))
+        {
+            this.largestActionID++;
+            this.actionIDs[action] = this.largestActionID;
+            return this.largestActionID;
+        }
+        else return this.actionIDs[action];
     }
 
     public void Announce()
@@ -289,7 +349,7 @@ public class MovementLogger : IDisposable
                 this.edges.Add(edge);
                 if (!sceneChange)
                 {
-                    foreach (PlayerAction action in this.currentActions) edge.actions.Add(action);
+                    foreach (PlayerAction action in this.currentActions) edge.actions.Add(this.actionIDs[action]);
                     foreach (MovementState state in this.currentStates) edge.states.Add(state.id);
                 }
 
