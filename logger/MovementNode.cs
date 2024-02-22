@@ -15,7 +15,7 @@ public class MovementNode
     public string scene;
     public string location;
     public HashSet<PlayerAction> actions;
-    public HashSet<int> states;
+    public HashSet<MovementState> states;
 
     public MovementNode(int id, string scene, string location)
     {

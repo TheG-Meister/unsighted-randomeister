@@ -112,9 +112,9 @@ public class MovementLogger : IDisposable
         this.nodes = new();
         this.edges = new();
 
-        this.largestActionID = 0;
-        this.largestStateID = 0;
-        this.largestNodeID = 0;
+        this.largestActionID = -1;
+        this.largestStateID = -1;
+        this.largestNodeID = -1;
 
         if (File.Exists(actionsPath))
         {
@@ -200,14 +200,14 @@ public class MovementLogger : IDisposable
                         if (!string.IsNullOrEmpty(actionsString))
                         {
                             List<string> actionsSplit = new(actionsString.Split(','));
-                            foreach (string action in actionsSplit) if (Enum.IsDefined(typeof(PlayerAction), action)) node.actions.Add((PlayerAction)Enum.Parse(typeof(PlayerAction), action));
+                            foreach (string action in actionsSplit) if (int.TryParse(action, out int actionID)) node.actions.Add(this.GetAction(actionID));
                         }
 
                         string statesString = split[headers.IndexOf("states")];
                         if (!string.IsNullOrEmpty(statesString))
                         {
                             List<string> statesSplit = new(statesString.Split(','));
-                            foreach (string state in statesSplit) if (int.TryParse(state, out int stateInt)) node.states.Add(stateInt);
+                            foreach (string state in statesSplit) if (int.TryParse(state, out int stateID)) node.states.Add(this.states[stateID]);
                         }
 
                         while (this.nodes.Count <= node.id) this.nodes.Add(null);
@@ -247,9 +247,8 @@ public class MovementLogger : IDisposable
         states ??= new();
 
         bool intermediate = actions.Count > 0 || states.Count > 0;
-        HashSet<int> stateIDs = new(states.Select(s => s.id).ToList());
 
-        MovementNode node = this.nodes.ToList().Find(n => n.scene == scene && n.location == location && (!intermediate || (n.actions.SetEquals(actions) && n.states.SetEquals(stateIDs))));
+        MovementNode node = this.nodes.ToList().Find(n => n.scene == scene && n.location == location && (!intermediate || (n.actions.SetEquals(actions) && n.states.SetEquals(states))));
         if (node == null)
         {
             this.largestNodeID++;
@@ -262,12 +261,12 @@ public class MovementLogger : IDisposable
                 if (actions.Count > 0)
                 {
                     foreach (PlayerAction action in actions) node.actions.Add(action);
-                    actionsString = string.Join(",", actions);
+                    actionsString = string.Join(",", actions.Select(a => this.GetActionID(a)));
                 }
                 if (states.Count > 0)
                 {
-                    foreach (MovementState state in states) node.states.Add(state.id);
-                    statesString = string.Join(",", stateIDs);
+                    foreach (MovementState state in states) node.states.Add(state);
+                    statesString = string.Join(",", states.Select(s => s.id));
                 }
             }
 
@@ -310,6 +309,12 @@ public class MovementLogger : IDisposable
         else return this.actionIDs[action];
     }
 
+    public PlayerAction GetAction(int id)
+    {
+        if (!this.actionIDs.ContainsValue(id)) throw new Exception("There is no action corresponding to this ID");
+        return this.actionIDs.First(k => k.Value == id).Key;
+    }
+
     public void Announce()
     {
         float time = Time.realtimeSinceStartup;
@@ -349,12 +354,12 @@ public class MovementLogger : IDisposable
                 this.edges.Add(edge);
                 if (!sceneChange)
                 {
-                    foreach (PlayerAction action in this.currentActions) edge.actions.Add(this.actionIDs[action]);
-                    foreach (MovementState state in this.currentStates) edge.states.Add(state.id);
+                    foreach (PlayerAction action in this.currentActions) edge.actions.Add(action);
+                    foreach (MovementState state in this.currentStates) edge.states.Add(state);
                 }
 
-                string states = string.Join(",", this.currentStates.Select(s => s.id).ToArray());
-                string actions = string.Join(",", this.currentActions.ToArray());
+                string states = string.Join(",", edge.states.Select(s => s.id));
+                string actions = string.Join(",", edge.actions.Select(a => this.GetActionID(a)));
                 string realTimeDuration = (realTime - this.realTime).ToString();
                 string gameTimeDuration = (gameTime - this.gameTime).ToString();
 

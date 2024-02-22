@@ -12,8 +12,8 @@ public class MovementEdge
 
     public int source;
     public int target;
-    public HashSet<int> actions;
-    public HashSet<int> states;
+    public HashSet<PlayerAction> actions;
+    public HashSet<MovementState> states;
     public bool sceneChange;
     public float realTime;
     public float gameTime;
