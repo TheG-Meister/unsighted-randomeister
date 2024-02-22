@@ -23,7 +23,7 @@ public class IDs
     public static string GetLadderID(SceneChangeLadder ladder) => string.Join(ID_SEPARATOR.ToString(), ladder.GetType(), ladder.name);
     public static string GetTowerElevatorID(CraterTowerElevator elevator) => string.Join(ID_SEPARATOR.ToString(), elevator.GetType(), elevator.name);
     public static string GetMetalScrapOreStateID(MetalScrapOre ore, bool present) => string.Join(ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex(), present ? "Present" : "Absent");
-    public static string GetMetalScrapOreLocationID(MetalScrapOre ore) => string.Join(ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex());
+    public static string GetMetalScrapOreID(MetalScrapOre ore) => string.Join(ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex());
     public static string GetCheckpointID(TemporaryCheckpointLocation checkpoint) => IDs.GetID("Checkpoint", checkpoint.position.x, checkpoint.position.y);
     public static string GetEagleExitID(EagleRideTrigger trigger) => IDs.GetID(trigger.GetType());
     public static string GetEagleBossEntranceID(Eagle eagle) => IDs.GetID(eagle.GetType());

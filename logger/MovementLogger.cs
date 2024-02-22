@@ -1265,6 +1265,9 @@ public class MovementLogger : IDisposable
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
         Vector3 position = __instance.transform.position;
+
+        logger.LogObject(__instance.GetType().Name, scene, IDs.GetMetalScrapOreID(__instance));
+
         if (PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains(__instance.GetOreCode()))
         {
             logger.AddStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, false));
@@ -1279,7 +1282,7 @@ public class MovementLogger : IDisposable
         string scene = SceneManager.GetActiveScene().name;
         Vector3 position = __instance.transform.position;
 
-        logger.SetLocation(scene, IDs.GetMetalScrapOreLocationID(__instance), position, true, false);
+        logger.SetLocation(scene, IDs.GetMetalScrapOreID(__instance), position, true, false);
         logger.RemoveStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, true));
         logger.AddStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, false));
     }
