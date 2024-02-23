@@ -447,6 +447,7 @@ public class MovementLogger : IDisposable
         }
 
         this.SetChangingScene(changingScene);
+        if (!changingScene) this.PollActions();
 
         this.gameTime = gameTime;
         this.realTime = realTime;
@@ -573,7 +574,7 @@ public class MovementLogger : IDisposable
         else return new Vector3(obj.transform.position.x, obj.transform.position.y, 0);
     }
 
-    // ------------------------- ROOM CHANGES --------------------- //
+    // ------------------------- LOCATION CHANGES --------------------- //
 
     public IEnumerator AppendCodeToEnumerator(IEnumerator original, Action action)
     {
@@ -621,7 +622,6 @@ public class MovementLogger : IDisposable
             __result = logger.AppendCodeToEnumerator(__result, () =>
             {
                 logger.SetLocation(location, checkpoint.position, false, false);
-                logger.PollActions();
             });
         }
     }
@@ -680,7 +680,6 @@ public class MovementLogger : IDisposable
             {
                 string location = IDs.GetScreenTransitionID(__instance);
                 logger.SetLocation(__instance.gameObject, location, false, false);
-                logger.PollActions();
             });
         }
     }
@@ -726,7 +725,6 @@ public class MovementLogger : IDisposable
             __result = logger.AppendCodeToEnumerator(__result, () =>
             {
                 logger.SetLocation(location, new Vector3(__instance.transform.position.x, __instance.transform.position.y, 16f), false, false);
-                logger.PollActions();
             });
         }
     }
@@ -833,7 +831,6 @@ public class MovementLogger : IDisposable
             __result = logger.AppendCodeToEnumerator(__result, () =>
             {
                 logger.SetLocation(__instance.gameObject, location, false, false);
-                logger.PollActions();
             });
         }
     }
@@ -878,7 +875,6 @@ public class MovementLogger : IDisposable
         __result = logger.AppendCodeToEnumerator(__result, () =>
         {
             logger.SetLocation(__instance.gameObject, location, false, false);
-            logger.PollActions();
         });
     }
 
@@ -901,7 +897,6 @@ public class MovementLogger : IDisposable
         __result = logger.AppendCodeToEnumerator(__result, () =>
         {
             logger.SetLocation(__instance.gameObject, location, false, false);
-            logger.PollActions();
         });
     }
 
