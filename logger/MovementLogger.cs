@@ -181,41 +181,38 @@ public class MovementLogger : IDisposable
 
         if (File.Exists(nodesPath))
         {
-            List<string> lines = new(File.ReadAllLines(nodesPath));
+            List<string> headers = new() { "id", "scene", "location", "x", "y", "height", "actions", "states" };
 
-            List<string> headers = null;
-            foreach (string line in lines)
+            List<List<string>> parsedNodesFile = DelimitedFileReader.ReadDelimitedFile(nodesPath, '\t', headers.ToArray());
+
+            foreach (List<string> parsedNode in parsedNodesFile)
             {
-                if (!string.IsNullOrEmpty(line) && !line.StartsWith("#"))
+                int id = int.Parse(parsedNode[headers.IndexOf("id")]);
+
+                if (!float.TryParse(parsedNode[headers.IndexOf("x")], out float x)) x = -3E38f;
+                if (!float.TryParse(parsedNode[headers.IndexOf("y")], out float y)) y = -3E38f;
+                if (!float.TryParse(parsedNode[headers.IndexOf("height")], out float height)) height = -3E38f;
+
+                MovementNode node = new(id, parsedNode[headers.IndexOf("scene")], parsedNode[headers.IndexOf("location")], new Vector3(x, y, height));
+
+                string actionsString = parsedNode[headers.IndexOf("actions")];
+                if (!string.IsNullOrEmpty(actionsString))
                 {
-                    if (headers == null) headers = new(line.Split('\t'));
-                    else
-                    {
-                        List<string> split = new(line.Split('\t'));
-
-                        int id = int.Parse(split[headers.IndexOf("id")]);
-                        MovementNode node = new(id, split[headers.IndexOf("scene")], split[headers.IndexOf("location")]);
-
-                        string actionsString = split[headers.IndexOf("actions")];
-                        if (!string.IsNullOrEmpty(actionsString))
-                        {
-                            List<string> actionsSplit = new(actionsString.Split(','));
-                            foreach (string action in actionsSplit) if (int.TryParse(action, out int actionID)) node.actions.Add(this.GetAction(actionID));
-                        }
-
-                        string statesString = split[headers.IndexOf("states")];
-                        if (!string.IsNullOrEmpty(statesString))
-                        {
-                            List<string> statesSplit = new(statesString.Split(','));
-                            foreach (string state in statesSplit) if (int.TryParse(state, out int stateID)) node.states.Add(this.states[stateID]);
-                        }
-
-                        while (this.nodes.Count <= node.id) this.nodes.Add(null);
-                        this.nodes[node.id] = node;
-
-                        if (node.id > this.largestNodeID) this.largestNodeID = node.id;
-                    }
+                    List<string> actionsSplit = new(actionsString.Split(','));
+                    foreach (string action in actionsSplit) if (int.TryParse(action, out int actionID)) node.actions.Add(this.GetAction(actionID));
                 }
+
+                string statesString = parsedNode[headers.IndexOf("states")];
+                if (!string.IsNullOrEmpty(statesString))
+                {
+                    List<string> statesSplit = new(statesString.Split(','));
+                    foreach (string state in statesSplit) if (int.TryParse(state, out int stateID)) node.states.Add(this.states[stateID]);
+                }
+
+                while (this.nodes.Count <= node.id) this.nodes.Add(null);
+                this.nodes[node.id] = node;
+
+                if (node.id > this.largestNodeID) this.largestNodeID = node.id;
             }
 
             this.nodeLogger = new(nodesPath);
@@ -223,7 +220,7 @@ public class MovementLogger : IDisposable
         else
         {
             Logger logger = new(nodesPath);
-            logger.stream.WriteLine(string.Join("\t", "id", "scene", "location", "actions", "states"));
+            logger.stream.WriteLine(string.Join("\t", "id", "scene", "location", "x", "y", "height", "actions", "states"));
             logger.stream.Flush();
 
             this.nodeLogger = logger;
@@ -263,7 +260,7 @@ public class MovementLogger : IDisposable
 
     }
 
-    public MovementNode GetNode(string scene, string location, HashSet<PlayerAction> actions = null, HashSet<MovementState> states = null)
+    public MovementNode GetNode(string scene, string location, Vector3 position, HashSet<PlayerAction> actions = null, HashSet<MovementState> states = null)
     {
         actions ??= new();
         states ??= new();
@@ -274,7 +271,7 @@ public class MovementLogger : IDisposable
         if (node == null)
         {
             this.largestNodeID++;
-            node = new MovementNode(this.largestNodeID, scene, location);
+            node = new MovementNode(this.largestNodeID, scene, location, position);
             string actionsString = "";
             string statesString = "";
 
@@ -295,7 +292,7 @@ public class MovementLogger : IDisposable
             while (this.nodes.Count <= node.id) this.nodes.Add(null);
             this.nodes[node.id] = node;
 
-            this.nodeLogger.stream.WriteLine(string.Join("\t", node.id, node.scene, node.location, actionsString, statesString));
+            this.nodeLogger.stream.WriteLine(string.Join("\t", node.id, node.scene, node.location, node.position.x, node.position.y, node.position.z, actionsString, statesString));
             this.nodeLogger.stream.Flush();
         }
 
@@ -418,8 +415,8 @@ public class MovementLogger : IDisposable
         if (gameTime < 0) gameTime = 0;
 
         MovementNode target;
-        if (intermediate) target = this.GetNode(scene, location, this.currentActions, this.currentStates);
-        else target = this.GetNode(scene, location);
+        if (intermediate) target = this.GetNode(scene, location, position, this.currentActions, this.currentStates);
+        else target = this.GetNode(scene, location, position);
 
         this.LogMovement(target, position, this.changingScene, realTime, gameTime, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds());
 

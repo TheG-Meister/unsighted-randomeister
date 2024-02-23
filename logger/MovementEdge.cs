@@ -17,7 +17,7 @@ public class MovementEdge
     public bool sceneChange;
     public float realTime;
     public float gameTime;
-    public long timestamp
+    public long timestamp;
 
     public MovementEdge(int source, int target, bool sceneChange, float realTime, float gameTime, long timestamp)
     {
