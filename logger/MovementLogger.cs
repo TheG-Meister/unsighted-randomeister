@@ -561,11 +561,10 @@ public class MovementLogger : IDisposable
 
     // ------------------------- ROOM CHANGES --------------------- //
 
-    public IEnumerator AddLocationChangeToEnumerator(IEnumerator original, string scene, string location, Vector3 position, bool intermediate, bool changingScene)
+    public IEnumerator AppendCodeToEnumerator(IEnumerator original, Action action)
     {
         while (original.MoveNext()) yield return original.Current;
-        Plugin.Instance.movementLogger.SetLocation(scene, location, position, intermediate, changingScene);
-        MovementLogger.PollActions();
+        action.Invoke();
     }
 
     [HarmonyPatch(typeof(NewGamePopup), nameof(NewGamePopup.NewGameCoroutine)), HarmonyPrefix]
@@ -598,7 +597,6 @@ public class MovementLogger : IDisposable
     public static void LogExitCheckpoint(ref IEnumerator __result)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
 
         PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
 
@@ -606,7 +604,11 @@ public class MovementLogger : IDisposable
         {
             TemporaryCheckpointLocation checkpoint = data.lastCheckpoint;
             string location = IDs.GetCheckpointID(checkpoint);
-            __result = logger.AddLocationChangeToEnumerator(__result, scene, location, checkpoint.position, false, false);
+            __result = logger.AppendCodeToEnumerator(__result, () =>
+            {
+                logger.SetLocation(location, checkpoint.position, false, false);
+                logger.PollActions();
+            });
         }
     }
 
@@ -660,9 +662,12 @@ public class MovementLogger : IDisposable
             (ScreenTransition.teleportCheat ||
             ScreenTransition.lastSceneName == PseudoSingleton<MapManager>.instance.GetNextRoomName(__instance.myDirection, __instance.triggerID)))
         {
-            string location = IDs.GetScreenTransitionID(__instance);
-
-            __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, logger.GetCameraPos(), false, false);
+            __result = logger.AppendCodeToEnumerator(__result, () =>
+            {
+                string location = IDs.GetScreenTransitionID(__instance);
+                logger.SetLocation(__instance.gameObject, location, false, false);
+                logger.PollActions();
+            });
         }
     }
 
@@ -704,7 +709,11 @@ public class MovementLogger : IDisposable
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string location = IDs.GetHoleID(__instance);
-            __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
+            __result = logger.AppendCodeToEnumerator(__result, () =>
+            {
+                logger.SetLocation(location, new Vector3(__instance.transform.position.x, __instance.transform.position.y, 16f), false, false);
+                logger.PollActions();
+            });
         }
     }
 
@@ -723,7 +732,10 @@ public class MovementLogger : IDisposable
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string location = IDs.GetElevatorID(__instance);
-            __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
+            __result = logger.AppendCodeToEnumerator(__result, () =>
+            {
+                logger.SetLocation(__instance.gameObject, location, false, false);
+            });
         }
     }
 
@@ -780,7 +792,10 @@ public class MovementLogger : IDisposable
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string location = IDs.GetTowerElevatorID(__instance);
-            __result = logger.AddLocationChangeToEnumerator(__result, SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
+            __result = logger.AppendCodeToEnumerator(__result, () =>
+            {
+                logger.SetLocation(__instance.gameObject, location, false, false);
+            });
         }
     }
 
@@ -801,7 +816,11 @@ public class MovementLogger : IDisposable
             MovementLogger logger = Plugin.Instance.movementLogger;
             string scene = SceneManager.GetActiveScene().name;
             string location = IDs.GetEagleBossEntranceID(__instance);
-            __result = logger.AddLocationChangeToEnumerator(__result, scene, location, __instance.transform.position, false, false);
+            __result = logger.AppendCodeToEnumerator(__result, () =>
+            {
+                logger.SetLocation(__instance.gameObject, location, false, false);
+                logger.PollActions();
+            });
         }
     }
 
@@ -842,7 +861,11 @@ public class MovementLogger : IDisposable
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
         string location = IDs.GetEagleCrystalID(__instance);
-        __result = logger.AddLocationChangeToEnumerator(__result, scene, location, __instance.transform.position, false, false);
+        __result = logger.AppendCodeToEnumerator(__result, () =>
+        {
+            logger.SetLocation(__instance.gameObject, location, false, false);
+            logger.PollActions();
+        });
     }
 
     public static int GetFlashbackRoomLayout(FlashbackRoomController controller)
@@ -861,11 +884,15 @@ public class MovementLogger : IDisposable
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
         string location = IDs.GetFlashbackRoomEntranceID(GetFlashbackRoomLayout(__instance));
-        __result = logger.AddLocationChangeToEnumerator(__result, scene, location, __instance.transform.position, false, false);
+        __result = logger.AppendCodeToEnumerator(__result, () =>
+        {
+            logger.SetLocation(__instance.gameObject, location, false, false);
+            logger.PollActions();
+        });
     }
 
     [HarmonyPatch(typeof(FlashbackRoomController), nameof(FlashbackRoomController.ExitCutscene)), HarmonyPrefix]
-    public static void LogEnterFlashbackRoom(FlashbackRoomController __instance)
+    public static void LogExitFlashbackRoom(FlashbackRoomController __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
@@ -911,7 +938,7 @@ public class MovementLogger : IDisposable
 
     // ----------------------- ACTIONS -------------------------- //
 
-    public static void PollActions()
+    public void PollActions()
     {
         List<PlayerInfo> players = PseudoSingleton<PlayersManager>.instance.players;
         foreach (PlayerInfo player in players)
