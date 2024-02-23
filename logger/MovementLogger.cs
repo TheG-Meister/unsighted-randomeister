@@ -323,6 +323,8 @@ public class MovementLogger : IDisposable
         {
             this.largestActionID++;
             this.actionIDs[action] = this.largestActionID;
+            this.actionLogger.stream.WriteLine(string.Join("\t", this.largestActionID, action));
+            this.actionLogger.stream.Flush();
             return this.largestActionID;
         }
         else return this.actionIDs[action];
