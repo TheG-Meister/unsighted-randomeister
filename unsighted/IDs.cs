@@ -25,7 +25,7 @@ public class IDs
     public static string GetMetalScrapOreStateID(MetalScrapOre ore, bool present) => string.Join(ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex(), present ? "Present" : "Absent");
     public static string GetMetalScrapOreID(MetalScrapOre ore) => string.Join(ID_SEPARATOR.ToString(), ore.name, ore.transform.GetSiblingIndex());
     public static string GetCheckpointID(TemporaryCheckpointLocation checkpoint) => IDs.GetID("Checkpoint", checkpoint.position.x, checkpoint.position.y);
-    public static string GetEagleExitID(EagleRideTrigger trigger) => IDs.GetID(trigger.GetType());
+    public static string GetEagleRideTriggerID(EagleRideTrigger trigger) => IDs.GetID(trigger.GetType());
     public static string GetEagleBossEntranceID(Eagle eagle) => IDs.GetID(eagle.GetType());
     public static string GetEagleBossExitID(EaglesController controller) => IDs.GetID(controller.GetType(), "Exit");
     public static string GetCrashSiteEntranceID(AfterEagleBossCutscene cutscene) => IDs.GetID(cutscene.GetType());
@@ -41,5 +41,7 @@ public class IDs
     public static string GetVanaFlamebladeID() => IDs.GetID("Vana", "Flameblade");
     public static string GetBlacksmithCutsceneID() => IDs.GetID(typeof(BlacksmithCutscene));
     public static string GetCraftingTableID(CraftingTable table) => IDs.GetID(table.name);
+    public static string GetCrystalAppearID(CrystalAppear crystal) => IDs.GetID(typeof(CrystalAppear), crystal.myBossName);
+    public static string GetCrystalTeleportExitID(CrystalTeleportExit exit) => IDs.GetID(typeof(CrystalTeleportExit));
 
 }

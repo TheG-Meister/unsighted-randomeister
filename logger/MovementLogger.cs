@@ -597,7 +597,7 @@ public class MovementLogger : IDisposable
         string scene = SceneManager.GetActiveScene().name;
 
         string location = IDs.GetNewGameID();
-        logger.SetLocation(scene, location, logger.GetCameraPos(), false, false);
+        logger.SetLocation(scene, location, logger.GetPlayerPos(), false, false);
     }
 
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
@@ -632,21 +632,23 @@ public class MovementLogger : IDisposable
         if (!ScreenTransition.playerTransitioningScreens)
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
-            string scene = SceneManager.GetActiveScene().name;
 
             ItemChest chest = __instance.messageReciever.GetComponent<ItemChest>();
-            if (chest != null) logger.SetLocation(scene, IDs.GetChestID(chest), chest.transform.position, false, false);
+            if (chest != null) logger.SetLocation(chest.gameObject, IDs.GetChestID(chest), false, false);
 
             StoreNPC shop = __instance.messageReciever.GetComponent<StoreNPC>();
             NPCCharacter npc = __instance.messageReciever.GetComponent<NPCCharacter>();
-            if (shop != null && shop.npcName != "JoanaNPC") logger.SetLocation(scene, IDs.GetNPCID(shop), shop.transform.position, false, false);
-            else if (npc != null && loggedNonShopNPCs.Contains(npc.npcName)) logger.SetLocation(scene, IDs.GetNPCID(npc), npc.transform.position, false, false);
+            if (shop != null && shop.npcName != "JoanaNPC") logger.SetLocation(shop.gameObject, IDs.GetNPCID(shop), false, false);
+            else if (npc != null && loggedNonShopNPCs.Contains(npc.npcName)) logger.SetLocation(npc.gameObject, IDs.GetNPCID(npc), false, false);
 
             KeyCard keyCard = __instance.messageReciever.GetComponent<KeyCard>();
-            if (keyCard != null) logger.SetLocation(scene, IDs.GetKeyCardID(), keyCard.transform.position, false, false);
+            if (keyCard != null) logger.SetLocation(keyCard.gameObject, IDs.GetKeyCardID(), false, false);
 
             CraftingTable table = __instance.messageReciever.GetComponent<CraftingTable>();
-            if (table != null) logger.SetLocation(scene, IDs.GetCraftingTableID(table), table.transform.position, false, false);
+            if (table != null) logger.SetLocation(table.gameObject, IDs.GetCraftingTableID(table), false, false);
+
+            EagleRideTrigger eagle = __instance.messageReciever.GetComponent<EagleRideTrigger>();
+            if (eagle != null) logger.SetLocation(eagle.gameObject, IDs.GetEagleRideTriggerID(eagle), false, false);
         }
     }
 
@@ -654,9 +656,8 @@ public class MovementLogger : IDisposable
     public static void LogCollectAbility(AbilityCollectable __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
         string location = IDs.GetAbilityCollectableID(__instance);
-        logger.SetLocation(scene, location, __instance.transform.position, false, false);
+        logger.SetLocation(__instance.gameObject, location, false, false);
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
@@ -664,7 +665,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string location = IDs.GetScreenTransitionID(__instance);
-        logger.SetLocation(SceneManager.GetActiveScene().name, location, logger.GetCameraPos(), false, true);
+        logger.SetLocation(__instance.gameObject, location, false, true);
     }
 
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.EndPlayerScreenTransition)), HarmonyPostfix]
@@ -689,7 +690,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
-        logger.SetLocation(scene, IDs.GetTerminalID(), __instance.transform.position, false, false);
+        logger.SetLocation(__instance.gameObject, IDs.GetTerminalID(), false, false);
     }
 
     /*
@@ -712,7 +713,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string location = IDs.GetHoleID(__instance);
-        logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
+        logger.SetLocation(__instance.gameObject, location, false, true);
     }
 
     [HarmonyPatch(typeof(HoleTeleporter), nameof(HoleTeleporter.Start)), HarmonyPostfix]
@@ -734,7 +735,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string location = IDs.GetElevatorID(__instance);
-        logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
+        logger.SetLocation(__instance.gameObject, location, false, true);
     }
 
     [HarmonyPatch(typeof(Elevator), nameof(Elevator.Start)), HarmonyPostfix]
@@ -755,8 +756,8 @@ public class MovementLogger : IDisposable
     public static void LogEnterCrystal(CrystalAppear __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string location = string.Join(Constants.ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(CrystalAppear), __instance.myBossName);
-        logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
+        string location = IDs.GetCrystalAppearID(__instance);
+        logger.SetLocation(__instance.gameObject, location, false, true);
     }
 
     [HarmonyPatch(typeof(CrystalTeleportExit), nameof(CrystalTeleportExit.Start)), HarmonyPostfix]
@@ -764,9 +765,9 @@ public class MovementLogger : IDisposable
     {
         if (CrystalTeleportExit.usingCrystalTeleport)
         {
-            string location = string.Join(Constants.ID_SEPARATOR.ToString(), SceneManager.GetActiveScene().name, typeof(CrystalTeleportExit));
+            string location = IDs.GetCrystalTeleportExitID(__instance);
             MovementLogger logger = Plugin.Instance.movementLogger;
-            logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
+            logger.SetLocation(__instance.gameObject, location, false, false);
         }
     }
 
@@ -775,7 +776,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string location = IDs.GetLadderID(__instance);
-        logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
+        logger.SetLocation(__instance.gameObject, location, false, true);
     }
 
     [HarmonyPatch(typeof(SceneChangeLadder), nameof(SceneChangeLadder.Start)), HarmonyPrefix]
@@ -785,7 +786,7 @@ public class MovementLogger : IDisposable
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
             string location = IDs.GetLadderID(__instance);
-            logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, false);
+            logger.SetLocation(__instance.gameObject, location, false, false);
         }
     }
 
@@ -794,7 +795,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string location = IDs.GetTowerElevatorID(__instance);
-        logger.SetLocation(SceneManager.GetActiveScene().name, location, __instance.transform.position, false, true);
+        logger.SetLocation(__instance.gameObject, location, false, true);
     }
 
     [HarmonyPatch(typeof(CraterTowerElevator), nameof(CraterTowerElevator.Start)), HarmonyPostfix]
@@ -811,14 +812,16 @@ public class MovementLogger : IDisposable
         }
     }
 
+    /*
     [HarmonyPatch(typeof(EagleRideTrigger), nameof(EagleRideTrigger.CutsceneCoroutine)), HarmonyPrefix]
     public static void LogEnterEagleFlight(EagleRideTrigger __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
-        string location = IDs.GetEagleExitID(__instance);
+        string location = IDs.GetEagleRideTriggerID(__instance);
         logger.SetLocation(scene, location, __instance.transform.position, false, true);
     }
+    */
 
     [HarmonyPatch(typeof(Eagle), nameof(Eagle.Start)), HarmonyPostfix]
     public static void LogExitEagleFlight(Eagle __instance, ref IEnumerator __result)
@@ -826,7 +829,6 @@ public class MovementLogger : IDisposable
         if (__instance.firstEagle)
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
-            string scene = SceneManager.GetActiveScene().name;
             string location = IDs.GetEagleBossEntranceID(__instance);
             __result = logger.AppendCodeToEnumerator(__result, () =>
             {
@@ -839,9 +841,8 @@ public class MovementLogger : IDisposable
     public static void LogEnterEagleBossDeath(EaglesController __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
         string location = IDs.GetEagleBossExitID(__instance);
-        logger.SetLocation(scene, location, __instance.transform.position, false, true);
+        logger.SetLocation(__instance.gameObject, location, false, true);
     }
 
     [HarmonyPatch(typeof(AfterEagleBossCutscene), nameof(AfterEagleBossCutscene.Start)), HarmonyPrefix]
@@ -851,9 +852,8 @@ public class MovementLogger : IDisposable
         if (!data.currentData.playerDataSlots[data.loadedSlot].dataStrings.Contains("AfterEagleBossCutscene"))
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
-            string scene = SceneManager.GetActiveScene().name;
             string location = IDs.GetCrashSiteEntranceID(__instance);
-            logger.SetLocation(scene, location, __instance.transform.position, false, false);
+            logger.SetLocation(__instance.gameObject, location, false, false);
         }
     }
 
@@ -861,16 +861,14 @@ public class MovementLogger : IDisposable
     public static void LogEnterEagleCrystal(EagleBossCrystal __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
         string location = IDs.GetEagleCrystalID(__instance);
-        logger.SetLocation(scene, location, __instance.transform.position, false, true);
+        logger.SetLocation(__instance.gameObject, location, false, true);
     }
 
     [HarmonyPatch(typeof(EagleBossCrystal), nameof(EagleBossCrystal.AfterCrystalCoroutine)), HarmonyPostfix]
     public static void LogExitEagleCrystal(EagleBossCrystal __instance, ref IEnumerator __result)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
         string location = IDs.GetEagleCrystalID(__instance);
         __result = logger.AppendCodeToEnumerator(__result, () =>
         {
@@ -892,7 +890,6 @@ public class MovementLogger : IDisposable
     public static void LogEnterFlashbackRoom(FlashbackRoomController __instance, ref IEnumerator __result)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
         string location = IDs.GetFlashbackRoomEntranceID(GetFlashbackRoomLayout(__instance));
         __result = logger.AppendCodeToEnumerator(__result, () =>
         {
@@ -919,18 +916,16 @@ public class MovementLogger : IDisposable
         MovementLogger.LogExitDarkMonsterFight(__instance);
 
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
         string location = IDs.GetVanaFlamebladeID();
-        logger.SetLocation(scene, location, __instance.transform.position, false, true);
+        logger.SetLocation(__instance.gameObject, location, false, true);
     }
 
     [HarmonyPatch(typeof(DarkMonsterCraterCutscene), nameof(DarkMonsterCraterCutscene.DeathCutsceneCoroutine)), HarmonyPrefix]
     public static void LogExitDarkMonsterFight(DarkMonsterCraterCutscene __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
         string location = IDs.GetDarkMonsterFightExitID();
-        logger.SetLocation(scene, location, __instance.transform.position, false, true);
+        logger.SetLocation(__instance.gameObject, location, false, true);
     }
 
     [HarmonyPatch(typeof(BlacksmithCutscene), nameof(BlacksmithCutscene.Start)), HarmonyPrefix]
@@ -939,9 +934,8 @@ public class MovementLogger : IDisposable
         if (!PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains("BlacksmithCutscene"))
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
-            string scene = SceneManager.GetActiveScene().name;
             string location = IDs.GetBlacksmithCutsceneID();
-            logger.SetLocation(scene, location, __instance.transform.position, false, false);
+            logger.SetLocation(__instance.gameObject, location, false, false);
         }
     }
 
