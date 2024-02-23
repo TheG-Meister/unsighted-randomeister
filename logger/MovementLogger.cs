@@ -425,23 +425,31 @@ public class MovementLogger : IDisposable
         if (gameTime < 0) gameTime = 0;
 
         MovementNode target;
-        if (intermediate) target = this.GetNode(scene, location, position, this.currentActions, this.currentStates);
-        else target = this.GetNode(scene, location, position);
+        //if (intermediate) target = this.GetNode(scene, location, position, this.currentActions, this.currentStates);
+        target = this.GetNode(scene, location, position);
 
         this.LogMovement(target, position, this.changingScene, realTime, gameTime, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds());
 
         if (this.log) this.currentNode = target;
         else this.currentNode = null;
 
+        if (changingScene || this.changingScene) this.currentActions.Clear();
+        else
+        {
+            StringBuilder sb = new();
+            foreach (PlayerAction action in this.currentActions)
+            {
+                sb.Append(action.ToString());
+                sb.Append("\n");
+            }
+
+            this.announcements.Add(new Announcement(sb.ToString(), ColorNames.White, this.GetPlayerPos()));
+        }
+
         this.SetChangingScene(changingScene);
 
         this.gameTime = gameTime;
         this.realTime = realTime;
-
-        if (!intermediate)
-        {
-            this.currentActions.Clear();
-        }
     }
 
     public void ClearLocation()
@@ -474,7 +482,7 @@ public class MovementLogger : IDisposable
 
     public void AddActions(BasicCharacterController controller, params PlayerAction[] actions)
     {
-        this.AddActions(controller.gameObject.transform.position + Vector3.up * (controller.myPhysics.globalHeight + controller.myPhysics.Zsize * 1.55f), actions);
+        this.AddActions(controller.transform.position + Vector3.up * (controller.myPhysics.globalHeight + controller.myPhysics.Zsize * 1.55f), actions);
     }
 
     public void AddActions(MechaController controller, params PlayerAction[] actions)
@@ -543,6 +551,12 @@ public class MovementLogger : IDisposable
         Vector3 pos = PseudoSingleton<CameraSystem>.instance.myTransform.position;
         pos.z = 0;
         return pos;
+    }
+
+    public Vector3 GetPlayerPos()
+    {
+        BasicCharacterController controller = PseudoSingleton<PlayersManager>.instance.players[0].myCharacter;
+        return controller.transform.position + Vector3.up * (controller.myPhysics.globalHeight + controller.myPhysics.Zsize * 1.55f);
     }
 
     public Vector3 GetPositionInCamera(Vector3 pos)
