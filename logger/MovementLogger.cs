@@ -406,6 +406,16 @@ public class MovementLogger : IDisposable
         }
     }
 
+    public void SetLocation(GameObject obj, string location, bool intermediate, bool changingScene)
+    {
+        this.SetLocation(SceneManager.GetActiveScene().name, location, this.GetPosition(obj), intermediate, changingScene);
+    }
+
+    public void SetLocation(string location, Vector3 position, bool intermediate, bool changingScene)
+    {
+        this.SetLocation(SceneManager.GetActiveScene().name, location, position, intermediate, changingScene);
+    }
+
     public void SetLocation(string scene, string location, Vector3 position, bool intermediate, bool changingScene)
     {
         float realTime = Time.realtimeSinceStartup;
@@ -540,6 +550,13 @@ public class MovementLogger : IDisposable
         CameraSystem cameraSystem = PseudoSingleton<CameraSystem>.instance;
         if (!cameraSystem.PositionInsideCamera(pos, this.cameraPadding)) return this.GetCameraPos();
         else return pos;
+    }
+
+    public Vector3 GetPosition(GameObject obj)
+    {
+        SortingObject sort = obj.GetComponentInChildren<SortingObject>();
+        if (sort != null) return new Vector3(obj.transform.position.x, obj.transform.position.y, sort.height);
+        else return new Vector3(obj.transform.position.x, obj.transform.position.y, 0);
     }
 
     // ------------------------- ROOM CHANGES --------------------- //
