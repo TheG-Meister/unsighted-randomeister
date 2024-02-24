@@ -628,6 +628,13 @@ public class MovementLogger : IDisposable
         }
     }
 
+    [HarmonyPatch(typeof(Terminal), nameof(Terminal.PlayersEnteredMyTrigger)), HarmonyPostfix]
+    public static void LogEnterTerminalTrigger(Terminal __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        logger.SetLocation(__instance.gameObject, IDs.GetTerminalID(), false, false);
+    }
+
     [HarmonyPatch(typeof(InteractionTrigger), nameof(InteractionTrigger.PlayersEnteredMyTrigger)), HarmonyPrefix]
     public static void LogEnterInteractionTrigger(InteractionTrigger __instance)
     {
@@ -685,14 +692,6 @@ public class MovementLogger : IDisposable
                 logger.SetLocation(__instance.gameObject, location, false, false);
             });
         }
-    }
-
-    [HarmonyPatch(typeof(Terminal), nameof(Terminal.PlayersEnteredMyTrigger)), HarmonyPostfix]
-    public static void LogEnterTerminalTrigger(Terminal __instance)
-    {
-        MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
-        logger.SetLocation(__instance.gameObject, IDs.GetTerminalID(), false, false);
     }
 
     /*
