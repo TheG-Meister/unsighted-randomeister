@@ -1292,9 +1292,12 @@ public class MovementLogger : IDisposable
         {
             HashSet<PlayerAction> actions = new();
 
-            if (ground.infinityWall || ground.impossibleToGrab)
+            if (ground.infinityWall) actions.Add(StandOnUnclimbableGround);
+            if (ground.impossibleToGrab)
             {
-                if (ground.transform.parent.name != "Bridge") actions.Add(StandOnUnclimbableGround);
+                if (!(SceneManager.GetActiveScene().name == "GardenVillage" && 
+                    ground.name == "Collider (2)" &&
+                    ground.transform.parent.name == "Bridge")) actions.Add(StandOnUnclimbableGround);
             }
             if (ground.GetComponentInParent<MetalScrapOre>() != null) actions.Add(StandOnMaterialCrystal);
             if (ground.GetComponentInChildren<RockBlock>() != null) actions.Add(StandOnRockBlock);
