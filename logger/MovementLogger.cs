@@ -1122,7 +1122,7 @@ public class MovementLogger : IDisposable
         ElevatedGround currentWall = __instance.myPhysics.currentWall;
         if (currentWall != null && currentWall.transform.childCount >= 3)
         {
-            RockBlock rock = currentWall.transform.GetChild(3).GetComponent<RockBlock>();
+            RockBlock rock = currentWall.transform.GetChild(2).GetComponent<RockBlock>();
             if (rock != null) Plugin.Instance.movementLogger.AddActions(__instance, BreakRockWithSpinner);
         }
     }
