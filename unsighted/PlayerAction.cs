@@ -38,6 +38,7 @@ public enum PlayerAction
     DodgeOffSpinner,
     Grind,
     Skip,
+    BreakRockWithSpinner,
 
     Dodge,
     Jump,

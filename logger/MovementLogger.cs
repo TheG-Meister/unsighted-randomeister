@@ -1116,6 +1116,17 @@ public class MovementLogger : IDisposable
         if (!__instance.spinnerGrinding) Plugin.Instance.movementLogger.AddActions(__instance, Grind);
     }
 
+    [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.DestroyBlockWithSpinner)), HarmonyPrefix]
+    public static void LogBreakRockWithSpinner(BasicCharacterController __instance)
+    {
+        ElevatedGround currentWall = __instance.myPhysics.currentWall;
+        if (currentWall != null && currentWall.transform.childCount >= 3)
+        {
+            RockBlock rock = currentWall.transform.GetChild(3).GetComponent<RockBlock>();
+            if (rock != null) Plugin.Instance.movementLogger.AddActions(__instance, BreakRockWithSpinner);
+        }
+    }
+
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.Dash)), HarmonyPrefix]
     public static void LogEarlyJump(BasicCharacterController __instance, float impulseStrength)
     {
