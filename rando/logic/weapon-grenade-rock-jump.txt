@@ -1,0 +1,3 @@
+DowntownMiniboss1_BlasterChest
+MuseumEntrance_DustChest
+MuseumPrizeRoom_MuseumTreasureRoomChest

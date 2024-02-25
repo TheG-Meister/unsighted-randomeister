@@ -1,0 +1,4 @@
+DowntownMiniboss1_RooftopEntranceChest
+AquariumKeyRoom_KeyChest
+AquariumEntrance_CraftingTableChest
+MuseumOptionalRail_OptionalRailChest

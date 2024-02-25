@@ -1,0 +1,8 @@
+CavesShrine_DustChest
+CavesShrine_Chest
+MuseumBasement_UltraSecretBasementChest
+MuseumKeyRoomF2_Chest
+MuseumKeyRoom_MuseumKey1
+MuseumBasementSecret_MeteorDustChest
+AquariumKeyRoom_KeyChest
+AquariumNorthElevator_Chest

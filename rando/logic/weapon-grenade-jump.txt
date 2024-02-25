@@ -1,0 +1,7 @@
+SewersCentralRoom_EasyChest2
+AquariumWestElevator_BlockPuzzleChest
+AquariumExternalCombatRoom_FrostbiteChest
+MuseumMoonDeviceCorridor_TopChest
+MuseumKeyRoomF2_Chest
+MuseumKeyRoom_MuseumKey1
+MuseumLabyrinth_DustChest

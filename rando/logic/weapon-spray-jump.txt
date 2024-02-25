@@ -1,0 +1,5 @@
+MuseumLabyrinth_DustChest
+MuseumMoonDeviceCorridor_TopChest
+MuseumBasement_UltraSecretBasementChest
+MuseumKeyRoomF2_Chest
+MuseumKeyRoom_MuseumKey1
