@@ -58,7 +58,7 @@ public class ChestRandomiser
         };
 
         mainAreas = new BasicLogicReader(this.chestList).Read();
-        mainAreas.Add(new(requiredAbilities), new(unbannedChests));
+        if (!mainAreas.ContainsKey(new(requiredAbilities))) mainAreas.Add(new(requiredAbilities), new(unbannedChests));
     }
 
     public Dictionary<string, string> Randomise()
