@@ -336,6 +336,11 @@ public class MovementLogger : IDisposable
         return this.actionIDs.First(k => k.Value == id).Key;
     }
 
+    public void LogObject(object obj, string name)
+    {
+        this.LogObject(obj.GetType().Name, SceneManager.GetActiveScene().name, name);
+    }
+
     public void LogObject(string type, string scene, string name)
     {
         MovementObject obj = new(type, scene, name);
@@ -1325,28 +1330,14 @@ public class MovementLogger : IDisposable
     public static void LogOreStart(MetalScrapOre __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
-        Vector3 position = __instance.transform.position;
-
-        logger.LogObject(__instance.GetType().Name, scene, IDs.GetMetalScrapOreID(__instance));
-
-        if (PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains(__instance.GetOreCode()))
-        {
-            logger.AddStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, false));
-        }
-        else logger.AddStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, true));
+        logger.LogObject(__instance, IDs.GetMetalScrapOreID(__instance));
     }
 
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Destroyed)), HarmonyPostfix]
     public static void LogOreDestroy(MetalScrapOre __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
-        Vector3 position = __instance.transform.position;
-
-        logger.SetLocation(scene, IDs.GetMetalScrapOreID(__instance), position, true, false);
-        logger.RemoveStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, true));
-        logger.AddStates(position, scene, IDs.GetMetalScrapOreStateID(__instance, false));
+        logger.SetLocation(__instance.gameObject, IDs.GetMetalScrapOreID(__instance), true, false);
     }
 
 }
