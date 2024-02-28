@@ -1030,6 +1030,11 @@ public class MovementLogger : IDisposable
                 case "Icethrower":
                     Plugin.Instance.movementLogger.AddActions(__instance, Spray);
                     break;
+                case "GranadeLauncher":
+                case "IceGranade":
+                case "GranadeShotgun":
+                    Plugin.Instance.movementLogger.AddActions(__instance, PlayerGrenade);
+                    break;
             }
         }
     }
@@ -1042,6 +1047,13 @@ public class MovementLogger : IDisposable
             Plugin.Instance.movementLogger.AddActions(__instance.transform.position, Grenade);
         }
     }
+
+    [HarmonyPatch(typeof(ScrapRobotEnemy), nameof(ScrapRobotEnemy.InstantiateGranade)), HarmonyPrefix]
+    public static void LogScrapRobotGrenade(ScrapRobotEnemy __instance)
+    {
+        Plugin.Instance.movementLogger.AddActions(__instance.transform.position, ScrapRobotGrenade);
+    }
+
 
     [HarmonyPatch(typeof(BulletRaycaster), nameof(BulletRaycaster.IceShurikenPlatformSpawner)), HarmonyPostfix]
     public static void LogCryojetPlatformSpawn(BulletRaycaster __instance, ref IEnumerator __result)
