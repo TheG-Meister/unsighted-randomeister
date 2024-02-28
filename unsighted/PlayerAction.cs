@@ -58,6 +58,8 @@ public enum PlayerAction
     HaileeButton,
     HaileePush,
     HaileeMissile,
+    BreakRockWithMissile,
+    BreakSafeWithMissile,
 
     Telehook,
     Wierdshot,
@@ -73,4 +75,7 @@ public enum PlayerAction
 
     CoyoteJump,
 
+    PushContainerWithMeteorWeapon,
+    BreakRockWithMeteorWeapon,
+    BreakSafeWithMeteorWeapon,
 }

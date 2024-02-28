@@ -415,7 +415,7 @@ public class MovementLogger : IDisposable
 
     public void SetLocation(GameObject obj, string location, bool intermediate, bool changingScene)
     {
-        this.SetLocation(SceneManager.GetActiveScene().name, location, this.GetPosition(obj), intermediate, changingScene);
+        this.SetLocation(SceneManager.GetActiveScene().name, location, this.Get3DObjectPosition(obj), intermediate, changingScene);
     }
 
     public void SetLocation(string location, Vector3 position, bool intermediate, bool changingScene)
@@ -498,6 +498,8 @@ public class MovementLogger : IDisposable
         this.AddActions(controller.transform.position + Vector3.up * (controller.myPhysics.globalHeight), actions);
     }
 
+    public void AddStates(GameObject obj, params string[] states) => this.AddStates(this.Get3DLogPosition(obj), SceneManager.GetActiveScene().name, states);
+
     public void AddStates(Vector3 position, string scene, params string[] states)
     {
         foreach (string name in states)
@@ -574,10 +576,17 @@ public class MovementLogger : IDisposable
         else return pos;
     }
 
-    public Vector3 GetPosition(GameObject obj)
+    public Vector3 Get3DObjectPosition(GameObject obj)
     {
         SortingObject sort = obj.GetComponentInChildren<SortingObject>();
-        if (sort != null) return new Vector3(obj.transform.position.x, obj.transform.position.y, sort.height);
+        if (sort != null) return new Vector3(obj.transform.position.x, obj.transform.position.y, sort.globalHeight);
+        else return new Vector3(obj.transform.position.x, obj.transform.position.y, 0);
+    }
+
+    public Vector3 Get3DLogPosition(GameObject obj)
+    {
+        SortingObject sort = obj.GetComponentInChildren<SortingObject>();
+        if (sort != null) return new Vector3(obj.transform.position.x, obj.transform.position.y + sort.globalHeight);
         else return new Vector3(obj.transform.position.x, obj.transform.position.y, 0);
     }
 
@@ -1128,7 +1137,7 @@ public class MovementLogger : IDisposable
         if (currentWall != null && currentWall.transform.childCount >= 3)
         {
             RockBlock rock = currentWall.transform.GetChild(2).GetComponent<RockBlock>();
-            if (rock != null) Plugin.Instance.movementLogger.AddActions(__instance, BreakRockWithSpinner);
+            if (rock != null && !rock.isSafeDoor) Plugin.Instance.movementLogger.AddActions(__instance, BreakRockWithSpinner);
         }
     }
 
@@ -1324,7 +1333,7 @@ public class MovementLogger : IDisposable
         }
     }
 
-    // --------------------- STATES --------------------- //
+    // --------------------- STATES AND OBJECTS --------------------- //
 
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Start)), HarmonyPostfix]
     public static void LogOreStart(MetalScrapOre __instance)
@@ -1338,6 +1347,63 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         logger.SetLocation(__instance.gameObject, IDs.GetMetalScrapOreID(__instance), true, false);
+    }
+
+    [HarmonyPatch(typeof(RockBlock), nameof(RockBlock.Start)), HarmonyPrefix]
+    public static void LogRockStart(RockBlock __instance)
+    {
+        if (!__instance.reset)
+        {
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            logger.LogObject(__instance, IDs.GetRockID(__instance));
+
+            PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
+            if (data.dataStrings.Contains(__instance.GetDataString())) logger.AddStates(__instance.gameObject, IDs.GetRockStateID(__instance, false));
+        }
+    }
+
+    [HarmonyPatch(typeof(BulletRaycaster), nameof(BulletRaycaster.Update)), HarmonyPrefix]
+    public static void LogMissileRockBreak(BulletRaycaster __instance, bool ___collided, ref RaycastHit2D ___raycastHit)
+    {
+        if (!___collided && __instance.mechaMissile)
+        {
+            __instance.CastRaycast();
+
+            if (___raycastHit.collider != null && ___raycastHit.transform.childCount >= 3)
+            {
+                RockBlock rock = ___raycastHit.transform.GetChild(2).GetComponent<RockBlock>();
+                if (rock != null)
+                {
+                    MovementLogger logger = Plugin.Instance.movementLogger;
+                    if (rock.isSafeDoor) logger.AddActions(logger.GetPlayerPos(), BreakSafeWithMissile);
+                    else logger.AddActions(logger.GetPlayerPos(), BreakRockWithMissile);
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(RockBlock), nameof(RockBlock.DestroyBlock)), HarmonyPrefix]
+    public static void LogRockBreak(RockBlock __instance, bool mechaMissile, bool ___destroyed)
+    {
+        if (!PlayerInfo.cutscene && !___destroyed && (mechaMissile || !__instance.isSafeDoor))
+        {
+            MovementLogger logger = Plugin.Instance.movementLogger;
+            List<PlayerInfo> players = PseudoSingleton<PlayersManager>.instance.players;
+            foreach (PlayerInfo player in players)
+            {
+                if (player.myCharacter.meeleAttacking && player.lastHoldWeapon.Contains("Meteor"))
+                {
+                    if (__instance.isSafeDoor) logger.AddActions(player.myCharacter, BreakSafeWithMeteorWeapon);
+                    else logger.AddActions(player.myCharacter, BreakRockWithMeteorWeapon);
+                }
+            }
+
+            if (!__instance.reset)
+            {
+                logger.SetLocation(__instance.gameObject, IDs.GetRockID(__instance), true, false);
+                logger.AddStates(__instance.gameObject, IDs.GetRockStateID(__instance, false));
+            }
+        }
     }
 
 }

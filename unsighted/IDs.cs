@@ -43,5 +43,7 @@ public class IDs
     public static string GetCraftingTableID(CraftingTable table) => IDs.GetID(table.name);
     public static string GetCrystalAppearID(CrystalAppear crystal) => IDs.GetID(typeof(CrystalAppear), crystal.myBossName);
     public static string GetCrystalTeleportExitID(CrystalTeleportExit exit) => IDs.GetID(typeof(CrystalTeleportExit));
+    public static string GetRockID(RockBlock rock) => IDs.GetID(rock.isSafeDoor ? "SafeDoor" : "RockBlock", rock.transform.parent.name);
+    public static string GetRockStateID(RockBlock rock, bool present) => IDs.GetID(IDs.GetRockID(rock), present ? "Present" : "Broken");
 
 }
