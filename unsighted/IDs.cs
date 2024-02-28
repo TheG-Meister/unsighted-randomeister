@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using dev.gmeister.unsighted.randomeister.core;
 using UnityEngine.SceneManagement;
+using static UnityEngine.UI.Selectable;
 
 namespace dev.gmeister.unsighted.randomeister.unsighted;
 
@@ -45,5 +46,12 @@ public class IDs
     public static string GetCrystalTeleportExitID(CrystalTeleportExit exit) => IDs.GetID(typeof(CrystalTeleportExit));
     public static string GetRockID(RockBlock rock) => IDs.GetID(rock.isSafeDoor ? "SafeDoor" : "RockBlock", rock.transform.parent.name);
     public static string GetRockStateID(RockBlock rock, bool present) => IDs.GetID(IDs.GetRockID(rock), present ? "Present" : "Broken");
+    public static string GetKeyDoorID(KeyDoor keyDoor)
+    {
+        keyDoor.GetKeyDoorName();
+        return IDs.GetID(keyDoor.GetType().Name, keyDoor.name, Strings.SnakeToPascalCase(keyDoor.myDoorDirection.ToString()));
+    }
+
+    public static string GetKeyDoorStateID(KeyDoor keyDoor, bool present) => IDs.GetID(IDs.GetKeyDoorID(keyDoor), present ? "Shut" : "Open");
 
 }

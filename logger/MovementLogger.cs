@@ -1426,4 +1426,23 @@ public class MovementLogger : IDisposable
         }
     }
 
+    [HarmonyPatch(typeof(KeyDoor), nameof(KeyDoor.Start)), HarmonyPrefix]
+    public static void LogKeyDoorStart(KeyDoor __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        logger.LogObject(__instance.gameObject, IDs.GetKeyDoorID(__instance));
+
+        if (__instance.KeyDoorRegistred())
+        {
+            logger.AddStates(__instance.gameObject, IDs.GetKeyDoorStateID(__instance, false));
+        }
+    }
+
+    [HarmonyPatch(typeof(KeyDoor), nameof(KeyDoor.RegisterKeyDoor)), HarmonyPrefix]
+    public static void LogKeyDoorRemoved(KeyDoor __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        logger.AddStates(__instance.gameObject, IDs.GetKeyDoorStateID(__instance, false));
+    }
+
 }
