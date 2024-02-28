@@ -31,4 +31,13 @@ public class MovementObject
                scene == @object.scene &&
                name == @object.name;
     }
+
+    public override int GetHashCode()
+    {
+        int hashCode = -1080393842;
+        hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(type);
+        hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(scene);
+        hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(name);
+        return hashCode;
+    }
 }
