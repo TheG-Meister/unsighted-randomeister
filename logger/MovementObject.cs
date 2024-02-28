@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
@@ -12,16 +13,18 @@ public class MovementObject
     public string type;
     public string scene;
     public string name;
+    public Vector3 position;
 
     public MovementObject()
     {
     }
 
-    public MovementObject(string type, string scene, string name)
+    public MovementObject(string type, string scene, string name, Vector3 position = new Vector3())
     {
         this.type = type;
         this.scene = scene;
         this.name = name;
+        this.position = position;
     }
 
     public override bool Equals(object obj)

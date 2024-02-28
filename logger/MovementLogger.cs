@@ -238,13 +238,20 @@ public class MovementLogger : IDisposable
 
         if (File.Exists(objectsPath))
         {
-            List<string> headers = new() { "type", "scene", "name" };
+            List<string> headers = new() { "type", "scene", "name", "x", "y", "height" };
 
             List<List<string>> parsedObjectsFile = DelimitedFileReader.ReadDelimitedFile(objectsPath, '\t', headers.ToArray());
 
             foreach (List<string> parsedObject in parsedObjectsFile)
             {
-                this.objects.Add(new MovementObject(parsedObject[headers.IndexOf("type")], parsedObject[headers.IndexOf("scene")], parsedObject[headers.IndexOf("name")]));
+                MovementObject obj = new(parsedObject[headers.IndexOf("type")], parsedObject[headers.IndexOf("scene")], parsedObject[headers.IndexOf("name")]);
+
+                if (!float.TryParse(parsedObject[headers.IndexOf("x")], out float x)) x = -3E38f;
+                if (!float.TryParse(parsedObject[headers.IndexOf("y")], out float y)) y = -3E38f;
+                if (!float.TryParse(parsedObject[headers.IndexOf("height")], out float height)) height = -3E38f;
+                obj.position = new Vector3(x, y, height);
+
+                this.objects.Add(obj);
             }
 
             this.objectLogger = new(objectsPath);
@@ -252,7 +259,7 @@ public class MovementLogger : IDisposable
         else
         {
             Logger logger = new(objectsPath);
-            logger.stream.WriteLine(string.Join("\t", "type", "scene", "name"));
+            logger.stream.WriteLine(string.Join("\t", "type", "scene", "name", "x", "y", "height"));
             logger.stream.Flush();
 
             this.objectLogger = logger;
@@ -336,19 +343,22 @@ public class MovementLogger : IDisposable
         return this.actionIDs.First(k => k.Value == id).Key;
     }
 
-    public void LogObject(object obj, string name)
+    public void LogObject(GameObject obj, string name)
     {
-        this.LogObject(obj.GetType().Name, SceneManager.GetActiveScene().name, name);
+        this.LogObject(obj.GetType().Name, SceneManager.GetActiveScene().name, name, this.Get3DObjectPosition(obj));
     }
 
-    public void LogObject(string type, string scene, string name)
+    public void LogObject(string type, string scene, string name, Vector3 position)
     {
-        MovementObject obj = new(type, scene, name);
+        MovementObject obj = new(type, scene, name, position);
         if (!this.objects.Contains(obj))
         {
             this.objects.Add(obj);
-            this.objectLogger.stream.WriteLine(string.Join("\t", obj.type, obj.scene, obj.name));
-            this.objectLogger.stream.Flush();
+            if (this.log)
+            {
+                this.objectLogger.stream.WriteLine(string.Join("\t", obj.type, obj.scene, obj.name, obj.position.x, obj.position.y, obj.position.z));
+                this.objectLogger.stream.Flush();
+            }
         }
     }
 
@@ -1339,7 +1349,7 @@ public class MovementLogger : IDisposable
     public static void LogOreStart(MetalScrapOre __instance)
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        logger.LogObject(__instance, IDs.GetMetalScrapOreID(__instance));
+        logger.LogObject(__instance.gameObject, IDs.GetMetalScrapOreID(__instance));
     }
 
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Destroyed)), HarmonyPostfix]
@@ -1355,7 +1365,7 @@ public class MovementLogger : IDisposable
         if (!__instance.reset)
         {
             MovementLogger logger = Plugin.Instance.movementLogger;
-            logger.LogObject(__instance, IDs.GetRockID(__instance));
+            logger.LogObject(__instance.transform.parent.gameObject, IDs.GetRockID(__instance));
 
             PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
             if (data.dataStrings.Contains(__instance.GetDataString())) logger.AddStates(__instance.gameObject, IDs.GetRockStateID(__instance, false));
