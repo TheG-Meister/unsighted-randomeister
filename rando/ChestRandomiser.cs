@@ -81,7 +81,7 @@ public class ChestRandomiser
             { GetAndRemove(chestPool, chestPool.Find(chest => prologueAreas[new() { Weapon }].Contains(chest))), GetAndRemove(itemPool, itemPool.Find(item => itemAbilities.ContainsKey(item) && itemAbilities[item].Contains(Gun))) },
         };
 
-        string startingItem = itemPool.Find(item => itemAbilities.ContainsKey(item) && (itemAbilities[item].Contains(Water) || itemAbilities[item].Contains(Hook) || itemAbilities[item].Contains(Jump)));
+        string startingItem = itemPool.Find(item => itemAbilities.ContainsKey(item) && (itemAbilities[item].Contains(Water) || itemAbilities[item].Contains(Jump)));
         results.Add(GetAndRemove(chestPool, chestPool.Find(chest => mainAreas[new() { Weapon }].Contains(chest))), GetAndRemove(itemPool, startingItem));
 
         HashSet<Ability> currentAbilities = new() { Weapon };
