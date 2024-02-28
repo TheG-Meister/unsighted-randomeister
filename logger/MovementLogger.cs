@@ -464,6 +464,13 @@ public class MovementLogger : IDisposable
         this.currentNode = null;
     }
 
+    public void Reset()
+    {
+        this.ClearLocation();
+        this.currentStates.Clear();
+        this.currentActions.Clear();
+    }
+
     public void SetChangingScene(bool changingScene)
     {
         if (this.changingScene && !changingScene && this.currentNode != null) this.RemoveRoomStatesInverse(this.GetCameraPos(), this.currentNode.scene);
@@ -601,8 +608,7 @@ public class MovementLogger : IDisposable
     public static void ResetLocationOnNewGame()
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        logger.ClearLocation();
-        logger.currentStates.Clear();
+        logger.Reset();
     }
 
     [HarmonyPatch(typeof(LabCutscene1), nameof(LabCutscene1.AfterCutscene)), HarmonyPrefix]
@@ -619,8 +625,7 @@ public class MovementLogger : IDisposable
     public static void ResetLocationOnLoadGame()
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
-        logger.ClearLocation();
-        logger.currentStates.Clear();
+        logger.Reset();
     }
 
     [HarmonyPatch(typeof(LevelController), nameof(LevelController.FinishRestartingPlayers)), HarmonyPostfix]
@@ -1025,12 +1030,16 @@ public class MovementLogger : IDisposable
                 case "Icethrower":
                     Plugin.Instance.movementLogger.AddActions(__instance, Spray);
                     break;
-                case "GranadeLauncher":
-                case "IceGranade":
-                case "GranadeShotgun":
-                    Plugin.Instance.movementLogger.AddActions(__instance, Grenade);
-                    break;
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(GranadeController), nameof(GranadeController.SpawnExplosion)), HarmonyPrefix]
+    public static void LogExplosion(GranadeController __instance, bool ___alreadyExploded)
+    {
+        if (!___alreadyExploded)
+        {
+            Plugin.Instance.movementLogger.AddActions(__instance.transform.position, Grenade);
         }
     }
 
