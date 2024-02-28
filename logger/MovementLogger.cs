@@ -1443,6 +1443,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger logger = Plugin.Instance.movementLogger;
         logger.AddStates(__instance.gameObject, IDs.GetKeyDoorStateID(__instance, false));
+        logger.SetLocation(__instance.gameObject, IDs.GetKeyDoorID(__instance), false, false);
     }
 
 }
