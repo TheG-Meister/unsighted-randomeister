@@ -451,17 +451,6 @@ public class MovementLogger : IDisposable
         else this.currentNode = null;
 
         if (changingScene || this.changingScene) this.currentActions.Clear();
-        else
-        {
-            StringBuilder sb = new();
-            foreach (PlayerAction action in this.currentActions)
-            {
-                sb.Append(action.ToString());
-                sb.Append("\n");
-            }
-
-            this.announcements.Add(new Announcement(sb.ToString(), ColorNames.White, this.GetPlayerPos()));
-        }
 
         this.SetChangingScene(changingScene);
         if (!changingScene) this.PollActions();
