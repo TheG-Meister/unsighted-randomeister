@@ -519,6 +519,8 @@ public class MovementLogger : IDisposable
         }
     }
 
+    public void RemoveStates(GameObject obj, params string[] states) => this.RemoveStates(this.Get3DLogPosition(obj), SceneManager.GetActiveScene().name, states);
+
     public void RemoveStates(Vector3 position, string scene, params string[] states)
     {
         foreach (string name in states)
@@ -1444,6 +1446,64 @@ public class MovementLogger : IDisposable
         MovementLogger logger = Plugin.Instance.movementLogger;
         logger.AddStates(__instance.gameObject, IDs.GetKeyDoorStateID(__instance, false));
         logger.SetLocation(__instance.gameObject, IDs.GetKeyDoorID(__instance), false, false);
+    }
+
+    [HarmonyPatch(typeof(EnergyPlatform), nameof(EnergyPlatform.Start)), HarmonyPrefix]
+    public static void LogEnergyPlatformStart(EnergyPlatform __instance)
+    {
+        MovementLogger logger = Plugin.Instance.movementLogger;
+        logger.LogObject(__instance.gameObject, IDs.GetEnergyPlatformID(__instance));
+
+        if (__instance.saveStatus)
+        {
+            foreach (GameObject obj in __instance.messageRecievers)
+            {
+                if (obj.GetComponent<GrandPlatform>() != null || obj.GetComponent<BarrierDoor>() != null)
+                {
+                    logger.AddStates(__instance.gameObject, IDs.GetEnergyPlatformStateID(__instance, false));
+                    break;
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(EnergyPlatform), nameof(EnergyPlatform.SendOnMessage)), HarmonyPrefix]
+    public static void LogEnergyPlatformActivate(EnergyPlatform __instance)
+    {
+        if (!__instance.active && __instance.saveStatus)
+        {
+            foreach (GameObject obj in __instance.messageRecievers)
+            {
+                if (obj.GetComponent<BarrierDoor>() != null ||
+                    obj.GetComponent<GrandPlatform>() != null ||
+                    obj.GetComponent<TimedPlatformsParent>() != null ||
+                    obj.GetComponent<TweenPosition>() != null)
+                {
+                    MovementLogger logger = Plugin.Instance.movementLogger;
+                    logger.SetLocation(__instance.gameObject, IDs.GetEnergyPlatformID(__instance), false, false);
+                    logger.AddStates(__instance.gameObject, IDs.GetEnergyPlatformStateID(__instance, true));
+                    break;
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(EnergyPlatform), nameof(EnergyPlatform.SendOffMessage)), HarmonyPrefix]
+    public static void LogEnergyPlatformDeactivate(EnergyPlatform __instance)
+    {
+        if (__instance.active && __instance.saveStatus && __instance.unsaveStatus)
+        {
+            foreach (GameObject obj in __instance.messageRecievers)
+            {
+                if (obj.GetComponent<GrandPlatform>() != null || obj.GetComponent<BarrierDoor>() != null)
+                {
+                    MovementLogger logger = Plugin.Instance.movementLogger;
+                    logger.SetLocation(__instance.gameObject, IDs.GetEnergyPlatformID(__instance), false, false);
+                    logger.AddStates(__instance.gameObject, IDs.GetEnergyPlatformStateID(__instance, false));
+                    break;
+                }
+            }
+        }
     }
 
 }
