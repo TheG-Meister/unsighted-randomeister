@@ -1460,6 +1460,7 @@ public class MovementLogger : IDisposable
             {
                 if (obj.GetComponent<GrandPlatform>() != null || obj.GetComponent<BarrierDoor>() != null)
                 {
+                    logger.RemoveStates(__instance.gameObject, IDs.GetEnergyPlatformStateID(__instance, true));
                     logger.AddStates(__instance.gameObject, IDs.GetEnergyPlatformStateID(__instance, false));
                     break;
                 }
@@ -1481,6 +1482,7 @@ public class MovementLogger : IDisposable
                 {
                     MovementLogger logger = Plugin.Instance.movementLogger;
                     logger.SetLocation(__instance.gameObject, IDs.GetEnergyPlatformID(__instance), false, false);
+                    logger.RemoveStates(__instance.gameObject, IDs.GetEnergyPlatformStateID(__instance, false));
                     logger.AddStates(__instance.gameObject, IDs.GetEnergyPlatformStateID(__instance, true));
                     break;
                 }
