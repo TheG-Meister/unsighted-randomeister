@@ -1033,8 +1033,6 @@ public class MovementLogger : IDisposable
                     Plugin.Instance.movementLogger.AddActions(__instance, Spray);
                     break;
                 case "IceGranade":
-                    Plugin.Instance.movementLogger.AddActions(__instance, PlayerGrenade, PlayerIceGrenade);
-                    break;
                 case "GranadeLauncher":
                 case "GranadeShotgun":
                     Plugin.Instance.movementLogger.AddActions(__instance, PlayerGrenade);
@@ -1100,7 +1098,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(GranadeController), nameof(GranadeController.FallOnWater)), HarmonyPrefix]
     public static void LogIceGrenadePlatformSpawn(GranadeController __instance)
     {
-        if (__instance.iceGranade) Plugin.Instance.movementLogger.AddActions(__instance.transform.position, CreateIceOrRockPlatform);
+        if (__instance.iceGranade) Plugin.Instance.movementLogger.AddActions(__instance.transform.position, CreateIceOrRockPlatform, PlayerIceGrenade);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.HookshotCoroutine)), HarmonyPrefix]
