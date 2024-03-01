@@ -345,7 +345,7 @@ public class MovementLogger : IDisposable
 
     public void LogObject(GameObject obj, string name)
     {
-        this.LogObject(obj.GetType().Name, SceneManager.GetActiveScene().name, name, this.Get3DObjectPosition(obj));
+        this.LogObject(obj.GetType().Name, obj.scene.name, name, this.Get3DObjectPosition(obj));
     }
 
     public void LogObject(string type, string scene, string name, Vector3 position)
@@ -425,7 +425,7 @@ public class MovementLogger : IDisposable
 
     public void SetLocation(GameObject obj, string location, bool intermediate, bool changingScene)
     {
-        this.SetLocation(SceneManager.GetActiveScene().name, location, this.Get3DObjectPosition(obj), intermediate, changingScene);
+        this.SetLocation(obj.scene.name, location, this.Get3DObjectPosition(obj), intermediate, changingScene);
     }
 
     public void SetLocation(string location, Vector3 position, bool intermediate, bool changingScene)
@@ -504,7 +504,7 @@ public class MovementLogger : IDisposable
         this.AddActions(controller.transform.position + Vector3.up * (controller.myPhysics.globalHeight), actions);
     }
 
-    public void AddStates(GameObject obj, params string[] states) => this.AddStates(this.Get3DLogPosition(obj), SceneManager.GetActiveScene().name, states);
+    public void AddStates(GameObject obj, params string[] states) => this.AddStates(this.Get3DLogPosition(obj), obj.scene.name, states);
 
     public void AddStates(Vector3 position, string scene, params string[] states)
     {
@@ -519,7 +519,7 @@ public class MovementLogger : IDisposable
         }
     }
 
-    public void RemoveStates(GameObject obj, params string[] states) => this.RemoveStates(this.Get3DLogPosition(obj), SceneManager.GetActiveScene().name, states);
+    public void RemoveStates(GameObject obj, params string[] states) => this.RemoveStates(this.Get3DLogPosition(obj), obj.scene.name, states);
 
     public void RemoveStates(Vector3 position, string scene, params string[] states)
     {
@@ -614,13 +614,12 @@ public class MovementLogger : IDisposable
     }
 
     [HarmonyPatch(typeof(LabCutscene1), nameof(LabCutscene1.AfterCutscene)), HarmonyPrefix]
-    public static void LogNewGame()
+    public static void LogNewGame(LabCutscene1 __instance)
     {
         MovementLogger logger = Plugin.instance.movementLogger;
-        string scene = SceneManager.GetActiveScene().name;
 
         string location = IDs.GetNewGameID();
-        logger.SetLocation(scene, location, logger.GetPlayerPos(), false, false);
+        logger.SetLocation(__instance.gameObject, location, false, false);
     }
 
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
@@ -925,10 +924,10 @@ public class MovementLogger : IDisposable
         string scene = SceneManager.GetActiveScene().name;
 
         string exitLoc = IDs.GetFlashbackRoomExitID(GetFlashbackRoomLayout(__instance));
-        logger.SetLocation(scene, exitLoc, __instance.transform.position, false, true);
+        logger.SetLocation(__instance.gameObject, exitLoc, false, true);
 
         string itemLoc = IDs.GetMeteorCrystalItemLocID(FlashbackRoomController.myBossName);
-        logger.SetLocation(scene, itemLoc, __instance.transform.position, false, true);
+        logger.SetLocation(__instance.gameObject, itemLoc, false, true);
     }
 
     [HarmonyPatch(typeof(DarkMonsterCraterCutscene), nameof(DarkMonsterCraterCutscene.SkipCutsceneInput)), HarmonyPrefix]
@@ -1342,7 +1341,7 @@ public class MovementLogger : IDisposable
             if (ground.infinityWall) actions.Add(StandOnUnclimbableGround);
             if (ground.impossibleToGrab)
             {
-                if (!(SceneManager.GetActiveScene().name == "GardenVillage" && 
+                if (!(ground.gameObject.scene.name == "GardenVillage" && 
                     ground.name == "Collider (2)" &&
                     ground.transform.parent.name == "Bridge")) actions.Add(StandOnUnclimbableGround);
             }
