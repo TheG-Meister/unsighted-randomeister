@@ -22,6 +22,7 @@ public enum PlayerAction
     ShootBullet,
     Spray,
     PlayerGrenade,
+    PlayerIceGrenade,
     Grenade,
     ScrapRobotGrenade,
     CreateIceOrRockPlatform,

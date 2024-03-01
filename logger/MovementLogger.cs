@@ -1032,8 +1032,10 @@ public class MovementLogger : IDisposable
                 case "Icethrower":
                     Plugin.Instance.movementLogger.AddActions(__instance, Spray);
                     break;
-                case "GranadeLauncher":
                 case "IceGranade":
+                    Plugin.Instance.movementLogger.AddActions(__instance, PlayerGrenade, PlayerIceGrenade);
+                    break;
+                case "GranadeLauncher":
                 case "GranadeShotgun":
                     Plugin.Instance.movementLogger.AddActions(__instance, PlayerGrenade);
                     break;
