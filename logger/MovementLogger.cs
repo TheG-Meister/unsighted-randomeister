@@ -1475,9 +1475,9 @@ public class MovementLogger : IDisposable
             foreach (GameObject obj in __instance.messageRecievers)
             {
                 if (obj.GetComponent<BarrierDoor>() != null ||
-                    obj.GetComponent<GrandPlatform>() != null ||
-                    obj.GetComponent<TimedPlatformsParent>() != null ||
-                    obj.GetComponent<TweenPosition>() != null)
+                    obj.GetComponent<GrandPlatform>() != null)
+                    //obj.GetComponent<TimedPlatformsParent>() != null ||
+                    //obj.GetComponent<TweenPosition>() != null)
                 {
                     MovementLogger logger = Plugin.instance.movementLogger;
                     logger.SetLocation(__instance.gameObject, IDs.GetEnergyPlatformID(__instance), false, false);
