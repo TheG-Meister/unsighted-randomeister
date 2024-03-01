@@ -48,7 +48,7 @@ public class ChestLogger
     [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.ChestOpenCoroutine)), HarmonyPrefix]
     public static void BeforeChestOpen(ItemChest __instance)
     {
-        if (Plugin.Instance.options.chestLogging.Value)
+        if (Plugin.instance.options.chestLogging.Value)
         {
             PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
             List<string> items = data.currentWeapons.Select(weapon => weapon.equipmentName).ToList();
@@ -58,7 +58,7 @@ public class ChestLogger
                 if (item.itemName == "Spinner") items.Add("Spinner");
             }
 
-            Plugin.Instance.chestLogger.LogChest(SceneManager.GetActiveScene().name, __instance.gameObject.name, items);
+            Plugin.instance.chestLogger.LogChest(SceneManager.GetActiveScene().name, __instance.gameObject.name, items);
         }
     }
 

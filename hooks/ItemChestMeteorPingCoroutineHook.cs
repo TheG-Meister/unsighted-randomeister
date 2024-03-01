@@ -79,7 +79,7 @@ public class ItemChestMeteorPingCoroutineHook
 
     public static bool ShouldMeteorDustPing(ItemChest chest)
     {
-        if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.newChestRadar) return !chest.ObjectRegistred();
+        if (Plugin.instance.currentData != null && Plugin.instance.currentData.newChestRadar) return !chest.ObjectRegistred();
         else return PseudoSingleton<Helpers>.instance.GetChestReward(chest.gameObject.name, PseudoSingleton<MapManager>.instance.playerRoom.sceneName) == "MeteorDust" && !chest.ObjectRegistred() && PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains("CollectedMeteorDustOnce");
     }
 

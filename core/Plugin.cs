@@ -26,13 +26,13 @@ public class Plugin : BaseUnityPlugin
     public MovementLogger movementLogger;
     public ChestLogger chestLogger;
 
-    public static Plugin Instance { get; private set; } = null!;
+    public static Plugin instance { get; private set; } = null!;
 
     public Dictionary<string, List<string>> itemPools;
 
     public Plugin()
     {
-        if (Instance != null) throw new InvalidOperationException("There cannot be more than one instance of this plugin");
+        if (instance != null) throw new InvalidOperationException("There cannot be more than one instance of this plugin");
 
         options = new(Config);
 
@@ -51,7 +51,7 @@ public class Plugin : BaseUnityPlugin
         };
         this.chestLogger = new ChestLogger(Path.Combine(Constants.PATH_DEFAULT, PATH_LOGS, Constants.PATH_CHEST_LOGS));
 
-        Instance = this;
+        instance = this;
 
         Logger.LogInfo($"Loading {GUID}");
         new Harmony(GUID).PatchAll();

@@ -38,7 +38,7 @@ internal class Hooks
     [HarmonyPatch(typeof(Lists), nameof(Lists.Start)), HarmonyPostfix]
     private static void AfterListsStart(Lists __instance)
     {
-        Plugin.Instance.SetOriginalLists(__instance);
+        Plugin.instance.SetOriginalLists(__instance);
 
         //foreach (NPCObject npc in __instance.npcDatabase.npcList) Debug.Log($"{npc.npcName}\t{String.Join(",", npc.itemsOnSale)}");
     }
@@ -46,21 +46,21 @@ internal class Hooks
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
     public static void BeforeGameLoaded()
     {
-        Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, false);
-        Plugin.Instance.movementLogger.ClearLocation();
+        Plugin.instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, false);
+        Plugin.instance.movementLogger.ClearLocation();
     }
 
     [HarmonyPatch(typeof(NewGamePopup), nameof(NewGamePopup.NewGameCoroutine)), HarmonyPrefix]
     public static void BeforeNewGame()
     {
-        Plugin.Instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, true);
-        Plugin.Instance.movementLogger.ClearLocation();
+        Plugin.instance.SetCurrentSlotAndRandomise(PseudoSingleton<GlobalGameData>.instance.loadedSlot, true);
+        Plugin.instance.movementLogger.ClearLocation();
     }
 
     [HarmonyPatch(typeof(RotatingSpiderBossRoom), nameof(RotatingSpiderBossRoom.Start)), HarmonyPrefix]
     public static bool BeforeQueenSpinarachBossRoomLoad(RotatingSpiderBossRoom __instance)
     {
-        if (Plugin.Instance.currentData == null || !Plugin.Instance.currentData.removeFragileOnJumpBootsChest) return true;
+        if (Plugin.instance.currentData == null || !Plugin.instance.currentData.removeFragileOnJumpBootsChest) return true;
 
         List<string> dataStrings = PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings;
         bool bossDefeated = dataStrings.Contains("RotatingSpiderDefeated");
@@ -87,19 +87,19 @@ internal class Hooks
     [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.Start)), HarmonyPrefix]
     public static void BeforeItemChestStart(ItemChest __instance)
     {
-        if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.removeFragileOnJumpBootsChest && SceneManager.GetActiveScene().name == "DowntownJumpRoom" && __instance.gameObject.name == "JumpBootsChest") __instance.fragileItem = false;
+        if (Plugin.instance.currentData != null && Plugin.instance.currentData.removeFragileOnJumpBootsChest && SceneManager.GetActiveScene().name == "DowntownJumpRoom" && __instance.gameObject.name == "JumpBootsChest") __instance.fragileItem = false;
     }
 
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.EraseConfirm)), HarmonyPostfix]
     public static void AfterFileErase(SaveSlotButton __instance)
     {
-        Plugin.Instance.OnFileErased(__instance);
+        Plugin.instance.OnFileErased(__instance);
     }
 
     [HarmonyPatch(typeof(SaveSlotPopup), nameof(SaveSlotPopup.CopyFile)), HarmonyPrefix]
     public static void BeforeFileCopy(SaveSlotPopup __instance, int originalSlotNumber)
     {
-        Plugin.Instance.OnFileCopied(__instance, originalSlotNumber);
+        Plugin.instance.OnFileCopied(__instance, originalSlotNumber);
     }
 
 }

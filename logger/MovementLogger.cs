@@ -609,14 +609,14 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(NewGamePopup), nameof(NewGamePopup.NewGameCoroutine)), HarmonyPrefix]
     public static void ResetLocationOnNewGame()
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         logger.Reset();
     }
 
     [HarmonyPatch(typeof(LabCutscene1), nameof(LabCutscene1.AfterCutscene)), HarmonyPrefix]
     public static void LogNewGame()
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
 
         string location = IDs.GetNewGameID();
@@ -626,14 +626,14 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
     public static void ResetLocationOnLoadGame()
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         logger.Reset();
     }
 
     [HarmonyPatch(typeof(LevelController), nameof(LevelController.FinishRestartingPlayers)), HarmonyPostfix]
     public static void LogExitCheckpoint(ref IEnumerator __result)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
 
         PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
 
@@ -651,7 +651,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(Terminal), nameof(Terminal.PlayersEnteredMyTrigger)), HarmonyPostfix]
     public static void LogEnterTerminalTrigger(Terminal __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         logger.SetLocation(__instance.gameObject, IDs.GetTerminalID(), false, false);
     }
 
@@ -660,7 +660,7 @@ public class MovementLogger : IDisposable
     {
         if (!ScreenTransition.playerTransitioningScreens)
         {
-            MovementLogger logger = Plugin.Instance.movementLogger;
+            MovementLogger logger = Plugin.instance.movementLogger;
 
             ItemChest chest = __instance.messageReciever.GetComponent<ItemChest>();
             if (chest != null) logger.SetLocation(chest.gameObject, IDs.GetChestID(chest), false, false);
@@ -684,7 +684,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(AbilityCollectable), nameof(AbilityCollectable.ItemCollected)), HarmonyPrefix]
     public static void LogCollectAbility(AbilityCollectable __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetAbilityCollectableID(__instance);
         logger.SetLocation(__instance.gameObject, location, false, false);
     }
@@ -692,7 +692,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.PlayerScreenTransition)), HarmonyPrefix]
     public static void LogEnterScreenTransition(ScreenTransition __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetScreenTransitionID(__instance);
         logger.SetLocation(__instance.gameObject, location, false, true);
     }
@@ -700,7 +700,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.EndPlayerScreenTransition)), HarmonyPostfix]
     public static void LogExitScreenTransition(ScreenTransition __instance, ref IEnumerator __result)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         if (ScreenTransition.playerTransitioningScreens &&
             ScreenTransition.currentDoorName == __instance.gameObject.name &&
             (ScreenTransition.teleportCheat ||
@@ -726,13 +726,13 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.TeleportToLastTerminal)), HarmonyPostfix]
     public static void SetChangingSceneOnTeleport()
     {
-        Plugin.Instance.movementLogger.SetChangingScene(true);
+        Plugin.instance.movementLogger.SetChangingScene(true);
     }
 
     [HarmonyPatch(typeof(HoleTeleporter), nameof(HoleTeleporter.FallIntoHole)), HarmonyPrefix]
     public static void LogEnterHole(HoleTeleporter __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetHoleID(__instance);
         logger.SetLocation(__instance.gameObject, location, false, true);
     }
@@ -742,7 +742,7 @@ public class MovementLogger : IDisposable
     {
         if (__instance.GetComponent<ElevatedGround>() == null && HoleTeleporter.fallingDownOnHole && HoleTeleporter.lastHoleID == __instance.holeIndex)
         {
-            MovementLogger logger = Plugin.Instance.movementLogger;
+            MovementLogger logger = Plugin.instance.movementLogger;
             string location = IDs.GetHoleID(__instance);
             __result = logger.AppendCodeToEnumerator(__result, () =>
             {
@@ -754,7 +754,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(Elevator), nameof(Elevator.PlayerScreenTransition)), HarmonyPrefix]
     public static void LogEnterElevator(Elevator __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetElevatorID(__instance);
         logger.SetLocation(__instance.gameObject, location, false, true);
     }
@@ -764,7 +764,7 @@ public class MovementLogger : IDisposable
     {
         if (__instance.elevatorID == Elevator.lastElevatorID && Elevator.ridingElevator)
         {
-            MovementLogger logger = Plugin.Instance.movementLogger;
+            MovementLogger logger = Plugin.instance.movementLogger;
             string location = IDs.GetElevatorID(__instance);
             __result = logger.AppendCodeToEnumerator(__result, () =>
             {
@@ -776,7 +776,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(CrystalAppear), nameof(CrystalAppear.CollectionCoroutine)), HarmonyPrefix]
     public static void LogEnterCrystal(CrystalAppear __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetCrystalAppearID(__instance);
         logger.SetLocation(__instance.gameObject, location, false, true);
     }
@@ -787,7 +787,7 @@ public class MovementLogger : IDisposable
         if (CrystalTeleportExit.usingCrystalTeleport)
         {
             string location = IDs.GetCrystalTeleportExitID(__instance);
-            MovementLogger logger = Plugin.Instance.movementLogger;
+            MovementLogger logger = Plugin.instance.movementLogger;
             logger.SetLocation(__instance.gameObject, location, false, false);
         }
     }
@@ -795,7 +795,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(SceneChangeLadder), nameof(SceneChangeLadder.LadderCoroutine)), HarmonyPrefix]
     public static void LogEnterLadder(SceneChangeLadder __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetLadderID(__instance);
         logger.SetLocation(__instance.gameObject, location, false, true);
     }
@@ -805,7 +805,7 @@ public class MovementLogger : IDisposable
     {
         if (SceneChangeLadder.currentLadder == __instance.name)
         {
-            MovementLogger logger = Plugin.Instance.movementLogger;
+            MovementLogger logger = Plugin.instance.movementLogger;
             string location = IDs.GetLadderID(__instance);
             logger.SetLocation(__instance.gameObject, location, false, false);
         }
@@ -814,7 +814,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(CraterTowerElevator), nameof(CraterTowerElevator.ElevatorCoroutine)), HarmonyPrefix]
     public static void LogEnterTowerElevator(CraterTowerElevator __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetTowerElevatorID(__instance);
         logger.SetLocation(__instance.gameObject, location, false, true);
     }
@@ -824,7 +824,7 @@ public class MovementLogger : IDisposable
     {
         if (CraterTowerElevator.currentElevator == __instance.name)
         {
-            MovementLogger logger = Plugin.Instance.movementLogger;
+            MovementLogger logger = Plugin.instance.movementLogger;
             string location = IDs.GetTowerElevatorID(__instance);
             __result = logger.AppendCodeToEnumerator(__result, () =>
             {
@@ -849,7 +849,7 @@ public class MovementLogger : IDisposable
     {
         if (__instance.firstEagle)
         {
-            MovementLogger logger = Plugin.Instance.movementLogger;
+            MovementLogger logger = Plugin.instance.movementLogger;
             string location = IDs.GetEagleBossEntranceID(__instance);
             __result = logger.AppendCodeToEnumerator(__result, () =>
             {
@@ -861,7 +861,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(EaglesController), nameof(EaglesController.Death)), HarmonyPrefix]
     public static void LogEnterEagleBossDeath(EaglesController __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetEagleBossExitID(__instance);
         logger.SetLocation(__instance.gameObject, location, false, true);
     }
@@ -872,7 +872,7 @@ public class MovementLogger : IDisposable
         GlobalGameData data = PseudoSingleton<GlobalGameData>.instance;
         if (!data.currentData.playerDataSlots[data.loadedSlot].dataStrings.Contains("AfterEagleBossCutscene"))
         {
-            MovementLogger logger = Plugin.Instance.movementLogger;
+            MovementLogger logger = Plugin.instance.movementLogger;
             string location = IDs.GetCrashSiteEntranceID(__instance);
             logger.SetLocation(__instance.gameObject, location, false, false);
         }
@@ -881,7 +881,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(EagleBossCrystal), nameof(EagleBossCrystal.CollectionCoroutine)), HarmonyPrefix]
     public static void LogEnterEagleCrystal(EagleBossCrystal __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetEagleCrystalID(__instance);
         logger.SetLocation(__instance.gameObject, location, false, true);
     }
@@ -889,7 +889,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(EagleBossCrystal), nameof(EagleBossCrystal.AfterCrystalCoroutine)), HarmonyPostfix]
     public static void LogExitEagleCrystal(EagleBossCrystal __instance, ref IEnumerator __result)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetEagleCrystalID(__instance);
         __result = logger.AppendCodeToEnumerator(__result, () =>
         {
@@ -910,7 +910,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(FlashbackRoomController), nameof(FlashbackRoomController.Start)), HarmonyPostfix]
     public static void LogEnterFlashbackRoom(FlashbackRoomController __instance, ref IEnumerator __result)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetFlashbackRoomEntranceID(GetFlashbackRoomLayout(__instance));
         __result = logger.AppendCodeToEnumerator(__result, () =>
         {
@@ -921,7 +921,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(FlashbackRoomController), nameof(FlashbackRoomController.ExitCutscene)), HarmonyPrefix]
     public static void LogExitFlashbackRoom(FlashbackRoomController __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string scene = SceneManager.GetActiveScene().name;
 
         string exitLoc = IDs.GetFlashbackRoomExitID(GetFlashbackRoomLayout(__instance));
@@ -936,7 +936,7 @@ public class MovementLogger : IDisposable
     {
         MovementLogger.LogExitDarkMonsterFight(__instance);
 
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetVanaFlamebladeID();
         logger.SetLocation(__instance.gameObject, location, false, true);
     }
@@ -944,7 +944,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(DarkMonsterCraterCutscene), nameof(DarkMonsterCraterCutscene.DeathCutsceneCoroutine)), HarmonyPrefix]
     public static void LogExitDarkMonsterFight(DarkMonsterCraterCutscene __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         string location = IDs.GetDarkMonsterFightExitID();
         logger.SetLocation(__instance.gameObject, location, false, true);
     }
@@ -954,7 +954,7 @@ public class MovementLogger : IDisposable
     {
         if (!PseudoSingleton<Helpers>.instance.GetPlayerData().dataStrings.Contains("BlacksmithCutscene"))
         {
-            MovementLogger logger = Plugin.Instance.movementLogger;
+            MovementLogger logger = Plugin.instance.movementLogger;
             string location = IDs.GetBlacksmithCutsceneID();
             logger.SetLocation(__instance.gameObject, location, false, false);
         }
@@ -970,14 +970,14 @@ public class MovementLogger : IDisposable
             HashSet<PlayerAction> actions = new();
             if (player.myCharacter.ridingSpinner) actions.Add(Spinner);
             if (player.myCharacter.ridingMecha) actions.Add(Hailee);
-            Plugin.Instance.movementLogger.AddActions(player.myCharacter, actions.ToArray());
+            Plugin.instance.movementLogger.AddActions(player.myCharacter, actions.ToArray());
         }
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StaminaChargeCoroutine)), HarmonyPrefix]
     public static void LogStaminaRecharge(BasicCharacterController __instance)
     {
-        Plugin.Instance.movementLogger.AddActions(__instance, StaminaRecharge);
+        Plugin.instance.movementLogger.AddActions(__instance, StaminaRecharge);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.SwordCoroutine)), HarmonyPrefix]
@@ -991,7 +991,7 @@ public class MovementLogger : IDisposable
                 if (!__instance.myPhysics.grounded || (___forceJumpAttack && !__instance.myInfo.canJump) || __instance.ridingSpinner) actions.Add(JumpAttack);
                 else if (__instance.running) actions.Add(DashAttack);
             }
-            Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
+            Plugin.instance.movementLogger.AddActions(__instance, actions.ToArray());
         }
     }
 
@@ -1000,19 +1000,19 @@ public class MovementLogger : IDisposable
     {
         HashSet<PlayerAction> actions = new() { SpinAttack };
         if (__instance.hookshotFiring) actions.Add(Telehook);
-        Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
+        Plugin.instance.movementLogger.AddActions(__instance, actions.ToArray());
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.GuardCoroutine)), HarmonyPrefix]
     public static void LogParry(BasicCharacterController __instance)
     {
-        Plugin.Instance.movementLogger.AddActions(__instance, Parry);
+        Plugin.instance.movementLogger.AddActions(__instance, Parry);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.ShurikenCoroutine)), HarmonyPrefix]
     public static void LogShuriken(BasicCharacterController __instance)
     {
-        if (!__instance.staminaDrained && __instance.CanThrowShuriken()) Plugin.Instance.movementLogger.AddActions(__instance, ShurikenThrow);
+        if (!__instance.staminaDrained && __instance.CanThrowShuriken()) Plugin.instance.movementLogger.AddActions(__instance, ShurikenThrow);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.GunFireCoroutine)), HarmonyPrefix]
@@ -1026,16 +1026,16 @@ public class MovementLogger : IDisposable
                 case "DoctorsGun":
                 case "AutomaticBlaster":
                 case "Shotgun":
-                    Plugin.Instance.movementLogger.AddActions(__instance, ShootBullet);
+                    Plugin.instance.movementLogger.AddActions(__instance, ShootBullet);
                     break;
                 case "Flamethrower":
                 case "Icethrower":
-                    Plugin.Instance.movementLogger.AddActions(__instance, Spray);
+                    Plugin.instance.movementLogger.AddActions(__instance, Spray);
                     break;
                 case "IceGranade":
                 case "GranadeLauncher":
                 case "GranadeShotgun":
-                    Plugin.Instance.movementLogger.AddActions(__instance, PlayerGrenade);
+                    Plugin.instance.movementLogger.AddActions(__instance, PlayerGrenade);
                     break;
             }
         }
@@ -1046,14 +1046,14 @@ public class MovementLogger : IDisposable
     {
         if (!___alreadyExploded)
         {
-            Plugin.Instance.movementLogger.AddActions(__instance.transform.position, Grenade);
+            Plugin.instance.movementLogger.AddActions(__instance.transform.position, Grenade);
         }
     }
 
     [HarmonyPatch(typeof(ScrapRobotEnemy), nameof(ScrapRobotEnemy.InstantiateGranade)), HarmonyPrefix]
     public static void LogScrapRobotGrenade(ScrapRobotEnemy __instance)
     {
-        Plugin.Instance.movementLogger.AddActions(__instance.transform.position, ScrapRobotGrenade);
+        Plugin.instance.movementLogger.AddActions(__instance.transform.position, ScrapRobotGrenade);
     }
 
 
@@ -1070,7 +1070,7 @@ public class MovementLogger : IDisposable
             if (!raycaster.AnyPointOverlapPlatform(0.75f))
             {
                 ElevatedGround elevatedGround = PseudoSingleton<Helpers>.instance.HighestGround(raycaster.transform.position, false, true);
-                if (elevatedGround.deepWater) Plugin.Instance.movementLogger.AddActions(raycaster.transform.position, CreateIceOrRockPlatform);
+                if (elevatedGround.deepWater) Plugin.instance.movementLogger.AddActions(raycaster.transform.position, CreateIceOrRockPlatform);
             }
             yield return original.Current;
         }
@@ -1089,7 +1089,7 @@ public class MovementLogger : IDisposable
             if (controller.myPhysics.globalHeight <= 1.5f && !controller.AnyPointOverlapPlatform(0.25f))
             {
                 ElevatedGround elevatedGround = PseudoSingleton<Helpers>.instance.HighestGround(controller.transform.position, false, true);
-                if (elevatedGround.deepWater) Plugin.Instance.movementLogger.AddActions(controller.transform.position, CreateIceOrRockPlatform);
+                if (elevatedGround.deepWater) Plugin.instance.movementLogger.AddActions(controller.transform.position, CreateIceOrRockPlatform);
             }
             yield return original.Current;
         }
@@ -1098,7 +1098,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(GranadeController), nameof(GranadeController.FallOnWater)), HarmonyPrefix]
     public static void LogIceGrenadePlatformSpawn(GranadeController __instance)
     {
-        if (__instance.iceGranade) Plugin.Instance.movementLogger.AddActions(__instance.transform.position, CreateIceOrRockPlatform, PlayerIceGrenade);
+        if (__instance.iceGranade) Plugin.instance.movementLogger.AddActions(__instance.transform.position, CreateIceOrRockPlatform, PlayerIceGrenade);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.HookshotCoroutine)), HarmonyPrefix]
@@ -1125,13 +1125,13 @@ public class MovementLogger : IDisposable
                 break;
             }
 
-        Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
+        Plugin.instance.movementLogger.AddActions(__instance, actions.ToArray());
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StartRidingSpinner)), HarmonyPrefix]
     public static void LogSpinner(BasicCharacterController __instance)
     {
-        Plugin.Instance.movementLogger.AddActions(__instance, Spinner);
+        Plugin.instance.movementLogger.AddActions(__instance, Spinner);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.SpinnerAttack)), HarmonyPrefix]
@@ -1142,14 +1142,14 @@ public class MovementLogger : IDisposable
             HashSet<PlayerAction> actions = new() { SpinnerAttack };
             if (__instance.myPhysics.currentElevatedGround != null && __instance.myPhysics.currentElevatedGround.deepWater && !__instance.spinnerGrinding && (__instance.myPhysics.globalHeight < 0.75f && __instance.myPhysics.heightDelta < 0f && PseudoSingleton<CameraSystem>.instance.PositionInsideCamera(__instance.myAnimations.myAnimator.transform.position, 0f)))
                 actions.Add(Skip);
-            Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
+            Plugin.instance.movementLogger.AddActions(__instance, actions.ToArray());
         }
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.CheckIfBeganRidingRail)), HarmonyPrefix]
     public static void LogGrind(BasicCharacterController __instance)
     {
-        if (!__instance.spinnerGrinding) Plugin.Instance.movementLogger.AddActions(__instance, Grind);
+        if (!__instance.spinnerGrinding) Plugin.instance.movementLogger.AddActions(__instance, Grind);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.DestroyBlockWithSpinner)), HarmonyPrefix]
@@ -1159,7 +1159,7 @@ public class MovementLogger : IDisposable
         if (currentWall != null && currentWall.transform.childCount >= 3)
         {
             RockBlock rock = currentWall.transform.GetChild(2).GetComponent<RockBlock>();
-            if (rock != null && !rock.isSafeDoor) Plugin.Instance.movementLogger.AddActions(__instance, BreakRockWithSpinner);
+            if (rock != null && !rock.isSafeDoor) Plugin.instance.movementLogger.AddActions(__instance, BreakRockWithSpinner);
         }
     }
 
@@ -1170,14 +1170,14 @@ public class MovementLogger : IDisposable
         {
             if (__instance.hookshotClimbing)
             {
-                if (__instance.GetComponentInParent<MovingDrone>() == null) Plugin.Instance.movementLogger.AddActions(__instance, JumpWhileHanging);
+                if (__instance.GetComponentInParent<MovingDrone>() == null) Plugin.instance.movementLogger.AddActions(__instance, JumpWhileHanging);
             }
             else if (!__instance.myPhysics.grounded &&
                     !__instance.climbing &&
                     !__instance.climbingDash &&
                     !__instance.wallKicked &&
                     (!__instance.jumpedWhileRiddingSpinner || __instance.myPhysics.height != 1f))
-                Plugin.Instance.movementLogger.AddActions(__instance, CoyoteJump);
+                Plugin.instance.movementLogger.AddActions(__instance, CoyoteJump);
         }
     }
 
@@ -1205,9 +1205,9 @@ public class MovementLogger : IDisposable
                         }
                         if (character.wallJumping) actions.Add(WallJump);
                         if (character.axis == Vector3.zero) actions.Add(JumpUp);
-                        Plugin.Instance.movementLogger.AddActions(character, actions.ToArray());
+                        Plugin.instance.movementLogger.AddActions(character, actions.ToArray());
                     }
-                    else if (character.wallJumping) Plugin.Instance.movementLogger.AddActions(character, Jump, ClimbSlash);
+                    else if (character.wallJumping) Plugin.instance.movementLogger.AddActions(character, Jump, ClimbSlash);
                 }
             }
             yield return original.Current;
@@ -1220,32 +1220,32 @@ public class MovementLogger : IDisposable
         HashSet<PlayerAction> actions = new() { Dodge };
         if (__instance.jumpedWhileRiddingSpinner) actions.Add(DodgeOffSpinner);
         if (!__instance.myPhysics.grounded && (!__instance.jumpedWhileRiddingSpinner || __instance.myPhysics.height != 1f)) actions.Add(CoyoteJump);
-        Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
+        Plugin.instance.movementLogger.AddActions(__instance, actions.ToArray());
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.LiftObjectCoroutine)), HarmonyPrefix]
     public static void LogBoxGrab(BasicCharacterController __instance)
     {
-        if (__instance.myHoldingObject.breakable) Plugin.Instance.movementLogger.AddActions(__instance, GrabBox);
+        if (__instance.myHoldingObject.breakable) Plugin.instance.movementLogger.AddActions(__instance, GrabBox);
     }
 
     [HarmonyPatch(typeof(HoldableObject), nameof(HoldableObject.PlacedOnGround)), HarmonyPrefix]
     public static void LogBoxPlace(HoldableObject __instance)
     {
-        if (__instance.breakable) Plugin.Instance.movementLogger.AddActions(__instance.transform.position, PlaceBox);
+        if (__instance.breakable) Plugin.instance.movementLogger.AddActions(__instance.transform.position, PlaceBox);
     }
 
     [HarmonyPatch(typeof(HoldableObject), nameof(HoldableObject.ThrownAt)), HarmonyPrefix]
     public static void LogBoxThrow(HoldableObject __instance)
     {
-        if (__instance.breakable) Plugin.Instance.movementLogger.AddActions(__instance.transform.position, ThrowBox);
+        if (__instance.breakable) Plugin.instance.movementLogger.AddActions(__instance.transform.position, ThrowBox);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.GetDashInput)), HarmonyPrefix]
     public static void LogBoxJump(BasicCharacterController __instance)
     {
         if (!PlayerInfo.cutscene && ButtonSystem.GetKeyDown(PseudoSingleton<GlobalInputManager>.instance.inputData.GetInputProfile(__instance.myInfo.playerNum).dash) && (__instance.holdingObject || __instance.carryingRaquel) && !__instance.myInfo.canJump && ButtonSystem.GetKey(PseudoSingleton<GlobalInputManager>.instance.inputData.GetInputProfile(__instance.myInfo.playerNum).guard, false))
-            Plugin.Instance.movementLogger.AddActions(__instance, BoxJump);
+            Plugin.instance.movementLogger.AddActions(__instance, BoxJump);
     }
 
     /*[HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.CastHookshotRaycast)), HarmonyTranspiler]
@@ -1272,7 +1272,7 @@ public class MovementLogger : IDisposable
         {
             List<RaycastHit2D> hits = new() { ___tempWallHit1, ___tempWallHit2, ___tempWallHit3 };
             foreach (RaycastHit2D hit in hits) if (hit.collider == null || !__instance.HookshotNotBeingIgnored(hit) || __instance.HookpointNotBlockedByWall(hit)) return;
-            if (___currentEnemyHitBox != null) Plugin.Instance.movementLogger.AddActions(__instance, Wierdshot);
+            if (___currentEnemyHitBox != null) Plugin.instance.movementLogger.AddActions(__instance, Wierdshot);
         }
         /*RaycastHit2D r = __instance.currentWallHit;
         StringBuilder sb = new();
@@ -1299,19 +1299,19 @@ public class MovementLogger : IDisposable
     public static void LogRespawn(BasicCharacterController __instance)
     {
         if (__instance.myPhysics.currentElevatedGround != null && (!__instance.myPhysics.currentElevatedGround.hole || __instance.myPhysics.currentElevatedGround.GetComponent<HoleTeleporter>() == null))
-            Plugin.Instance.movementLogger.AddActions(__instance, Respawn);
+            Plugin.instance.movementLogger.AddActions(__instance, Respawn);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StartRidingMecha)), HarmonyPrefix]
     public static void LogHailee(BasicCharacterController __instance)
     {
-        Plugin.Instance.movementLogger.AddActions(__instance, Hailee);
+        Plugin.instance.movementLogger.AddActions(__instance, Hailee);
     }
 
     [HarmonyPatch(typeof(FactoryButton), nameof(FactoryButton.PressedByMecha)), HarmonyPrefix]
     public static void LogHaileeButton(FactoryButton __instance)
     {
-        Plugin.Instance.movementLogger.AddActions(__instance.transform.position, HaileeButton);
+        Plugin.instance.movementLogger.AddActions(__instance.transform.position, HaileeButton);
     }
 
     [HarmonyPatch(typeof(MechaController), nameof(MechaController.SetPushSettings)), HarmonyPrefix]
@@ -1321,14 +1321,14 @@ public class MovementLogger : IDisposable
         {
             ElevatedGround block = __instance.myPhysics.currentPushableObject;
             if (block != null && block.pushable && block.myPushablePhysics != null && block.myPushablePhysics.onlyPushableByMecha)
-                Plugin.Instance.movementLogger.AddActions(__instance, HaileePush);
+                Plugin.instance.movementLogger.AddActions(__instance, HaileePush);
         }
     }
 
     [HarmonyPatch(typeof(MechaController), nameof(MechaController.Fire)), HarmonyPrefix]
     public static void LogHaileeMissile(MechaController __instance, float ___lastFire, BasicCharacterController ___myPlayer)
     {
-        if (Time.time - ___lastFire >= 0.2f && !___myPlayer.staminaDrained) Plugin.Instance.movementLogger.AddActions(__instance, HaileeMissile);
+        if (Time.time - ___lastFire >= 0.2f && !___myPlayer.staminaDrained) Plugin.instance.movementLogger.AddActions(__instance, HaileeMissile);
     }
 
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.Update)), HarmonyPostfix]
@@ -1351,7 +1351,7 @@ public class MovementLogger : IDisposable
             if (ground.GetComponent<Handcar>() != null) actions.Add(StandOnMinecart);
             if (ground.GetComponentInParent<TrainBarrier>() != null) actions.Add(StandOnBarrier);
 
-            Plugin.Instance.movementLogger.AddActions(__instance, actions.ToArray());
+            Plugin.instance.movementLogger.AddActions(__instance, actions.ToArray());
         }
     }
 
@@ -1360,14 +1360,14 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Start)), HarmonyPostfix]
     public static void LogOreStart(MetalScrapOre __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         logger.LogObject(__instance.gameObject, IDs.GetMetalScrapOreID(__instance));
     }
 
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Destroyed)), HarmonyPostfix]
     public static void LogOreDestroy(MetalScrapOre __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         logger.SetLocation(__instance.gameObject, IDs.GetMetalScrapOreID(__instance), true, false);
     }
 
@@ -1376,7 +1376,7 @@ public class MovementLogger : IDisposable
     {
         if (!__instance.reset)
         {
-            MovementLogger logger = Plugin.Instance.movementLogger;
+            MovementLogger logger = Plugin.instance.movementLogger;
             logger.LogObject(__instance.transform.parent.gameObject, IDs.GetRockID(__instance));
 
             PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
@@ -1396,7 +1396,7 @@ public class MovementLogger : IDisposable
                 RockBlock rock = ___raycastHit.transform.GetChild(2).GetComponent<RockBlock>();
                 if (rock != null)
                 {
-                    MovementLogger logger = Plugin.Instance.movementLogger;
+                    MovementLogger logger = Plugin.instance.movementLogger;
                     if (rock.isSafeDoor) logger.AddActions(logger.GetPlayerPos(), BreakSafeWithMissile);
                     else logger.AddActions(logger.GetPlayerPos(), BreakRockWithMissile);
                 }
@@ -1409,7 +1409,7 @@ public class MovementLogger : IDisposable
     {
         if (!PlayerInfo.cutscene && !___destroyed && (mechaMissile || !__instance.isSafeDoor))
         {
-            MovementLogger logger = Plugin.Instance.movementLogger;
+            MovementLogger logger = Plugin.instance.movementLogger;
             List<PlayerInfo> players = PseudoSingleton<PlayersManager>.instance.players;
             foreach (PlayerInfo player in players)
             {
@@ -1431,7 +1431,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(KeyDoor), nameof(KeyDoor.Start)), HarmonyPrefix]
     public static void LogKeyDoorStart(KeyDoor __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         logger.LogObject(__instance.gameObject, IDs.GetKeyDoorID(__instance));
 
         if (__instance.KeyDoorRegistred())
@@ -1443,7 +1443,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(KeyDoor), nameof(KeyDoor.RegisterKeyDoor)), HarmonyPrefix]
     public static void LogKeyDoorRemoved(KeyDoor __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         logger.AddStates(__instance.gameObject, IDs.GetKeyDoorStateID(__instance, false));
         logger.SetLocation(__instance.gameObject, IDs.GetKeyDoorID(__instance), false, false);
     }
@@ -1451,7 +1451,7 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(EnergyPlatform), nameof(EnergyPlatform.Start)), HarmonyPrefix]
     public static void LogEnergyPlatformStart(EnergyPlatform __instance)
     {
-        MovementLogger logger = Plugin.Instance.movementLogger;
+        MovementLogger logger = Plugin.instance.movementLogger;
         logger.LogObject(__instance.gameObject, IDs.GetEnergyPlatformID(__instance));
 
         if (__instance.saveStatus)
@@ -1480,7 +1480,7 @@ public class MovementLogger : IDisposable
                     obj.GetComponent<TimedPlatformsParent>() != null ||
                     obj.GetComponent<TweenPosition>() != null)
                 {
-                    MovementLogger logger = Plugin.Instance.movementLogger;
+                    MovementLogger logger = Plugin.instance.movementLogger;
                     logger.SetLocation(__instance.gameObject, IDs.GetEnergyPlatformID(__instance), false, false);
                     logger.RemoveStates(__instance.gameObject, IDs.GetEnergyPlatformStateID(__instance, false));
                     logger.AddStates(__instance.gameObject, IDs.GetEnergyPlatformStateID(__instance, true));
@@ -1499,13 +1499,30 @@ public class MovementLogger : IDisposable
             {
                 if (obj.GetComponent<GrandPlatform>() != null || obj.GetComponent<BarrierDoor>() != null)
                 {
-                    MovementLogger logger = Plugin.Instance.movementLogger;
+                    MovementLogger logger = Plugin.instance.movementLogger;
                     logger.SetLocation(__instance.gameObject, IDs.GetEnergyPlatformID(__instance), false, false);
                     logger.AddStates(__instance.gameObject, IDs.GetEnergyPlatformStateID(__instance, false));
                     break;
                 }
             }
         }
+    }
+
+    [HarmonyPatch(typeof(ItemBarrier), nameof(ItemBarrier.OnEnable)), HarmonyPrefix]
+    public static void LogItemBarrierStart(ItemBarrier __instance)
+    {
+        MovementLogger logger = Plugin.instance.movementLogger;
+        logger.LogObject(__instance.gameObject, IDs.GetItemBarrierID(__instance));
+
+        if (__instance.ObjectRegistred()) logger.AddStates(__instance.gameObject, IDs.GetItemBarrierStateID(__instance, false));
+    }
+
+    [HarmonyPatch(typeof(ItemBarrier), nameof(ItemBarrier.DestroyBarrier)), HarmonyPrefix]
+    public static void LogItemBarrierDestroy(ItemBarrier __instance)
+    {
+        MovementLogger logger = Plugin.instance.movementLogger;
+        logger.SetLocation(__instance.gameObject, IDs.GetItemBarrierID(__instance), false, false);
+        logger.AddStates(__instance.gameObject, IDs.GetItemBarrierStateID(__instance, false));
     }
 
 }

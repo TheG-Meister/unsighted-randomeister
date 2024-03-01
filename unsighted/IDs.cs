@@ -55,5 +55,7 @@ public class IDs
     public static string GetKeyDoorStateID(KeyDoor keyDoor, bool present) => IDs.GetID(IDs.GetKeyDoorID(keyDoor), present ? "Shut" : "Open");
     public static string GetEnergyPlatformID(EnergyPlatform platform) => IDs.GetID(platform.name);
     public static string GetEnergyPlatformStateID(EnergyPlatform platform, bool active) => IDs.GetID(IDs.GetEnergyPlatformID(platform), active ? "Active" : "Inactive");
+    public static string GetItemBarrierID(ItemBarrier barrier) => IDs.GetID(barrier.name);
+    public static string GetItemBarrierStateID(ItemBarrier barrier, bool present) => IDs.GetID(IDs.GetItemBarrierID(barrier), present ? "Present" : "Gone");
 
 }

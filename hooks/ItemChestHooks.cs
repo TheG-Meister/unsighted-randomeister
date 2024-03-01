@@ -20,30 +20,30 @@ public class ItemChestHooks
     [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.ShowDustPing)), HarmonyPostfix]
     public static void ToggleDustPingDuringGameplay(ItemChest __instance, ref bool __result)
     {
-        if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.chestRadarMoreOften) __result = !gameTime.paused && PseudoSingleton<GlobalGameData>.instance.currentData.radarLevel != 2;
+        if (Plugin.instance.currentData != null && Plugin.instance.currentData.chestRadarMoreOften) __result = !gameTime.paused && PseudoSingleton<GlobalGameData>.instance.currentData.radarLevel != 2;
     }
 
     [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.Start)), HarmonyPostfix]
     public static void SetIconAfterChestStart(ItemChest __instance)
     {
-        if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.newChestRadar) ChangeMeteorPing(__instance);
+        if (Plugin.instance.currentData != null && Plugin.instance.currentData.newChestRadar) ChangeMeteorPing(__instance);
     }
 
     [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.DustIconColor)), HarmonyPostfix]
     public static void SetIconBeforeColourChange(ItemChest __instance)
     {
-        if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.newChestRadar) ChangeMeteorPing(__instance, false, true, false);
+        if (Plugin.instance.currentData != null && Plugin.instance.currentData.newChestRadar) ChangeMeteorPing(__instance, false, true, false);
     }
 
     [HarmonyPatch(typeof(ItemChest), nameof(ItemChest.UpdateDustIconPosition)), HarmonyPostfix]
     public static void SetIconPosition(ItemChest __instance)
     {
-        if (Plugin.Instance.currentData != null && Plugin.Instance.currentData.newChestRadar)
+        if (Plugin.instance.currentData != null && Plugin.instance.currentData.newChestRadar)
         {
-            float cameraPadding = Plugin.Instance.options.chestRadarCameraPadding.Value;
-            bool snapToChest = Plugin.Instance.options.chestRadarSnapping.Value;
-            bool limitToAlma = Plugin.Instance.options.chestRadarCircular.Value;
-            float radius = Plugin.Instance.options.chestRadarRadius.Value;
+            float cameraPadding = Plugin.instance.options.chestRadarCameraPadding.Value;
+            bool snapToChest = Plugin.instance.options.chestRadarSnapping.Value;
+            bool limitToAlma = Plugin.instance.options.chestRadarCircular.Value;
+            float radius = Plugin.instance.options.chestRadarRadius.Value;
             float minRadius = 1f;
 
             CameraSystem camera = PseudoSingleton<CameraSystem>.instance;
@@ -94,11 +94,11 @@ public class ItemChestHooks
         if (chest == null) return;
         string item = PseudoSingleton<Helpers>.instance.GetChestReward(chest.gameObject.name, PseudoSingleton<MapManager>.instance.playerRoom.sceneName);
 
-        if (Plugin.Instance.items != null)
+        if (Plugin.instance.items != null)
         {
             ItemObject itemObject = PseudoSingleton<Helpers>.instance.GetItemObject(item);
             if (icon) SetMeteorPingIcon(chest, itemObject.itemMenuIcon);
-            if (scale) ScaleMeteorPing(chest.dustIcon.GetComponent<TweenScale>(), Plugin.Instance.options.chestRadarScale.Value);
+            if (scale) ScaleMeteorPing(chest.dustIcon.GetComponent<TweenScale>(), Plugin.instance.options.chestRadarScale.Value);
 
             if (itemObject is ChipObject chipObject && chipObject != null)
             {

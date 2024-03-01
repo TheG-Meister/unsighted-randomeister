@@ -17,9 +17,9 @@ public class EnemyControllerHooks
     [HarmonyPatch(typeof(EnemyController), nameof(EnemyController.Start)), HarmonyPostfix]
     public static void ChangeDropController(EnemyController __instance)
     {
-        if (Plugin.Instance != null && Plugin.Instance.currentData != null)
+        if (Plugin.instance != null && Plugin.instance.currentData != null)
         {
-            Dictionary<string, DropController> dropTables = Plugin.Instance.currentData.enemyDropTables;
+            Dictionary<string, DropController> dropTables = Plugin.instance.currentData.enemyDropTables;
             if (dropTables != null && dropTables.ContainsKey(__instance.GetType().Name))
             {
                 __instance.dropController = dropTables[__instance.GetType().Name];

@@ -15,7 +15,7 @@ public class CraftingPopupHooks
     [HarmonyPatch(typeof(CraftingPopup), nameof(CraftingPopup.ConfirmCraft)), HarmonyPrefix]
     public static bool BeforeConfirmCraft(CraftingPopup __instance)
     {
-        if (Plugin.Instance == null || Plugin.Instance.currentData == null || Plugin.Instance.currentData.canCraftWithoutBlueprint || __instance.usedBlueprint) return true;
+        if (Plugin.instance == null || Plugin.instance.currentData == null || Plugin.instance.currentData.canCraftWithoutBlueprint || __instance.usedBlueprint) return true;
         else
         {
             PseudoSingleton<PopupManager>.instance.MessagePopup(__instance.gameObject, "You cannot craft an item without a valid blueprint.", true);

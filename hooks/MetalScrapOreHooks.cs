@@ -48,16 +48,16 @@ public class MetalScrapOreHooks
 
     public static string ReplaceMaterialCrystalItem(MetalScrapOre crystal, string item)
     {
-        if (Plugin.Instance == null || Plugin.Instance.currentData == null) return item;
+        if (Plugin.instance == null || Plugin.instance.currentData == null) return item;
         else
         {
-            Dictionary<string, string> crystalItems = Plugin.Instance.currentData.crystalItems;
+            Dictionary<string, string> crystalItems = Plugin.instance.currentData.crystalItems;
             string code = crystal.GetOreCode();
             string area = PseudoSingleton<MapManager>.instance.areaName;
 
             if (crystalItems != null)
             {
-                if (Plugin.Instance.currentData.crystalItemsPerArea)
+                if (Plugin.instance.currentData.crystalItemsPerArea)
                 {
                     if (crystalItems.ContainsKey(area)) return crystalItems[area];
                 }
