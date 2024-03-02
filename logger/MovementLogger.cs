@@ -1524,4 +1524,33 @@ public class MovementLogger : IDisposable
         logger.AddStates(__instance.gameObject, IDs.GetItemBarrierStateID(__instance, false));
     }
 
+    [HarmonyPatch(typeof(SaveObjectLocation), nameof(SaveObjectLocation.OnEnable)), HarmonyPrefix]
+    public static void LogSaveObjectLocationStart(SaveObjectLocation __instance)
+    {
+        MovementLogger logger = Plugin.instance.movementLogger;
+        logger.LogObject(__instance.gameObject, IDs.GetSaveObjectLocationID(__instance));
+
+        PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
+        if (data.dataStrings.Contains(__instance.GetDataString())) logger.AddStates(__instance.gameObject, IDs.GetSaveObjectLocationStateID(__instance, true));
+    }
+
+    [HarmonyPatch(typeof(SaveObjectLocation), nameof(SaveObjectLocation.OnCollisionEnter2D)), HarmonyPrefix]
+    public static void LogObjectLocationSaved(SaveObjectLocation __instance, Collision2D hit, bool ___activated)
+    {
+        PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
+        if (!data.dataStrings.Contains(__instance.GetDataString()) && !___activated && hit.gameObject.layer == (int) __instance.collisionLayer && hit.gameObject.name == __instance.targetObject.name)
+        {
+            MovementLogger logger = Plugin.instance.movementLogger;
+            logger.SetLocation(__instance.gameObject, IDs.GetSaveObjectLocationID(__instance), false, false);
+
+            if (__instance.otherPossibleSavePosition != null && data.dataStrings.Contains(__instance.GetDataStringFromOtherPos()))
+            {
+                SaveObjectLocation other = __instance.otherPossibleSavePosition.GetComponent<SaveObjectLocation>();
+                if (other != null) logger.RemoveStates(other.gameObject, IDs.GetSaveObjectLocationStateID(other, true));
+            }
+
+            logger.AddStates(__instance.gameObject, IDs.GetSaveObjectLocationStateID(__instance, true));
+        }
+    }
+
 }

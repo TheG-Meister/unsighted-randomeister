@@ -57,5 +57,7 @@ public class IDs
     public static string GetEnergyPlatformStateID(EnergyPlatform platform, bool active) => IDs.GetID(IDs.GetEnergyPlatformID(platform), active ? "Active" : "Inactive");
     public static string GetItemBarrierID(ItemBarrier barrier) => IDs.GetID(barrier.name);
     public static string GetItemBarrierStateID(ItemBarrier barrier, bool present) => IDs.GetID(IDs.GetItemBarrierID(barrier), present ? "Present" : "Gone");
+    public static string GetSaveObjectLocationID(SaveObjectLocation location) => IDs.GetID(location.name);
+    public static string GetSaveObjectLocationStateID(SaveObjectLocation location, bool saved) => IDs.GetID(IDs.GetSaveObjectLocationID(location), saved ? "Saved" : "NotSaved");
 
 }
