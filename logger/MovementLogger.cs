@@ -453,7 +453,11 @@ public class MovementLogger : IDisposable
         if (changingScene || this.changingScene) this.currentActions.Clear();
 
         this.SetChangingScene(changingScene);
-        if (!changingScene) this.PollActions();
+        if (!changingScene)
+        {
+            this.PollActions();
+            this.PollStates();
+        }
 
         this.gameTime = gameTime;
         this.realTime = realTime;
@@ -1355,6 +1359,32 @@ public class MovementLogger : IDisposable
     }
 
     // --------------------- STATES AND OBJECTS --------------------- //
+
+    public void PollStates()
+    {
+        PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
+        MapManager mapManager = PseudoSingleton<MapManager>.instance;
+
+        List<string> statesToRemove = new();
+        List<string> statesToAdd = new();
+
+        bool prologue = !data.dataStrings.Contains("FinishedFirstPart");
+        statesToRemove.Add(IDs.GetPrologueStateID(!prologue));
+        statesToAdd.Add(IDs.GetPrologueStateID(prologue));
+
+        /*
+        bool museumLightUsed = mapManager.areaName == "Museum" && !mapManager.playerRoom.customLight.useCustomLightColors;
+        bool museumLight = data.museumLightsOn;
+        statesToRemove.Add(IDs.GetMuseumLightStateID(!museumLight));
+        if (museumLightUsed) statesToAdd.Add(IDs.GetMuseumLightStateID(museumLight));
+        else statesToRemove.Add(IDs.GetMuseumLightStateID(museumLight));
+
+        bool highways = PseudoSingleton<MapManager>.instance.areaName == "SuburbsRails";
+        */
+
+        this.RemoveStates(this.GetPlayerPos(), "", statesToRemove.ToArray());
+        this.AddStates(this.GetPlayerPos(), "", statesToAdd.ToArray());
+    }
 
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Start)), HarmonyPostfix]
     public static void LogOreStart(MetalScrapOre __instance)

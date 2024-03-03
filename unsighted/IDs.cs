@@ -59,5 +59,7 @@ public class IDs
     public static string GetItemBarrierStateID(ItemBarrier barrier, bool present) => IDs.GetID(IDs.GetItemBarrierID(barrier), present ? "Present" : "Gone");
     public static string GetSaveObjectLocationID(SaveObjectLocation location) => IDs.GetID(location.name);
     public static string GetSaveObjectLocationStateID(SaveObjectLocation location, bool saved) => IDs.GetID(IDs.GetSaveObjectLocationID(location), saved ? "Saved" : "NotSaved");
+    public static string GetPrologueStateID(bool prologue) => IDs.GetID(prologue ? "Prologue" : "PrologueOver");
+    public static string GetMuseumLightStateID(bool on) => IDs.GetID("MuseumLight", on ? "On" : "Off");
 
 }
