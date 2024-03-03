@@ -458,6 +458,10 @@ public class MovementLogger : IDisposable
             this.PollActions();
             this.PollStates();
         }
+        else
+        {
+            this.RemoveTemporaryGameStates();
+        }
 
         this.gameTime = gameTime;
         this.realTime = realTime;
@@ -1386,6 +1390,11 @@ public class MovementLogger : IDisposable
         this.AddStates(this.GetPlayerPos(), "", statesToAdd.ToArray());
     }
 
+    public void RemoveTemporaryGameStates()
+    {
+        this.RemoveStates(this.GetCameraPos(), "", IDs.GetHighwaysPoleStateID(true), IDs.GetHighwaysPoleStateID(false));
+    }
+
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Start)), HarmonyPostfix]
     public static void LogOreStart(MetalScrapOre __instance)
     {
@@ -1580,6 +1589,32 @@ public class MovementLogger : IDisposable
             }
 
             logger.AddStates(__instance.gameObject, IDs.GetSaveObjectLocationStateID(__instance, true));
+        }
+    }
+
+    [HarmonyPatch(typeof(ColoredPoleController), nameof(ColoredPoleController.UpdatePoles)), HarmonyPrefix]
+    public static void LogHighwaysPoleChange(ColoredPoleController __instance)
+    {
+        MovementLogger logger = Plugin.instance.movementLogger;
+        PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
+
+        bool bluePolesDown = data.dataStrings.Contains("BluePoleDown");
+        logger.RemoveStates(logger.GetPlayerPos(), "", IDs.GetHighwaysPoleStateID(!bluePolesDown));
+        logger.AddStates(logger.GetPlayerPos(), "", IDs.GetHighwaysPoleStateID(bluePolesDown));
+    }
+
+    [HarmonyPatch(typeof(EyeSpinButton), nameof(EyeSpinButton.GotHitBy)), HarmonyPrefix]
+    public static void LogEyeSpinButtonHit(EyeSpinButton __instance)
+    {
+        foreach (GameObject obj in __instance.messageRecievers)
+        {
+            if (obj != null && obj.GetComponent<ColoredPoleController>() != null)
+            {
+                MovementLogger logger = Plugin.instance.movementLogger;
+                logger.LogObject(__instance.gameObject, IDs.GetHighwaysPoleSwitchID(__instance));
+                logger.SetLocation(obj, IDs.GetHighwaysPoleSwitchID(__instance), false, false);
+                break;
+            }
         }
     }
 

@@ -61,5 +61,8 @@ public class IDs
     public static string GetSaveObjectLocationStateID(SaveObjectLocation location, bool saved) => IDs.GetID(IDs.GetSaveObjectLocationID(location), saved ? "Saved" : "NotSaved");
     public static string GetPrologueStateID(bool prologue) => IDs.GetID(prologue ? "Prologue" : "PrologueOver");
     public static string GetMuseumLightStateID(bool on) => IDs.GetID("MuseumLight", on ? "On" : "Off");
+    public static string GetHighwaysPoleStateID(bool blueDown) => IDs.GetID("Highways", blueDown ? "BluePolesDown" : "RedPolesDown");
+    public static string GetDifficultyID(Difficulty difficulty) => IDs.GetID("Difficulty", difficulty);
+    public static string GetHighwaysPoleSwitchID(EyeSpinButton button) => IDs.GetID("HighwaysPoleSwitch", button.name);
 
 }
