@@ -1392,7 +1392,11 @@ public class MovementLogger : IDisposable
 
     public void RemoveTemporaryGameStates()
     {
-        this.RemoveStates(this.GetCameraPos(), "", IDs.GetHighwaysPoleStateID(true), IDs.GetHighwaysPoleStateID(false));
+        this.RemoveStates(this.GetCameraPos(), "",
+            IDs.GetHighwaysPoleStateID(true),
+            IDs.GetHighwaysPoleStateID(false),
+            IDs.GetMuseumLightStateID(true),
+            IDs.GetMuseumLightStateID(false));
     }
 
     [HarmonyPatch(typeof(MetalScrapOre), nameof(MetalScrapOre.Start)), HarmonyPostfix]
@@ -1606,16 +1610,45 @@ public class MovementLogger : IDisposable
     [HarmonyPatch(typeof(EyeSpinButton), nameof(EyeSpinButton.GotHitBy)), HarmonyPrefix]
     public static void LogEyeSpinButtonHit(EyeSpinButton __instance)
     {
+        MovementLogger logger = Plugin.instance.movementLogger;
         foreach (GameObject obj in __instance.messageRecievers)
         {
-            if (obj != null && obj.GetComponent<ColoredPoleController>() != null)
+            if (obj != null)
             {
-                MovementLogger logger = Plugin.instance.movementLogger;
-                logger.LogObject(__instance.gameObject, IDs.GetHighwaysPoleSwitchID(__instance));
-                logger.SetLocation(obj, IDs.GetHighwaysPoleSwitchID(__instance), false, false);
-                break;
+                if (obj.GetComponent<ColoredPoleController>() != null)
+                {
+                    logger.LogObject(__instance.gameObject, IDs.GetHighwaysPoleSwitchID(__instance));
+                    logger.SetLocation(obj, IDs.GetHighwaysPoleSwitchID(__instance), false, false);
+                }
+                else if (obj.GetComponent<MoonDevice>() != null)
+                {
+                    logger.LogObject(__instance.gameObject, IDs.GetMuseumLightSwitchID(__instance));
+                    logger.SetLocation(obj, IDs.GetMuseumLightSwitchID(__instance), false, false);
+                }
             }
         }
+    }
+
+    [HarmonyPatch(typeof(MoonDevice), nameof(MoonDevice.EyeButtonHit)), HarmonyPostfix]
+    public static void LogMuseumLightChange(MoonDevice __instance)
+    {
+        MovementLogger logger = Plugin.instance.movementLogger;
+        PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
+
+        bool museumLightOn = data.museumLightsOn;
+        logger.RemoveStates(logger.GetPlayerPos(), "", IDs.GetMuseumLightStateID(!museumLightOn));
+        if (__instance.moonDevicePressed != null) logger.AddStates(logger.GetPlayerPos(), "", IDs.GetMuseumLightStateID(museumLightOn));
+    }
+
+    [HarmonyPatch(typeof(MoonPlatform), nameof(MoonPlatform.DelayedOnEnable)), HarmonyPrefix]
+    public static void LogMoonPlatformStart(MoonPlatform __instance)
+    {
+        MovementLogger logger = Plugin.instance.movementLogger;
+        PlayerData data = PseudoSingleton<Helpers>.instance.GetPlayerData();
+
+        bool museumLightOn = data.museumLightsOn;
+        logger.RemoveStates(logger.GetPlayerPos(), "", IDs.GetMuseumLightStateID(!museumLightOn));
+        logger.AddStates(logger.GetPlayerPos(), "", IDs.GetMuseumLightStateID(museumLightOn));
     }
 
 }

@@ -64,5 +64,6 @@ public class IDs
     public static string GetHighwaysPoleStateID(bool blueDown) => IDs.GetID("Highways", blueDown ? "BluePolesDown" : "RedPolesDown");
     public static string GetDifficultyID(Difficulty difficulty) => IDs.GetID("Difficulty", difficulty);
     public static string GetHighwaysPoleSwitchID(EyeSpinButton button) => IDs.GetID("HighwaysPoleSwitch", button.name);
+    public static string GetMuseumLightSwitchID(EyeSpinButton button) => IDs.GetID("MuseumLightSwitch", button.name);
 
 }
