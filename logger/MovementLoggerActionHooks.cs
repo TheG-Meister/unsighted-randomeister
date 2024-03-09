@@ -213,8 +213,9 @@ public class MovementLoggerActionHooks
         {
             if (__instance.hookshotClimbing)
             {
-                if (__instance.GetComponentInParent<MovingDrone>() == null) Plugin.instance.movementLogger.AddActions(__instance, JumpWhileHanging);
+                if (__instance.GetComponentInParent<MovingDrone>() == null) Plugin.instance.movementLogger.AddActions(__instance, JumpWhileClimbing, JumpWhileHanging);
             }
+            else if (__instance.climbing) Plugin.instance.movementLogger.AddActions(__instance, JumpWhileClimbing);
             else if (!__instance.myPhysics.grounded &&
                     !__instance.climbing &&
                     !__instance.climbingDash &&

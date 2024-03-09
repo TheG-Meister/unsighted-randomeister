@@ -49,6 +49,7 @@ public enum PlayerAction
     JumpUp,
     WallClimb,
     WallJump,
+    JumpWhileClimbing,
     JumpWhileHanging,
 
     GrabBox,
