@@ -226,9 +226,12 @@ public class MovementLoggerActionHooks
             else if (!__instance.myPhysics.grounded &&
                     !__instance.climbing &&
                     !__instance.climbingDash &&
-                    !__instance.wallKicked &&
-                    (!__instance.jumpedWhileRiddingSpinner || __instance.myPhysics.height != 1f))
-                Plugin.instance.movementLogger.AddActions(__instance, CoyoteJump);
+                    !__instance.wallKicked)
+            {
+                if (!__instance.jumpedWhileRiddingSpinner || __instance.myPhysics.height != 1f) Plugin.instance.movementLogger.AddActions(__instance, CoyoteJump);
+            }
+
+            if (__instance.running) Plugin.instance.movementLogger.AddActions(__instance, RunningJump);
         }
     }
 
@@ -256,6 +259,7 @@ public class MovementLoggerActionHooks
                         }
                         if (character.wallJumping) actions.Add(WallJump);
                         if (character.axis == Vector3.zero) actions.Add(JumpUp);
+
                         Plugin.instance.movementLogger.AddActions(character, actions.ToArray());
                     }
                     else if (character.wallJumping) Plugin.instance.movementLogger.AddActions(character, Jump, ClimbSlash);
@@ -271,6 +275,7 @@ public class MovementLoggerActionHooks
         HashSet<PlayerAction> actions = new() { Dodge };
         if (__instance.jumpedWhileRiddingSpinner) actions.Add(DodgeOffSpinner);
         if (!__instance.myPhysics.grounded && (!__instance.jumpedWhileRiddingSpinner || __instance.myPhysics.height != 1f)) actions.Add(CoyoteJump);
+        if (__instance.running) actions.Add(RunningDodge);
         Plugin.instance.movementLogger.AddActions(__instance, actions.ToArray());
     }
 

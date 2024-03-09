@@ -45,7 +45,9 @@ public enum PlayerAction
     BreakRockWithSpinner,
 
     Dodge,
+    RunningDodge,
     Jump,
+    RunningJump,
     JumpUp,
     WallClimb,
     WallJump,
