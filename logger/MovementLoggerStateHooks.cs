@@ -11,6 +11,7 @@ using UnityEngine;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
+[Harmony]
 public class MovementLoggerStateHooks
 {
 

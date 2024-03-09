@@ -14,6 +14,7 @@ using static dev.gmeister.unsighted.randomeister.unsighted.PlayerAction;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
+[Harmony]
 public class MovementLoggerActionHooks
 {
 
