@@ -18,6 +18,12 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementLoggerActionHooks
 {
 
+    [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StartRunning)), HarmonyPrefix]
+    public static void LogRunning(BasicCharacterController __instance)
+    {
+        if (__instance.myPhysics.delta != Vector3.zero) Plugin.instance.movementLogger.AddActions(__instance, Run);
+    }
+
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StaminaChargeCoroutine)), HarmonyPrefix]
     public static void LogStaminaRecharge(BasicCharacterController __instance)
     {

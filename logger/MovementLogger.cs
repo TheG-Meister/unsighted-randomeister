@@ -618,6 +618,7 @@ public class MovementLogger : IDisposable
             HashSet<PlayerAction> actions = new();
             if (player.myCharacter.ridingSpinner) actions.Add(Spinner);
             if (player.myCharacter.ridingMecha) actions.Add(Hailee);
+            if (player.myCharacter.running) actions.Add(Run);
             Plugin.instance.movementLogger.AddActions(player.myCharacter, actions.ToArray());
         }
     }
