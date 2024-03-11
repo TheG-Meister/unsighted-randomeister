@@ -46,12 +46,16 @@ public class MovementLoggerActionHooks
             if (logger.jumpVector == Vector3.zero) logger.jumpVector = __instance.myPhysics.delta;
 
             if (!__instance.jumpAttacking &&
-                !__instance.wallKicked &&
-                !___smallJump &&
+                //!__instance.wallKicked &&
+                //!___smallJump &&
                 !__instance.wallJumping &&
                 !__instance.upwardDash &&
-                !PlayerInfo.cutscene &&
-                Vector3.Angle(__instance.myDirection, logger.jumpVector) > 10) actions.Add(ChangeDirectionDuringJump);
+                !PlayerInfo.cutscene)
+            {
+                float angle = Vector3.Angle(__instance.myDirection, logger.jumpVector);
+                if (angle > 50) actions.Add(BigCurvedJump);
+                if (angle > 10) actions.Add(CurvedJump);
+            }
         }
         else logger.jumpVector = Vector3.zero;
 
