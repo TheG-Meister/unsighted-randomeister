@@ -13,6 +13,10 @@ public class PluginConfig
     public ConfigEntry<bool> movementLoggingUniqueAnnouncements;
     public ConfigEntry<float> announcementCameraPadding;
     public ConfigEntry<float> announcementDelay;
+    public ConfigEntry<float> announcementTime;
+    public ConfigEntry<bool> announceUnusedActions;
+    public ConfigEntry<bool> announceSimpleActions;
+    public ConfigEntry<bool> announceComplexActions;
 
     public const string CATEGORY_GENERAL = "General";
     public ConfigEntry<bool> useRandomeister;
@@ -62,6 +66,15 @@ public class PluginConfig
         this.announcementCameraPadding.SettingChanged += (o, e) => { Plugin.instance.movementLogger.cameraPadding = this.announcementCameraPadding.Value; };
         this.announcementDelay = configFile.Bind(CATEGORY_DEVELOPER, "Announcement delay", 0.333333f, "Delay between announcements in seconds");
         this.announcementDelay.SettingChanged += (o, e) => { Plugin.instance.movementLogger.announcementDelay = this.announcementDelay.Value; };
+        this.announcementTime = configFile.Bind(CATEGORY_DEVELOPER, "Announcement time", 2f, "Time for announcements to linger on screen, in seconds");
+        this.announcementTime.SettingChanged += (o, e) => { Plugin.instance.movementLogger.announcementTime = this.announcementTime.Value; };
+
+        this.announceUnusedActions = configFile.Bind(CATEGORY_DEVELOPER, "Announce unused actions", false, "Announce currently unused actions");
+        this.announceUnusedActions.SettingChanged += (o, e) => { Plugin.instance.movementLogger.announceUnusedActions = this.announceUnusedActions.Value; };
+        this.announceSimpleActions = configFile.Bind(CATEGORY_DEVELOPER, "Announce simple actions", true, "Announce a majority of actions. Disabling can clear up announcement clutter if you are familiar with the logger");
+        this.announceSimpleActions.SettingChanged += (o, e) => { Plugin.instance.movementLogger.announceSimpleActions = this.announceSimpleActions.Value; };
+        this.announceComplexActions = configFile.Bind(CATEGORY_DEVELOPER, "Announce complex actions", true, "Announce less intuitive actions. Enable to be more aware of what the logger is recording, or disable if it's less important.");
+        this.announceComplexActions.SettingChanged += (o, e) => { Plugin.instance.movementLogger.announceComplexActions = this.announceComplexActions.Value; };
 
         useRandomeister = configFile.Bind(CATEGORY_GENERAL, "Use randomeister", true, "Enable the use of the randomeister plugin. Turning this option off will disable all other randomisation options, and cause new story files to be completely unchanged. It does not disable other tweaks and hacks included in this plugin.");
 

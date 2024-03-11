@@ -43,8 +43,12 @@ public class MovementLogger : IDisposable
     public bool announce;
     public bool uniqueAnnouncements;
     public bool log;
+    public bool announceUnusedActions;
+    public bool announceSimpleActions;
+    public bool announceComplexActions;
     public float lastAnnouncementTime;
     public float announcementDelay;
+    public float announcementTime;
     public float cameraPadding;
     public List<Announcement> announcements;
 
@@ -71,7 +75,8 @@ public class MovementLogger : IDisposable
     private float realTime;
     public Vector3 jumpVector;
 
-    private readonly HashSet<PlayerAction> silentActions = new() { Walk, Run, StaminaRecharge, Attack, DashAttack, SpinAttack, Parry, SpinnerAttack, JumpOffSpinner, Grind, JumpUp };
+    private readonly HashSet<PlayerAction> unusedActions = new() { Walk, Run, StaminaRecharge, DashAttack, Parry, Grind, JumpUp, CurvedJump, RunningDodge, RunningJump, WallClimb, };
+    private readonly HashSet<PlayerAction> complexActions = new() { JumpAttack, SpinAttack, PlayerIceGrenade, ScrapRobotGrenade, LongHookshot, DoubleHookshot, ShurikenHookshot, HookshotStraightIntoMyPantsDaddy, JumpUpOffSpinner, RunningDodge, RunningJump, CurvedJump, BigCurvedJump, JumpUp, JumpWhileClimbing, JumpWhileHanging, GrabBox, PlaceBox, ThrowBox, BoxJump, Telehook, Weirdshot, HitSwitchWithBox, ClimbSlash, Respawn, StandOnMaterialCrystal, StandOnHandcar, StandOnBarrier, StandOnRockBlock, StandOnUnclimbableGround, CoyoteJump };
 
     public MovementLogger(string dir)
     {
@@ -86,6 +91,11 @@ public class MovementLogger : IDisposable
         this.announcements = new();
         this.announcementDelay = 0.2f;
         this.cameraPadding = -4f;
+        this.announcementTime = 2f;
+
+        this.announceUnusedActions = false;
+        this.announceSimpleActions = true;
+        this.announceComplexActions = true;
 
         this.currentNode = null;
         this.jumpVector = Vector3.zero;
@@ -382,7 +392,7 @@ public class MovementLogger : IDisposable
             foreach (Announcement announcement in removed) this.announcements.Remove(announcement);
 
             this.lastAnnouncementTime = time;
-            PseudoSingleton<InGameTextController>.instance.ShowText(string.Join("\n", announcements.Distinct().ToList()), this.GetPositionInCamera(first.position), color: colour, duration: 2f);
+            PseudoSingleton<InGameTextController>.instance.ShowText(string.Join("\n", announcements.Distinct().ToList()), this.GetPositionInCamera(first.position), color: colour, duration: this.announcementTime);
         }
     }
 
@@ -493,7 +503,9 @@ public class MovementLogger : IDisposable
             if (!this.uniqueAnnouncements || !this.currentActions.Contains(action))
             {
                 this.currentActions.Add(action);
-                //if (!this.silentActions.Contains(action)) 
+                if ((this.announceUnusedActions || !this.unusedActions.Contains(action)) &&
+                    ((this.announceSimpleActions && !this.complexActions.Contains(action)) ||
+                    (this.announceComplexActions && this.complexActions.Contains(action))))
                 announcements.Add(Strings.ReplaceSpecialCharsInPascal(action.ToString()));
             }
         }

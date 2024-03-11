@@ -48,6 +48,11 @@ public class Plugin : BaseUnityPlugin
             uniqueAnnouncements = this.options.movementLoggingUniqueAnnouncements.Value,
             announcementDelay = this.options.announcementDelay.Value,
             cameraPadding = this.options.announcementCameraPadding.Value,
+            announcementTime = this.options.announcementTime.Value,
+
+            announceUnusedActions = this.options.announceUnusedActions.Value,
+            announceSimpleActions = this.options.announceSimpleActions.Value,
+            announceComplexActions = this.options.announceComplexActions.Value,
         };
         this.chestLogger = new ChestLogger(Path.Combine(Constants.PATH_DEFAULT, PATH_LOGS, Constants.PATH_CHEST_LOGS));
 

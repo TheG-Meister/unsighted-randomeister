@@ -37,7 +37,7 @@ public class MovementLoggerActionHooks
             }
             if (ground.GetComponentInParent<MetalScrapOre>() != null) actions.Add(StandOnMaterialCrystal);
             if (ground.GetComponentInChildren<RockBlock>() != null) actions.Add(StandOnRockBlock);
-            if (ground.GetComponent<Handcar>() != null) actions.Add(StandOnMinecart);
+            if (ground.GetComponent<Handcar>() != null) actions.Add(StandOnHandcar);
             if (ground.GetComponentInParent<TrainBarrier>() != null) actions.Add(StandOnBarrier);
         }
 
@@ -373,7 +373,7 @@ public class MovementLoggerActionHooks
         {
             List<RaycastHit2D> hits = new() { ___tempWallHit1, ___tempWallHit2, ___tempWallHit3 };
             foreach (RaycastHit2D hit in hits) if (hit.collider == null || !__instance.HookshotNotBeingIgnored(hit) || __instance.HookpointNotBlockedByWall(hit)) return;
-            if (___currentEnemyHitBox != null) Plugin.instance.movementLogger.AddActions(__instance, Wierdshot);
+            if (___currentEnemyHitBox != null) Plugin.instance.movementLogger.AddActions(__instance, Weirdshot);
         }
         /*RaycastHit2D r = __instance.currentWallHit;
         StringBuilder sb = new();

@@ -69,13 +69,13 @@ public enum PlayerAction
     BreakSafeWithMissile,
 
     Telehook,
-    Wierdshot,
+    Weirdshot,
     HitSwitchWithBox,
     ClimbSlash,
     Respawn,
 
     StandOnMaterialCrystal,
-    StandOnMinecart,
+    StandOnHandcar,
     StandOnBarrier,
     StandOnRockBlock,
     StandOnUnclimbableGround,
