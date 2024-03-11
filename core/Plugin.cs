@@ -43,7 +43,8 @@ public class Plugin : BaseUnityPlugin
 
         this.movementLogger = new MovementLogger("unsighted-randomeister/logs/movement/")
         {
-            log = this.options.movementLogging.Value,
+            //log = this.options.movementLogging.Value,
+            log = false,
             announce = this.options.movementLoggingAnnouncements.Value,
             uniqueAnnouncements = this.options.movementLoggingUniqueAnnouncements.Value,
             announcementDelay = this.options.announcementDelay.Value,
