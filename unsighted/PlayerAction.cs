@@ -48,6 +48,7 @@ public enum PlayerAction
     RunningDodge,
     Jump,
     RunningJump,
+    ChangeDirectionDuringJump,
     JumpUp,
     WallClimb,
     WallJump,

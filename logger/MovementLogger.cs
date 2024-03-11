@@ -69,6 +69,7 @@ public class MovementLogger : IDisposable
     private bool changingScene;
     private float gameTime;
     private float realTime;
+    public Vector3 jumpVector;
 
     private readonly HashSet<PlayerAction> silentActions = new() { Walk, Run, StaminaRecharge, Attack, DashAttack, SpinAttack, Parry, SpinnerAttack, JumpOffSpinner, Grind, JumpUp };
 
@@ -87,6 +88,7 @@ public class MovementLogger : IDisposable
         this.cameraPadding = -4f;
 
         this.currentNode = null;
+        this.jumpVector = Vector3.zero;
 
         this.InitLoggers(dir);
     }

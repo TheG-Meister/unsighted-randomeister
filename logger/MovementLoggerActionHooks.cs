@@ -18,6 +18,46 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementLoggerActionHooks
 {
 
+    [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.Update)), HarmonyPostfix]
+    public static void LogEveryFrame(BasicCharacterController __instance, bool ___smallJump, bool ___justJumped)
+    {
+        MovementLogger logger = Plugin.instance.movementLogger;
+        HashSet<PlayerAction> actions = new();
+
+        ElevatedGround ground = __instance.myPhysics.currentElevatedGround;
+        if (__instance.myPhysics.grounded && ground != null)
+        {
+
+            if (ground.infinityWall) actions.Add(StandOnUnclimbableGround);
+            if (ground.impossibleToGrab)
+            {
+                if (!(ground.gameObject.scene.name == "GardenVillage" &&
+                    ground.name == "Collider (2)" &&
+                    ground.transform.parent.name == "Bridge")) actions.Add(StandOnUnclimbableGround);
+            }
+            if (ground.GetComponentInParent<MetalScrapOre>() != null) actions.Add(StandOnMaterialCrystal);
+            if (ground.GetComponentInChildren<RockBlock>() != null) actions.Add(StandOnRockBlock);
+            if (ground.GetComponent<Handcar>() != null) actions.Add(StandOnMinecart);
+            if (ground.GetComponentInParent<TrainBarrier>() != null) actions.Add(StandOnBarrier);
+        }
+
+        if (___justJumped)
+        {
+            if (logger.jumpVector == Vector3.zero) logger.jumpVector = __instance.myPhysics.delta;
+
+            if (!__instance.jumpAttacking &&
+                !__instance.wallKicked &&
+                !___smallJump &&
+                !__instance.wallJumping &&
+                !__instance.upwardDash &&
+                !PlayerInfo.cutscene &&
+                Vector3.Angle(__instance.myDirection, logger.jumpVector) > 10) actions.Add(ChangeDirectionDuringJump);
+        }
+        else logger.jumpVector = Vector3.zero;
+
+        if (actions.Count > 0) logger.AddActions(__instance, actions.ToArray());
+    }
+
     [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.StartRunning)), HarmonyPrefix]
     public static void LogRunning(BasicCharacterController __instance)
     {
@@ -386,29 +426,5 @@ public class MovementLoggerActionHooks
     public static void LogHaileeMissile(MechaController __instance, float ___lastFire, BasicCharacterController ___myPlayer)
     {
         if (Time.time - ___lastFire >= 0.2f && !___myPlayer.staminaDrained) Plugin.instance.movementLogger.AddActions(__instance, HaileeMissile);
-    }
-
-    [HarmonyPatch(typeof(BasicCharacterController), nameof(BasicCharacterController.Update)), HarmonyPostfix]
-    public static void LogStandOnUnclimbableGround(BasicCharacterController __instance)
-    {
-        ElevatedGround ground = __instance.myPhysics.currentElevatedGround;
-        if (__instance.myPhysics.grounded && ground != null)
-        {
-            HashSet<PlayerAction> actions = new();
-
-            if (ground.infinityWall) actions.Add(StandOnUnclimbableGround);
-            if (ground.impossibleToGrab)
-            {
-                if (!(ground.gameObject.scene.name == "GardenVillage" &&
-                    ground.name == "Collider (2)" &&
-                    ground.transform.parent.name == "Bridge")) actions.Add(StandOnUnclimbableGround);
-            }
-            if (ground.GetComponentInParent<MetalScrapOre>() != null) actions.Add(StandOnMaterialCrystal);
-            if (ground.GetComponentInChildren<RockBlock>() != null) actions.Add(StandOnRockBlock);
-            if (ground.GetComponent<Handcar>() != null) actions.Add(StandOnMinecart);
-            if (ground.GetComponentInParent<TrainBarrier>() != null) actions.Add(StandOnBarrier);
-
-            Plugin.instance.movementLogger.AddActions(__instance, actions.ToArray());
-        }
     }
 }
