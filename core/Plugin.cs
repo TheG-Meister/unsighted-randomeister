@@ -26,9 +26,11 @@ public class Plugin : BaseUnityPlugin
     public MovementLogger movementLogger;
     public ChestLogger chestLogger;
 
-    public static Plugin instance { get; private set; } = null!;
+    public static Plugin instance;
 
     public Dictionary<string, List<string>> itemPools;
+
+    public bool enableLogging = true;
 
     public Plugin()
     {
@@ -43,8 +45,7 @@ public class Plugin : BaseUnityPlugin
 
         this.movementLogger = new MovementLogger("unsighted-randomeister/logs/movement/")
         {
-            //log = this.options.movementLogging.Value,
-            log = false,
+            log = this.options.movementLogging.Value && this.enableLogging,
             announce = this.options.movementLoggingAnnouncements.Value,
             uniqueAnnouncements = this.options.movementLoggingUniqueAnnouncements.Value,
             announcementDelay = this.options.announcementDelay.Value,
