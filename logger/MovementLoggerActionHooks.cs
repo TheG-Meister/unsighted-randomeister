@@ -83,7 +83,11 @@ public class MovementLoggerActionHooks
             List<PlayerAction> actions = new() { Attack };
             if (!__instance.jumpAttacking)
             {
-                if (!__instance.myPhysics.grounded || (___forceJumpAttack && !__instance.myInfo.canJump) || __instance.ridingSpinner) actions.Add(JumpAttack);
+                if (!__instance.myPhysics.grounded || (___forceJumpAttack && !__instance.myInfo.canJump) || __instance.ridingSpinner)
+                {
+                    actions.Add(JumpAttack);
+                    if (__instance.wallKicked) actions.Add(ClimbSlash);
+                }
                 else if (__instance.running) actions.Add(DashAttack);
             }
             Plugin.instance.movementLogger.AddActions(__instance, actions.ToArray());
@@ -307,7 +311,6 @@ public class MovementLoggerActionHooks
 
                         Plugin.instance.movementLogger.AddActions(character, actions.ToArray());
                     }
-                    else if (character.wallJumping) Plugin.instance.movementLogger.AddActions(character, Jump, ClimbSlash);
                 }
             }
             yield return original.Current;
