@@ -6,7 +6,7 @@ Unsighted Randomeister is a randomiser mod for indie metroidvania UNSIGHTED.
 
 This randomiser is in a pre-release testing phase which needs help from players like you!
 
-If you're interested, contact The G-Meister through the [Contact] section.
+If you're interested, contact The G-Meister through the Contact section.
 
 ## Features
 
@@ -39,7 +39,7 @@ Later down the line we also hope to add:
 - Random locations of objects such as item crystals, enemies, dig spots and fish spots
 - Plandomiser (custom game world) settings
 
-If you have any ideas, feel free to share them with me via the [Contact] methods below, or by opening an issue!
+If you have any ideas, feel free to share them with me via the contact methods below, or by opening an issue!
 
 ## Contact
 
