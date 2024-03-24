@@ -1,28 +1,54 @@
 # Unsighted Randomeister
 
-Unsighted Randomeister is a randomiser mod for UNSIGHTED. Currently part-way through development, it contains the following:
-* A seed-based chest randomiser with 2 different item pools
-* An upgraded, customisable chest radar
-* Numerous options
-* Simple softlock prevention
-* Saving, loading and copying randomised data
+Unsighted Randomeister is a randomiser mod for indie metroidvania UNSIGHTED.
 
-![chest-radar-gif](https://github.com/TheG-Meister/unsighted-randomeister/blob/mistress/docs/gifs/chest-radar.gif "Chest Radar")
+## We need your help!
 
-A few more features are planned before release, including:
-* A GUI
-* Improving randomiser "logic"
-* Randomising items from shops, NPCs, digging and fishing
-* Requiring blueprints before crafting
-* Patching glitches
-* Opt-in movement logging
+This randomiser is in a pre-release testing phase which needs help from players like you!
 
-More long term there are lots of cool ideas such as random enemy spawns, random map transitions, bigger and better "logic", customisable game worlds and so much more. If you have any ideas, feel free to share them by opening an Issue!
+If you're interested, contact The G-Meister through the Contact section.
+
+## Features
+
+A suite of features are already implemented, including:
+- Random items from chests, shops, enemies and item crystals
+- Random shop prices
+- Basic softlock prevention
+- Seed-based randomisation
+- Preveting crafting without blueprints
+- A toggleable, customisable chest item radar
+- An extensive options menu
+- Tools for collecting data about the game world
+
+In addition, a bunch more features are planned before release including:
+- Archipelago integration
+- Vastly improved softlock prevention, including tracking of keys and bolts
+- Randomising all remaining items, including digging, fishing and NPC items
+- Random blueprints
+- New crafting materials
+- Options for splitting the spinner abilities into multiple items
+- Options for locking speedrunner tricks behind new items
+- An integrated item tracker using the world map
+
+Later down the line we also hope to add:
+- Random weapon stats
+- Random chip stats
+- Random entrances
+- Random enemies
+- Random enemy and boss attack patterns
+- Random locations of objects such as item crystals, enemies, dig spots and fish spots
+- Plandomiser (custom game world) settings
+
+If you have any ideas, feel free to share them with me via the contact methods below, or by opening an issue!
 
 ## Contact
 
 This mod is maintained by The G-Meister:
-* Discord - @the_g_meister
-* Email - [thegiemeister@gmail.com](mailto:thegiemeister@gmail.com)
+- Discord - @the_g_meister
+- Email - [thegiemeister@gmail.com](mailto:thegiemeister@gmail.com)
 
-I'm active in the Studio Pixel Punk Discord (invite can be found on UNSIGHTED's [speedrun.com page](https://www.speedrun.com/unsighted)). Issues and pull requests are always welcome \<3
+If you'd like to help out with mapping the game world, join one of the discords below and send me a message!
+- [Studio Pixel Punk](https://discord.com/invite/qr6khYfd3E) - #mods-and-hacks
+- [Archipelago](https://discord.gg/archipelago) - Unsighted post in #future-game-design
+
+Issues and pull requests are also always welcome <3

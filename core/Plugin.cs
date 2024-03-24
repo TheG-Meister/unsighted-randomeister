@@ -30,7 +30,7 @@ public class Plugin : BaseUnityPlugin
 
     public Dictionary<string, List<string>> itemPools;
 
-    public bool enableLogging = true;
+    public bool enableLogging = false;
 
     public Plugin()
     {
