@@ -375,7 +375,7 @@ public class MovementLogger : IDisposable
     public void Announce()
     {
         float time = Time.realtimeSinceStartup;
-        if (this.announce && !this.changingScene && time - this.lastAnnouncementTime > this.announcementDelay && this.announcements.Count > 0)
+        if (this.LoggingIsRelevant() && this.announce && !this.changingScene && time - this.lastAnnouncementTime > this.announcementDelay && this.announcements.Count > 0)
         {
             Announcement first = this.announcements[0];
             ColorNames colour = this.announcements[0].colour;
@@ -445,6 +445,8 @@ public class MovementLogger : IDisposable
 
     public void SetLocation(string scene, string location, Vector3 position, bool intermediate, bool changingScene)
     {
+        if (!this.LoggingIsRelevant()) return;
+
         float realTime = Time.realtimeSinceStartup;
         GameplayTime gameplayTime = PseudoSingleton<Helpers>.instance.GetCurrentTimeData();
         float gameTime = gameplayTime.hours * 60 * 60 + gameplayTime.minutes * 60 + gameplayTime.seconds;
