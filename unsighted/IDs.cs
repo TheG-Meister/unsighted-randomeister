@@ -62,8 +62,10 @@ public class IDs
     public static string GetPrologueStateID(bool prologue) => IDs.GetID(prologue ? "Prologue" : "PrologueOver");
     public static string GetMuseumLightStateID(bool on) => IDs.GetID("MuseumLight", on ? "On" : "Off");
     public static string GetHighwaysPoleStateID(bool blueDown) => IDs.GetID("Highways", blueDown ? "BluePolesDown" : "RedPolesDown");
-    public static string GetDifficultyID(Difficulty difficulty) => IDs.GetID("Difficulty", difficulty);
     public static string GetHighwaysPoleSwitchID(EyeSpinButton button) => IDs.GetID("HighwaysPoleSwitch", button.name);
     public static string GetMuseumLightSwitchID(EyeSpinButton button) => IDs.GetID("MuseumLightSwitch", button.name);
+    public static string GetInputID(InputType inputType) => IDs.GetID(nameof(InputType), inputType.ToString());
+    public static string GetDifficultyID(Difficulty difficulty) => IDs.GetID("Difficulty", difficulty.ToString());
+    public static string GetNewGameStyleID(GameMode mode) => IDs.GetID("NewGameStyle", mode.ToString());
 
 }

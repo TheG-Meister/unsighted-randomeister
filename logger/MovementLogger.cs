@@ -649,6 +649,8 @@ public class MovementLogger : IDisposable
         statesToRemove.Add(IDs.GetPrologueStateID(!prologue));
         statesToAdd.Add(IDs.GetPrologueStateID(prologue));
 
+        InputType inputType = PseudoSingleton<GlobalInputManager>.instance.inputData.GetInputProfile(0).myInputType;
+
         /*
         bool museumLightUsed = mapManager.areaName == "Museum" && !mapManager.playerRoom.customLight.useCustomLightColors;
         bool museumLight = data.museumLightsOn;
@@ -670,6 +672,12 @@ public class MovementLogger : IDisposable
             IDs.GetHighwaysPoleStateID(false),
             IDs.GetMuseumLightStateID(true),
             IDs.GetMuseumLightStateID(false));
+    }
+
+    public bool LoggingIsRelevant()
+    {
+        return PseudoSingleton<Helpers>.instance.GetPlayerData().gameType == GameType.MainStory &&
+            PseudoSingleton<GlobalInputManager>.instance.inputData.numberOfPlayers == 1;
     }
 
 }
