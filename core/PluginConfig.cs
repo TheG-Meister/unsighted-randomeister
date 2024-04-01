@@ -58,9 +58,9 @@ public class PluginConfig
             Plugin.instance.movementLogger.log = this.movementLogging.Value;
             if (!this.movementLogging.Value) Plugin.instance.movementLogger.ClearLocation();
         };
-        this.movementLoggingAnnouncements = configFile.Bind(CATEGORY_DEVELOPER, "Movement logging announcements", true, "Announces various various actions performed by the player. Try to minimise white announcements, which report actions. Other announcement colours include green for a complete movement, yellow for a journey reset, and orange/blue for game and room states added/removed.");
+        this.movementLoggingAnnouncements = configFile.Bind(CATEGORY_DEVELOPER, "Movement logging announcements", false, "Announces various various actions performed by the player. Try to minimise white announcements, which report actions. Other announcement colours include green for a complete movement, yellow for a journey reset, and orange/blue for game and room states added/removed.");
         this.movementLoggingAnnouncements.SettingChanged += (o, e) => { Plugin.instance.movementLogger.announce = this.movementLoggingAnnouncements.Value; };
-        this.movementLoggingUniqueAnnouncements = configFile.Bind(CATEGORY_DEVELOPER, "Log unique announcements only", true, "If announcements are enabled, this option prevents duplicate actions from appearing. Turn this off if you'd like a better idea of what alma is doing.");
+        this.movementLoggingUniqueAnnouncements = configFile.Bind(CATEGORY_DEVELOPER, "Log unique announcements only", false, "If announcements are enabled, this option prevents duplicate actions from appearing. Turn this off if you'd like a better idea of what alma is doing.");
         this.movementLoggingUniqueAnnouncements.SettingChanged += (o, e) => { Plugin.instance.movementLogger.uniqueAnnouncements = this.movementLoggingUniqueAnnouncements.Value; };
         this.announcementCameraPadding = configFile.Bind(CATEGORY_DEVELOPER, "Announcement camera padding", -4f, "The amount of padding for announcements to keep them on screen. Set to values below zero to move announcements towards the camera.");
         this.announcementCameraPadding.SettingChanged += (o, e) => { Plugin.instance.movementLogger.cameraPadding = this.announcementCameraPadding.Value; };
