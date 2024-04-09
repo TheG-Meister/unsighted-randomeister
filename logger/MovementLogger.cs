@@ -205,20 +205,6 @@ public class MovementLogger : IDisposable
 
                 MovementNode node = new(id, parsedNode[headers.IndexOf("scene")], parsedNode[headers.IndexOf("location")], new Vector3(x, y, height));
 
-                string actionsString = parsedNode[headers.IndexOf("actions")];
-                if (!string.IsNullOrEmpty(actionsString))
-                {
-                    List<string> actionsSplit = new(actionsString.Split(','));
-                    foreach (string action in actionsSplit) if (int.TryParse(action, out int actionID)) node.actions.Add(this.GetAction(actionID));
-                }
-
-                string statesString = parsedNode[headers.IndexOf("states")];
-                if (!string.IsNullOrEmpty(statesString))
-                {
-                    List<string> statesSplit = new(statesString.Split(','));
-                    foreach (string state in statesSplit) if (int.TryParse(state, out int stateID)) node.states.Add(this.states[stateID]);
-                }
-
                 while (this.nodes.Count <= node.id) this.nodes.Add(null);
                 this.nodes[node.id] = node;
 
@@ -284,27 +270,13 @@ public class MovementLogger : IDisposable
 
         bool intermediate = actions.Count > 0 || states.Count > 0;
 
-        MovementNode node = this.nodes.ToList().Find(n => n.scene == scene && n.location == location && (!intermediate || (n.actions.SetEquals(actions) && n.states.SetEquals(states))));
+        MovementNode node = this.nodes.ToList().Find(n => n.scene == scene && n.location == location);
         if (node == null)
         {
             this.largestNodeID++;
             node = new MovementNode(this.largestNodeID, scene, location, position);
             string actionsString = "";
             string statesString = "";
-
-            if (intermediate)
-            {
-                if (actions.Count > 0)
-                {
-                    foreach (PlayerAction action in actions) node.actions.Add(action);
-                    actionsString = string.Join(",", actions.Select(a => this.GetActionID(a)));
-                }
-                if (states.Count > 0)
-                {
-                    foreach (MovementState state in states) node.states.Add(state);
-                    statesString = string.Join(",", states.Select(s => s.id));
-                }
-            }
 
             while (this.nodes.Count <= node.id) this.nodes.Add(null);
             this.nodes[node.id] = node;

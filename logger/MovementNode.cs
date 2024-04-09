@@ -16,9 +16,7 @@ public class MovementNode
     public string scene;
     public string location;
     public Vector3 position;
-    public HashSet<PlayerAction> actions;
-    public HashSet<MovementState> states;
-
+    
     public MovementNode(int id, string scene, string location, Vector3 position)
     {
         this.id = id;
