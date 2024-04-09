@@ -263,13 +263,8 @@ public class MovementLogger : IDisposable
 
     }
 
-    public MovementNode GetNode(string scene, string location, Vector3 position, HashSet<PlayerAction> actions = null, HashSet<MovementState> states = null)
+    public MovementNode GetNode(string scene, string location, Vector3 position)
     {
-        actions ??= new();
-        states ??= new();
-
-        bool intermediate = actions.Count > 0 || states.Count > 0;
-
         MovementNode node = this.nodes.ToList().Find(n => n.scene == scene && n.location == location);
         if (node == null)
         {
