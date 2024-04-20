@@ -15,6 +15,7 @@ using static System.Runtime.CompilerServices.RuntimeHelpers;
 using static dev.gmeister.unsighted.randomeister.logger.MovementLogger;
 using static TopdownPhysics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Remoting.Messaging;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
@@ -130,9 +131,10 @@ public class MovementLogger : IDisposable
 
         if (File.Exists(actionsPath))
         {
-            List<string> headers = new() { "id", "action" };
+            List<List<string>> parsedActionsFile = DelimitedFiles.Read(actionsPath, '\t', out List<string> headers);
 
-            List<List<string>> parsedActionsFile = DelimitedFileReader.ReadDelimitedFile(actionsPath, '\t', headers.ToArray());
+            List<string> requiredHeaders = new() { "id", "action" };
+            foreach (string header in requiredHeaders) if (!headers.Contains(header)) throw new ApplicationException();
 
             foreach (List<string> parsedAction in parsedActionsFile)
             {
@@ -191,9 +193,10 @@ public class MovementLogger : IDisposable
 
         if (File.Exists(nodesPath))
         {
-            List<string> headers = new() { "id", "scene", "location", "x", "y", "height", "actions", "states" };
+            List<List<string>> parsedNodesFile = DelimitedFiles.Read(nodesPath, '\t', out List<string> headers);
 
-            List<List<string>> parsedNodesFile = DelimitedFileReader.ReadDelimitedFile(nodesPath, '\t', headers.ToArray());
+            List<string> requiredHeaders = new() { "id", "scene", "location", "x", "y", "height", "actions", "states" };
+            foreach (string header in requiredHeaders) if (!headers.Contains(header)) throw new ApplicationException();
 
             foreach (List<string> parsedNode in parsedNodesFile)
             {
@@ -234,9 +237,10 @@ public class MovementLogger : IDisposable
 
         if (File.Exists(objectsPath))
         {
-            List<string> headers = new() { "type", "scene", "name", "x", "y", "height" };
+            List<List<string>> parsedObjectsFile = DelimitedFiles.Read(objectsPath, '\t', out List<string> headers);
 
-            List<List<string>> parsedObjectsFile = DelimitedFileReader.ReadDelimitedFile(objectsPath, '\t', headers.ToArray());
+            List<string> requiredHeaders = new() { "type", "scene", "name", "x", "y", "height" };
+            foreach (string header in requiredHeaders) if (!headers.Contains(header)) throw new ApplicationException();
 
             foreach (List<string> parsedObject in parsedObjectsFile)
             {
