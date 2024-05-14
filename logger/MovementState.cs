@@ -22,6 +22,11 @@ public class MovementState
         this.scene = scene;
     }
 
+    public MovementState(string id, string name, string scene)
+    {
+
+    }
+
     public string GetStringID()
     {
         return string.IsNullOrEmpty(scene) ? this.name : string.Join(Constants.ID_SEPARATOR.ToString(), this.scene, this.name);

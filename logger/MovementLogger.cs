@@ -131,7 +131,7 @@ public class MovementLogger : IDisposable
 
         if (File.Exists(actionsPath))
         {
-            List<List<string>> parsedActionsFile = DelimitedFiles.Read(actionsPath, '\t', out List<string> headers);
+            List<List<string>> parsedActionsFile = DelimitedFile.Read(actionsPath, '\t', out List<string> headers);
 
             List<string> requiredHeaders = new() { "id", "action" };
             foreach (string header in requiredHeaders) if (!headers.Contains(header)) throw new ApplicationException();
@@ -193,7 +193,7 @@ public class MovementLogger : IDisposable
 
         if (File.Exists(nodesPath))
         {
-            List<List<string>> parsedNodesFile = DelimitedFiles.Read(nodesPath, '\t', out List<string> headers);
+            List<List<string>> parsedNodesFile = DelimitedFile.Read(nodesPath, '\t', out List<string> headers);
 
             List<string> requiredHeaders = new() { "id", "scene", "location", "x", "y", "height", "actions", "states" };
             foreach (string header in requiredHeaders) if (!headers.Contains(header)) throw new ApplicationException();
@@ -237,7 +237,7 @@ public class MovementLogger : IDisposable
 
         if (File.Exists(objectsPath))
         {
-            List<List<string>> parsedObjectsFile = DelimitedFiles.Read(objectsPath, '\t', out List<string> headers);
+            List<List<string>> parsedObjectsFile = DelimitedFile.Read(objectsPath, '\t', out List<string> headers);
 
             List<string> requiredHeaders = new() { "type", "scene", "name", "x", "y", "height" };
             foreach (string header in requiredHeaders) if (!headers.Contains(header)) throw new ApplicationException();
