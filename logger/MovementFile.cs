@@ -30,7 +30,7 @@ public abstract class MovementFile<T> where T : IMovementData
         return missingFieldNames;
     }
 
-    public void Read()
+    public virtual void Read()
     {
         this.file.Read();
 
@@ -39,7 +39,7 @@ public abstract class MovementFile<T> where T : IMovementData
         foreach (int index in this.file.rows.Keys) this.parsedData[index] = this.ParseObject(this.file.GetEntry(index));
     }
 
-    public void Add(T obj)
+    public virtual void Add(T obj)
     {
         int index = this.file.Add(obj.ToDictionary());
         this.parsedData[index] = obj;
