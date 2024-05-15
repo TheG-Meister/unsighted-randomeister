@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public abstract class IndexedMovementFile<T> : MovementFile<T> where T : IndexedMovementData
+public abstract class IndexedMovementDataFile<T> : MovementDataFile<T> where T : IndexedMovementData
 {
 
     public int largestID;
 
-    public IndexedMovementFile(string path, char delim, List<string> fieldNames) : base(path, delim, fieldNames)
+    public IndexedMovementDataFile(string path, char delim, List<string> fieldNames) : base(path, delim, fieldNames)
     {
         this.largestID = -1;
     }

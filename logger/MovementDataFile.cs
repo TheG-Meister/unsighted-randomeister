@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public abstract class MovementFile<T> where T : IMovementData
+public abstract class MovementDataFile<T> where T : IMovementData
 {
 
     public DelimitedFile file;
     public List<string> fieldNames;
     public Dictionary<int, T> parsedData;
 
-    public MovementFile(string path, char delim, List<string> fieldNames)
+    public MovementDataFile(string path, char delim, List<string> fieldNames)
     {
         this.fieldNames = fieldNames;
         this.file = new(path, delim);
