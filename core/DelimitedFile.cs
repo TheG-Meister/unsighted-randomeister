@@ -22,11 +22,16 @@ public class DelimitedFile
     public int lastLine;
 
     public StreamWriter writer;
+    public bool modified;
+
+    public Dictionary<string, Dictionary<string, string>> substitutions;
 
     public DelimitedFile(string path, char delim)
     {
         this.path = path;
         this.delim = delim;
+        this.modified = false;
+        this.substitutions = new();
     }
 
     public bool Exists() => File.Exists(path);
@@ -42,6 +47,26 @@ public class DelimitedFile
                 break;
             }
         }
+    }
+
+    public void Create(params string[] colNames)
+    {
+        this.writer = File.CreateText(this.path);
+
+        this.colNamesLine = 0;
+        this.colNames = new(colNames);
+
+        this.WriteAll();
+    }
+
+    public void Create(Dictionary<string, string> defaultValuesDict)
+    {
+        this.writer = File.CreateText(this.path);
+
+        this.colNamesLine = 0;
+        this.AddColumns(defaultValuesDict);
+
+        this.WriteAll();
     }
 
     public void AddColumns(params string[] colNames)
@@ -66,27 +91,38 @@ public class DelimitedFile
         this.unusedLines = new();
         this.rows = new();
 
-        for (int i = 0; i < lines.Count; i++)
+        for (int lineNum = 0; lineNum < lines.Count; lineNum++)
         {
-            string line = lines[i];
-            this.lastLine = i;
+            string line = lines[lineNum];
+            this.lastLine = lineNum;
 
-            if (line == null) this.unusedLines[i] = BLANK_LINE;
-            else if (string.IsNullOrEmpty(line) || line.StartsWith("#")) this.unusedLines[i] = line;
+            if (line == null) this.unusedLines[lineNum] = BLANK_LINE;
+            else if (string.IsNullOrEmpty(line) || line.StartsWith("#")) this.unusedLines[lineNum] = line;
             else
             {
                 List<string> row = new(line.Split(delim));
                 if (!colNamesFound)
                 {
                     this.colNames = row;
-                    this.colNamesLine = i;
+                    this.colNamesLine = lineNum;
                     colNamesFound = true;
                 }
                 else
                 {
-                    while (this.colNames.Count < row.Count) this.colNames.Add(MISSING_COL_NAME);
-                    while (row.Count < this.colNames.Count) row.Add(BLANK_FIELD);
-                    this.rows[i] = row;
+
+                    while (this.colNames.Count < row.Count)
+                    {
+                        this.colNames.Add(MISSING_COL_NAME);
+                        this.modified = true;
+                    }
+
+                    while (row.Count < this.colNames.Count)
+                    {
+                        row.Add(BLANK_FIELD);
+                        this.modified = true;
+                    }
+
+                    this.rows[lineNum] = row;
                 }
             }
         }
@@ -97,8 +133,92 @@ public class DelimitedFile
             if (row.Count > this.colNames.Count) throw new ApplicationException("row has more fields than columns");
             else if (row.Count == this.colNames.Count) break;
 
-            while (row.Count < this.colNames.Count) row.Add(BLANK_FIELD);
+            while (row.Count < this.colNames.Count)
+            {
+                row.Add(BLANK_FIELD);
+                this.modified = true;
+            }
         }
+
+        this.SubstituteAll();
+    }
+
+    public void RemoveLines(params int[] lines)
+    {
+        foreach (int line in lines)
+        {
+            if (this.unusedLines.ContainsKey(line)) this.unusedLines.Remove(line);
+            if (this.rows.ContainsKey(line)) this.rows.Remove(line);
+        }
+
+        this.modified = true;
+        this.FixLineErrors();
+    }
+
+    public void SetField(int row, string colName, string field)
+    {
+        if (colName == this.colNames[0] && field.StartsWith("#")) throw new ArgumentException($"{nameof(field)} would comment out the line");
+        if (field.Contains(this.delim)) throw new ArgumentException($"{nameof(field)} contains the file delimiter.");
+
+        this.rows[row][this.colNames.IndexOf(colName)] = field;
+        this.modified = true;
+    }
+
+    public List<string> SetEntry(int index, Dictionary<string, string> fields)
+    {
+        List<string> fieldsList = new();
+
+        foreach (string col in this.colNames)
+        {
+            if (fields.ContainsKey(col)) fieldsList.Add(fields[col]);
+            else fieldsList.Add("");
+        }
+
+        this.rows[index] = fieldsList;
+        this.modified = true;
+
+        return fieldsList;
+    }
+
+    public void AddSubstitution(string colName, string term, string substitution)
+    {
+        if (colName == this.colNames[0] && substitution.StartsWith("#")) throw new ArgumentException($"{nameof(substitution)} would comment out the line");
+        if (substitution.Contains(this.delim)) throw new ArgumentException($"{nameof(substitution)} contains the file delimiter.");
+
+        if (!this.substitutions.ContainsKey(colName)) this.substitutions[colName] = new();
+        this.substitutions[colName].Add(term, substitution);
+
+        this.Substitute(colName, term, substitution);
+    }
+
+    public void SubstituteAll()
+    {
+        foreach (string colName in this.substitutions.Keys)
+        {
+            int colIndex = this.colNames.IndexOf(colName);
+            foreach (List<string> row in this.rows.Values)
+            {
+                string term = row[colIndex];
+                if (this.substitutions[colName].ContainsKey(term))
+                {
+                    row[colIndex] = this.substitutions[colName][term];
+                    this.modified = true;
+                }
+            }
+        }
+    }
+
+    public void Substitute(string colName, string term, string substitution)
+    {
+        if (colName == this.colNames[0] && substitution.StartsWith("#")) throw new ArgumentException($"{nameof(substitution)} would comment out the line");
+        if (substitution.Contains(this.delim)) throw new ArgumentException($"{nameof(substitution)} contains the file delimiter.");
+
+        int colIndex = this.colNames.IndexOf(colName);
+        foreach (List<string> row in this.rows.Values) if (row[colIndex] == term)
+            {
+                row[colIndex] = substitution;
+                this.modified = true;
+            }
     }
 
     public Dictionary<string, string> GetEntry(int index)
@@ -115,11 +235,21 @@ public class DelimitedFile
 
     public int Add(Dictionary<string, string> fields)
     {
+        if (fields.ContainsKey(this.colNames[0]) && fields[colNames[0]].StartsWith("#")) throw new ArgumentException($"The field for {this.colNames[0]} would comment out the line");
+
         List<string> fieldsList = new();
 
         foreach (string col in this.colNames)
         {
-            if (fields.ContainsKey(col)) fieldsList.Add(fields[col]);
+            if (fields.ContainsKey(col))
+            {
+                string field = fields[col];
+
+                if (this.substitutions.ContainsKey(col) && this.substitutions[col].ContainsKey(field)) field = this.substitutions[col][field];
+
+                if (field.Contains(this.delim)) throw new ArgumentException($"The field for {col} contains the file delimiter.");
+                fieldsList.Add(field);
+            }
             else fieldsList.Add("");
         }
 
@@ -150,7 +280,7 @@ public class DelimitedFile
 
     public void WriteAll()
     {
-        if (this.HasLineErrors()) throw new ApplicationException("Finish line error code");
+        if (this.HasLineErrors()) this.FixLineErrors();
 
         this.writer = new StreamWriter(this.path, false);
 
@@ -171,14 +301,22 @@ public class DelimitedFile
         }
 
         this.writer.Flush();
+        this.modified = false;
+    }
+
+    public int GetLastLine()
+    {
+        int max = Math.Max(this.unusedLines.Keys.Max(), this.rows.Keys.Max());
+        max = Math.Max(max, this.colNamesLine);
+        max++;
+        return max;
     }
 
     public bool HasLineErrors()
     {
-        //Line error for if the header line is below the first split line
-        //Also line error for if the largest line number is off
-        //if ()
-        if (this.unusedLines.ContainsKey(this.colNamesLine)) return true;
+        if (this.rows.Keys.Min() >= this.colNamesLine) return true;
+        else if (Math.Max(this.unusedLines.Keys.Max(), this.rows.Keys.Max()) != this.lastLine) return true;
+        else if (this.unusedLines.ContainsKey(this.colNamesLine)) return true;
         else if (this.rows.ContainsKey(this.colNamesLine)) return true;
         else
         {
@@ -190,20 +328,43 @@ public class DelimitedFile
 
     public void FixLineErrors()
     {
-        int max = Math.Max(this.unusedLines.Keys.Max(), this.rows.Keys.Max());
-        max = Math.Max(max, this.colNamesLine);
-        max++;
+        Dictionary<int, string> unusedLines = new();
+        Dictionary<int, List<string>> rows = new();
 
-        bool changedHeaderLine = false;
+        bool setHeaderLine = false;
         int line = 0;
-        for (int i = 0; i < max; i++)
+        for (int i = 0; this.unusedLines.Count > 0 || this.rows.Count > 0; i++)
         {
-            bool header = i == this.colNamesLine;
             bool unused = this.unusedLines.ContainsKey(i);
             bool row = this.rows.ContainsKey(i);
 
+            if (unused)
+            {
+                unusedLines[line] = this.unusedLines[i];
+                this.unusedLines.Remove(i);
+                line++;
+                this.lastLine = line;
+            }
 
+            if (row)
+            {
+                if (!setHeaderLine)
+                {
+                    this.colNamesLine = line;
+                    line++;
+                    setHeaderLine = true;
+                }
+
+                rows[line] = this.rows[i];
+                this.rows.Remove(i);
+                line++;
+                this.lastLine = line;
+            }
         }
+
+        this.unusedLines = unusedLines;
+        this.rows = rows;
+        this.modified = true;
     }
 
 }

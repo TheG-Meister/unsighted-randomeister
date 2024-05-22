@@ -7,44 +7,32 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public abstract class MovementDataFile<T> where T : IMovementData
+public abstract class MovementDataFile<T> : DelimitedFile where T : IMovementData
 {
 
-    public DelimitedFile file;
     public List<string> fieldNames;
     public Dictionary<int, T> parsedData;
 
-    public MovementDataFile(string path, char delim, List<string> fieldNames)
+    public MovementDataFile(string path, List<string> fieldNames) : base(path, '\t')
     {
         this.fieldNames = fieldNames;
-        this.file = new(path, delim);
+        this.parsedData = new();
     }
 
     public List<string> GetMissingFieldNames()
     {
-        if (this.file.colNames == null || this.file.colNames.Count > 0) this.file.ReadColNames();
+        if (this.colNames == null || this.colNames.Count > 0) this.ReadColNames();
 
         List<string> missingFieldNames = new(this.fieldNames);
-        foreach (string colName in this.file.colNames) if (missingFieldNames.Contains(colName)) missingFieldNames.Remove(colName);
+        foreach (string colName in this.colNames) if (missingFieldNames.Contains(colName)) missingFieldNames.Remove(colName);
 
         return missingFieldNames;
     }
 
-    public virtual void Read()
-    {
-        this.file.Read();
-
-        this.parsedData = new();
-
-        foreach (int index in this.file.rows.Keys) this.parsedData[index] = this.ParseObject(this.file.GetEntry(index));
-    }
-
     public virtual void Add(T obj)
     {
-        int index = this.file.Add(obj.ToDictionary());
+        int index = this.Add(obj.ToDictionary());
         this.parsedData[index] = obj;
     }
-
-    public abstract T ParseObject(Dictionary<string, string> fields);
 
 }

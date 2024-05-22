@@ -7,8 +7,10 @@ using UnityEngine;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class MovementObject
+public class MovementObject : IMovementData
 {
+
+    public static readonly List<string> FIELDS = new() { "type", "scene", "name", "x", "y", "height" };
 
     public string type;
     public string scene;
@@ -25,6 +27,19 @@ public class MovementObject
         this.scene = scene;
         this.name = name;
         this.position = position;
+    }
+
+    public Dictionary<string, string> ToDictionary()
+    {
+        return new Dictionary<string, string>
+        {
+            { nameof(type), type },
+            { nameof(scene), scene },
+            { nameof(name), name },
+            { "x", position.x.ToString() },
+            { "y", position.y.ToString() },
+            { "height", position.z.ToString() },
+        };
     }
 
     public override bool Equals(object obj)

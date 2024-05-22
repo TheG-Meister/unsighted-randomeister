@@ -16,9 +16,12 @@ public abstract class IndexedMovementData : IMovementData
         this.id = id;
     }
 
-    public IndexedMovementData(string id)
+    public IndexedMovementData(string id) : this(int.Parse(id))
     {
-        if (!int.TryParse(id, out this.id)) this.id = -1;
+    }
+
+    public IndexedMovementData(Dictionary<string, string> fields) : this(fields[nameof(id)])
+    {
     }
 
     public abstract Dictionary<string, string> ToDictionary();

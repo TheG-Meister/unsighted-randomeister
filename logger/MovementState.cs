@@ -8,23 +8,18 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class MovementState
+public class MovementState : IndexedMovementData
 {
 
-    public int id;
-    public string name;
-    public string scene;
+    public static readonly List<string> FIELDS = new() { "id", "scene", "name" };
 
-    public MovementState(int id, string name, string scene)
+    public string scene;
+    public string name;
+
+    public MovementState(string name, string scene) : base(id)
     {
-        this.id = id;
         this.name = name;
         this.scene = scene;
-    }
-
-    public MovementState(string id, string name, string scene)
-    {
-
     }
 
     public string GetStringID()
@@ -32,4 +27,13 @@ public class MovementState
         return string.IsNullOrEmpty(scene) ? this.name : string.Join(Constants.ID_SEPARATOR.ToString(), this.scene, this.name);
     }
 
+    public override Dictionary<string, string> ToDictionary()
+    {
+        return new Dictionary<string, string>
+        {
+            { nameof(id), this.id.ToString() },
+            { nameof(scene), this.scene },
+            { nameof(name), this.name },
+        };
+    }
 }

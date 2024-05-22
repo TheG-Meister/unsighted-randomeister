@@ -7,28 +7,36 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class MovementEdge
+public class MovementEdge : IndexedMovementData
 {
 
-    public int source;
-    public int target;
-    public HashSet<PlayerAction> actions;
-    public HashSet<MovementState> states;
-    public bool sceneChange;
-    public float realTime;
-    public float gameTime;
-    public long timestamp;
+    public static readonly List<string> FIELDS = new() { "id", "source", "target", "scene change", "actions", "states" };
 
-    public MovementEdge(int source, int target, bool sceneChange, float realTime, float gameTime, long timestamp)
+    public MovementNode source;
+    public MovementNode target;
+    public bool sceneChange;
+    public HashSet<MovementAction> actions;
+    public HashSet<MovementState> states;
+
+    public MovementEdge(int id, MovementNode source, MovementNode target, bool sceneChange) : base(id)
     {
         this.source = source;
         this.target = target;
         this.sceneChange = sceneChange;
-        this.realTime = realTime;
-        this.gameTime = gameTime;
-        this.timestamp = timestamp;
         this.actions = new();
         this.states = new();
     }
 
+    public override Dictionary<string, string> ToDictionary()
+    {
+        return new Dictionary<string, string>
+        {
+            { nameof(this.id), this.id.ToString() },
+            { nameof(this.source), this.source.id.ToString() },
+            { nameof(this.target), this.target.id.ToString() },
+            { nameof(this.sceneChange), this.sceneChange.ToString() },
+            { nameof(this.actions), string.Join(",", this.actions.Select(action => action.id)) },
+            { nameof(this.states), string.Join(",", this.states.Select(state => state.id)) },
+        };
+    }
 }

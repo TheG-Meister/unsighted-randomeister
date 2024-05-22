@@ -129,8 +129,6 @@ public class MovementLogger : IDisposable
         this.largestStateID = -1;
         this.largestNodeID = -1;
 
-
-
         if (File.Exists(actionsPath))
         {
             List<List<string>> parsedActionsFile = DelimitedFile.Read(actionsPath, '\t', out List<string> headers);

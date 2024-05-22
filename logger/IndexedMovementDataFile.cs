@@ -11,15 +11,14 @@ public abstract class IndexedMovementDataFile<T> : MovementDataFile<T> where T :
 
     public int largestID;
 
-    public IndexedMovementDataFile(string path, char delim, List<string> fieldNames) : base(path, delim, fieldNames)
+    public IndexedMovementDataFile(string path, List<string> fieldNames) : base(path, fieldNames)
     {
         this.largestID = -1;
     }
 
-    public override void Read()
+    public void UpdateLargestID()
     {
-        base.Read();
-        foreach (T obj in this.parsedData.Values) if (obj.id > this.largestID) this.largestID = obj.id;
+        foreach (T obj in this.parsedData.Values) if (obj != null && obj.id > this.largestID) this.largestID = obj.id; 
     }
 
     public override void Add(T obj)
