@@ -16,7 +16,7 @@ public class MovementState : IndexedMovementData
     public string scene;
     public string name;
 
-    public MovementState(string name, string scene) : base(id)
+    public MovementState(int id, string name, string scene) : base(id)
     {
         this.name = name;
         this.scene = scene;
