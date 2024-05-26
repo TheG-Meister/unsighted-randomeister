@@ -10,7 +10,7 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementEdge : IndexedMovementData
 {
 
-    public static readonly List<string> FIELDS = new() { "id", "source", "target", "scene change", "actions", "states" };
+    public static readonly List<string> FIELDS = new() { nameof(id), nameof(source), nameof(target), "scene change", nameof(actions), nameof(states) };
 
     public MovementNode source;
     public MovementNode target;
@@ -25,6 +25,21 @@ public class MovementEdge : IndexedMovementData
         this.sceneChange = sceneChange;
         this.actions = new();
         this.states = new();
+    }
+
+    public MovementEdge(string id, MovementNode source, MovementNode target, string sceneChange, HashSet<MovementAction> actions, HashSet<MovementState> states) : base(id)
+    {
+        this.source = source;
+        this.target = target;
+        this.sceneChange = bool.Parse(sceneChange);
+        this.actions = actions;
+        this.states = states;
+    }
+
+    public override bool SetField(string field, string value)
+    {
+        if (field == "scene change") return bool.TryParse(value, out sceneChange);
+        return base.SetField(field, value);
     }
 
     public override Dictionary<string, string> ToDictionary()

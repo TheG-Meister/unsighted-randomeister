@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public interface IMovementData
+public class MovementEdgeRunsFile : IndexedMovementDataFile<MovementEdge>
 {
+    public MovementEdgeRunsFile(string path) : base(path, MovementEdge.FIELDS)
+    {
 
-    public Dictionary<string, string> ToDictionary();
-    public bool SetField(string field, string value);
+    }
 
 }

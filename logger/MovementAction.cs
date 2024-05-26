@@ -28,15 +28,10 @@ public class MovementAction : IndexedMovementData
     {
     }
 
-    public override bool Equals(object obj)
+    public override bool SetField(string field, string value)
     {
-        return obj is MovementAction action &&
-               this.action == action.action;
-    }
-
-    public override int GetHashCode()
-    {
-        return -1387187753 + action.GetHashCode();
+        if (field == nameof(action)) return Enum.TryParse(value, out PlayerAction _);
+        else return base.SetField(field, value);
     }
 
     public override Dictionary<string, string> ToDictionary()
@@ -46,6 +41,17 @@ public class MovementAction : IndexedMovementData
             { nameof(this.id), this.id.ToString() },
             { nameof(this.action), this.action.ToString() },
         };
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is MovementAction action &&
+               this.action == action.action;
+    }
+
+    public override int GetHashCode()
+    {
+        return -1387187753 + action.GetHashCode();
     }
 
 }

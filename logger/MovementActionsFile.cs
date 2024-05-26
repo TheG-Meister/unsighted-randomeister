@@ -43,7 +43,7 @@ public class MovementActionsFile : IndexedMovementDataFile<MovementAction>
             }
         }
 
-        
+        this.UpdateLargestID();
         if (linesToRemove.Count > 0) this.RemoveLines(linesToRemove.ToArray());
 
         if (this.modified) this.WriteAll();
