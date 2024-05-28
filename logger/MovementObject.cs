@@ -56,15 +56,17 @@ public class MovementObject : IMovementData
         };
     }
 
-    public static string GetColName(string field)
-    {
-        ColNamesDict ??= MovementDataHelpers.GetFieldToColNameDict(typeof(MovementObject));
+    public static string GetColName(string field) => MovementDataHelpers.GetColName(GetColNameDict(), field);
 
-        if (!ColNamesDict.ContainsKey(field)) throw new ArgumentException($"{field} is not a valid field.");
-        return ColNamesDict[field];
+    public static List<string> GetColNames() => MovementDataHelpers.GetColNamesFromDict(FIELDS, GetColNameDict());
+
+    public static Dictionary<string, string> GetColNameDict()
+    {
+        ColNameDict ??= MovementDataHelpers.GetFieldToColNameDict(typeof(MovementObject));
+        return ColNameDict;
     }
 
-    public static Dictionary<string, string> ColNamesDict = null;
+    private static Dictionary<string, string> ColNameDict = null;
 
     public override bool Equals(object obj)
     {

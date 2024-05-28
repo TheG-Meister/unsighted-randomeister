@@ -28,39 +28,41 @@ public class MovementEdgeRun : IMovementData
 
     public MovementEdgeRun(Dictionary<string, string> fields, Dictionary<int, MovementEdge> edges)
     {
-        this.edge = edges[int.Parse(fields[FieldToColName(nameof(edge))])];
-        this.version = fields[FieldToColName(nameof(version))];
-        this.timestamp = long.Parse(fields[FieldToColName(nameof(timestamp))]);
-        this.realTime = float.Parse(fields[FieldToColName(nameof(realTime))]);
-        this.gameTime = float.Parse(fields[FieldToColName(nameof(gameTime))]);
+        this.edge = edges[int.Parse(fields[GetColName(nameof(edge))])];
+        this.version = fields[GetColName(nameof(version))];
+        this.timestamp = long.Parse(fields[GetColName(nameof(timestamp))]);
+        this.realTime = float.Parse(fields[GetColName(nameof(realTime))]);
+        this.gameTime = float.Parse(fields[GetColName(nameof(gameTime))]);
     }
 
     public Dictionary<string, string> ToDictionary()
     {
         return new Dictionary<string, string>
         {
-            { FieldToColName(nameof(edge)), this.edge.id.ToString() },
-            { FieldToColName(nameof(version)), this.version.ToString() },
-            { FieldToColName(nameof(timestamp)), this.timestamp.ToString() },
-            { FieldToColName(nameof(realTime)), this.realTime.ToString() },
-            { FieldToColName(nameof(gameTime)), this.gameTime.ToString() },
+            { GetColName(nameof(edge)), this.edge.id.ToString() },
+            { GetColName(nameof(version)), this.version.ToString() },
+            { GetColName(nameof(timestamp)), this.timestamp.ToString() },
+            { GetColName(nameof(realTime)), this.realTime.ToString() },
+            { GetColName(nameof(gameTime)), this.gameTime.ToString() },
         };
     }
 
-    public static string FieldToColName(string field)
-    {
-        if (fieldToColName == null)
-        {
-            fieldToColName = MovementDataHelpers.GetFieldToColNameDict(typeof(MovementEdgeRun));
-            fieldToColName[nameof(edge)] = "edge id";
-            fieldToColName[nameof(realTime)] = "real time";
-            fieldToColName[nameof(gameTime)] = "game time";
-        }
+    public static string GetColName(string field) => MovementDataHelpers.GetColName(GetColNameDict(), field);
 
-        if (!fieldToColName.ContainsKey(field)) throw new ArgumentException($"{field} is not a valid field.");
-        return fieldToColName[field];
+    public static List<string> GetColNames() => MovementDataHelpers.GetColNamesFromDict(FIELDS, GetColNameDict());
+
+    public static Dictionary<string, string> GetColNameDict()
+    {
+        if (ColNameDict == null)
+        {
+            ColNameDict = MovementDataHelpers.GetFieldToColNameDict(typeof(MovementEdgeRun));
+            ColNameDict[nameof(edge)] = "edge id";
+            ColNameDict[nameof(realTime)] = "real time";
+            ColNameDict[nameof(gameTime)] = "game time";
+        }
+        return ColNameDict;
     }
 
-    public static Dictionary<string, string> fieldToColName = null;
+    private static Dictionary<string, string> ColNameDict = null;
 
 }

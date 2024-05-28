@@ -11,7 +11,7 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementAction : IndexedMovementData
 {
 
-    public static readonly List<string> FIELDS = new() { FieldToColName(nameof(id)), FieldToColName(nameof(action)) };
+    public static readonly List<string> FIELDS = new() { GetColName(nameof(id)), GetColName(nameof(action)) };
 
     public PlayerAction action;
 
@@ -25,7 +25,7 @@ public class MovementAction : IndexedMovementData
         this.action = (PlayerAction) Enum.Parse(typeof(PlayerAction), action, false);
     }
 
-    public MovementAction(Dictionary<string, string> fields) : this(fields[FieldToColName(nameof(id))], fields[FieldToColName(nameof(action))])
+    public MovementAction(Dictionary<string, string> fields) : this(fields[GetColName(nameof(id))], fields[GetColName(nameof(action))])
     {
     }
 
@@ -33,20 +33,22 @@ public class MovementAction : IndexedMovementData
     {
         return new Dictionary<string, string>
         {
-            { FieldToColName(nameof(this.id)), this.id.ToString() },
-            { FieldToColName(nameof(this.action)), this.action.ToString() },
+            { GetColName(nameof(this.id)), this.id.ToString() },
+            { GetColName(nameof(this.action)), this.action.ToString() },
         };
     }
 
-    public static string FieldToColName(string field)
-    {
-        fieldToColName ??= MovementDataHelpers.GetFieldToColNameDict(typeof(MovementAction));
+    public static string GetColName(string field) => MovementDataHelpers.GetColName(GetColNameDict(), field);
 
-        if (!fieldToColName.ContainsKey(field)) throw new ArgumentException($"{field} is not a valid field");
-        return fieldToColName[field];
+    public static List<string> GetColNames() => MovementDataHelpers.GetColNamesFromDict(FIELDS, GetColNameDict());
+
+    public static Dictionary<string, string> GetColNameDict()
+    {
+        ColNameDict ??= MovementDataHelpers.GetFieldToColNameDict(typeof(MovementAction));
+        return ColNameDict;
     }
 
-    public static Dictionary<string, string> fieldToColName = null;
+    private static Dictionary<string, string> ColNameDict = null;
 
     public override bool Equals(object obj)
     {

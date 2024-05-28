@@ -30,13 +30,13 @@ public class MovementEdge : IndexedMovementData
 
     public MovementEdge(Dictionary<string, string> fields, Dictionary<int, MovementNode> nodes, Dictionary<int, MovementAction> actions, Dictionary<int, MovementState> states) : base(fields)
     {
-        this.source = nodes[int.Parse(fields[FieldToColName(nameof(this.source))])];
-        this.target = nodes[int.Parse(fields[FieldToColName(nameof(this.target))])];
-        this.sceneChange = bool.Parse(fields[FieldToColName(nameof(this.sceneChange))]);
+        this.source = nodes[int.Parse(fields[GetColName(nameof(this.source))])];
+        this.target = nodes[int.Parse(fields[GetColName(nameof(this.target))])];
+        this.sceneChange = bool.Parse(fields[GetColName(nameof(this.sceneChange))]);
 
         //Parse the actions field as a comma separated list of IDs, then index into the actions dictionary
         this.actions = new();
-        string actionsField = fields[FieldToColName(nameof(this.actions))];
+        string actionsField = fields[GetColName(nameof(this.actions))];
         if (actionsField.Length > 0)
         {
             List<int> actionIDs = actionsField.Split(',').Select(id => int.Parse(id)).ToList();
@@ -45,7 +45,7 @@ public class MovementEdge : IndexedMovementData
 
         //Parse the states field as a comma separated list of IDs, then index into the states dictionary
         this.states = new();
-        string statesField = fields[FieldToColName(nameof(this.states))];
+        string statesField = fields[GetColName(nameof(this.states))];
         if (statesField.Length > 0)
         {
             List<int> stateIDs = statesField.Split(',').Select(id => int.Parse(id)).ToList();
@@ -57,27 +57,29 @@ public class MovementEdge : IndexedMovementData
     {
         return new Dictionary<string, string>
         {
-            { FieldToColName(nameof(this.id)), this.id.ToString() },
-            { FieldToColName(nameof(this.source)), this.source.id.ToString() },
-            { FieldToColName(nameof(this.target)), this.target.id.ToString() },
-            { FieldToColName(nameof(this.sceneChange)), this.sceneChange.ToString() },
-            { FieldToColName(nameof(this.actions)), string.Join(",", this.actions.Select(action => action.id)) },
-            { FieldToColName(nameof(this.states)), string.Join(",", this.states.Select(state => state.id)) },
+            { GetColName(nameof(this.id)), this.id.ToString() },
+            { GetColName(nameof(this.source)), this.source.id.ToString() },
+            { GetColName(nameof(this.target)), this.target.id.ToString() },
+            { GetColName(nameof(this.sceneChange)), this.sceneChange.ToString() },
+            { GetColName(nameof(this.actions)), string.Join(",", this.actions.Select(action => action.id)) },
+            { GetColName(nameof(this.states)), string.Join(",", this.states.Select(state => state.id)) },
         };
     }
 
-    public static string FieldToColName(string field)
+    public static string GetColName(string field) => MovementDataHelpers.GetColName(GetColNameDict(), field);
+
+    public static List<string> GetColNames() => MovementDataHelpers.GetColNamesFromDict(FIELDS, GetColNameDict());
+
+    public static Dictionary<string, string> GetColNameDict()
     {
         if (ColNameDict == null)
         {
             ColNameDict = MovementDataHelpers.GetFieldToColNameDict(typeof(MovementEdge));
             ColNameDict[nameof(sceneChange)] = "scene change";
         }
-
-        if (!ColNameDict.ContainsKey(field)) throw new ArgumentException($"{field} is not a valid field");
-
-        return ColNameDict[field];
+        return ColNameDict;
     }
-    public static Dictionary<string, string> ColNameDict = null;
+
+    private static Dictionary<string, string> ColNameDict = null;
 
 }

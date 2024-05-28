@@ -18,4 +18,17 @@ public class MovementDataHelpers
         return result;
     }
 
+    public static List<string> GetColNamesFromDict(List<string> fields, Dictionary<string, string> colNamesDict)
+    {
+        List<string> result = new();
+        foreach (string field in fields) result.Add(colNamesDict[field]);
+        return result;
+    }
+
+    public static string GetColName(Dictionary<string, string> colNamesDict, string field)
+    {
+        if (!colNamesDict.ContainsKey(field)) throw new ArgumentException($"{field} is not a valid field");
+        return colNamesDict[field];
+    }
+
 }

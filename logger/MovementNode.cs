@@ -31,11 +31,11 @@ public class MovementNode : IndexedMovementData
 
     public MovementNode(Dictionary<string, string> fields) : base(fields)
     {
-        this.scene = fields[FieldToColName(nameof(scene))];
-        this.location = fields[FieldToColName(nameof(location))];
-        this.x = int.Parse(fields[FieldToColName(nameof(x))]);
-        this.y = int.Parse(fields[FieldToColName(nameof(y))]);
-        this.height = int.Parse(fields[FieldToColName(nameof(height))]);
+        this.scene = fields[GetColName(nameof(scene))];
+        this.location = fields[GetColName(nameof(location))];
+        this.x = int.Parse(fields[GetColName(nameof(x))]);
+        this.y = int.Parse(fields[GetColName(nameof(y))]);
+        this.height = int.Parse(fields[GetColName(nameof(height))]);
     }
 
     public Vector3 GetPositionVector()
@@ -52,21 +52,23 @@ public class MovementNode : IndexedMovementData
     {
         return new Dictionary<string, string>
         {
-            { FieldToColName(nameof(id)), id.ToString() },
-            { FieldToColName(nameof(scene)), scene.ToString() },
-            { FieldToColName(nameof(location)), location.ToString() },
-            { FieldToColName(nameof(x)), x.ToString() },
-            { FieldToColName(nameof(y)), y.ToString() },
-            { FieldToColName(nameof(height)), height.ToString() },
+            { GetColName(nameof(id)), id.ToString() },
+            { GetColName(nameof(scene)), scene.ToString() },
+            { GetColName(nameof(location)), location.ToString() },
+            { GetColName(nameof(x)), x.ToString() },
+            { GetColName(nameof(y)), y.ToString() },
+            { GetColName(nameof(height)), height.ToString() },
         };
     }
 
-    public static string FieldToColName(string field)
+    public static string GetColName(string field) => MovementDataHelpers.GetColName(GetColNameDict(), field);
+
+    public static List<string> GetColNames() => MovementDataHelpers.GetColNamesFromDict(FIELDS, GetColNameDict());
+
+    public static Dictionary<string, string> GetColNameDict()
     {
         ColNameDict ??= MovementDataHelpers.GetFieldToColNameDict(typeof(MovementNode));
-
-        if (!ColNameDict.ContainsKey(field)) throw new ArgumentException($"{field} is not a valid field");
-        return ColNameDict[field];
+        return ColNameDict;
     }
 
     private static Dictionary<string, string> ColNameDict = null;
