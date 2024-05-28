@@ -20,19 +20,10 @@ public abstract class IndexedMovementData : IMovementData
     {
     }
 
-    public IndexedMovementData(Dictionary<string, string> fields)
+    public IndexedMovementData(Dictionary<string, string> fields) : this(fields[nameof(id)])
     {
-        foreach (string field in fields.Keys)
-        {
-            if (!this.SetField(field, fields[field])) throw new ArgumentException($"{fields[field]} could not be parsed into the {field} field");
-        }
     }
 
     public abstract Dictionary<string, string> ToDictionary();
-    public virtual bool SetField(string field, string value)
-    {
-        if (field == nameof(id)) return int.TryParse(value, out this.id);
-        else throw new ArgumentException($"{field} is not a parseable field");
-    }
 
 }

@@ -9,50 +9,58 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementEdgeRun : IMovementData
 {
 
-    public static readonly List<string> FIELDS = new() { "edge id", "real time", "game time", nameof(timestamp), nameof(version) };
+    public static readonly List<string> FIELDS = new() { nameof(edge), nameof(version), nameof(timestamp), nameof(realTime), nameof(gameTime) };
 
     public MovementEdge edge;
+    public string version;
+    public long timestamp;
     public float realTime;
     public float gameTime;
-    public long timestamp;
-    public string version;
 
     public MovementEdgeRun(MovementEdge edge, float realTime, float gameTime, long timestamp, string version)
     {
         this.edge = edge;
+        this.version = version;
+        this.timestamp = timestamp;
         this.realTime = realTime;
         this.gameTime = gameTime;
-        this.timestamp = timestamp;
-        this.version = version;
     }
 
-    public bool SetField(string field, string value)
+    public MovementEdgeRun(Dictionary<string, string> fields, Dictionary<int, MovementEdge> edges)
     {
-        switch (field)
-        {
-            case "real time":
-                return float.TryParse(value, out realTime);
-            case "game time":
-                return float.TryParse(value, out gameTime);
-            case nameof(timestamp):
-                return long.TryParse(value, out timestamp);
-            case nameof(version):
-                this.version = value;
-                return true;
-            default:
-                throw new ArgumentException($"{field} is not a parseable field");
-        }
+        this.edge = edges[int.Parse(fields[FieldToColName(nameof(edge))])];
+        this.version = fields[FieldToColName(nameof(version))];
+        this.timestamp = long.Parse(fields[FieldToColName(nameof(timestamp))]);
+        this.realTime = float.Parse(fields[FieldToColName(nameof(realTime))]);
+        this.gameTime = float.Parse(fields[FieldToColName(nameof(gameTime))]);
     }
 
     public Dictionary<string, string> ToDictionary()
     {
         return new Dictionary<string, string>
         {
-            { "edge id", this.edge.id.ToString() },
-            { "real time", this.realTime.ToString() },
-            { "game time", this.gameTime.ToString() },
-            { nameof(this.timestamp), this.timestamp.ToString() },
-            { nameof(this.version), this.version.ToString() },
+            { FieldToColName(nameof(edge)), this.edge.id.ToString() },
+            { FieldToColName(nameof(version)), this.version.ToString() },
+            { FieldToColName(nameof(timestamp)), this.timestamp.ToString() },
+            { FieldToColName(nameof(realTime)), this.realTime.ToString() },
+            { FieldToColName(nameof(gameTime)), this.gameTime.ToString() },
         };
     }
+
+    public static string FieldToColName(string field)
+    {
+        if (fieldToColName == null)
+        {
+            fieldToColName = MovementDataHelpers.GetFieldToColNameDict(typeof(MovementEdgeRun));
+            fieldToColName[nameof(edge)] = "edge id";
+            fieldToColName[nameof(realTime)] = "real time";
+            fieldToColName[nameof(gameTime)] = "game time";
+        }
+
+        if (!fieldToColName.ContainsKey(field)) throw new ArgumentException($"{field} is not a valid field.");
+        return fieldToColName[field];
+    }
+
+    public static Dictionary<string, string> fieldToColName = null;
+
 }

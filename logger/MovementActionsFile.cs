@@ -27,7 +27,6 @@ public class MovementActionsFile : IndexedMovementDataFile<MovementAction>
     public override void Read()
     {
         base.Read();
-        List<int> linesToRemove = new();
 
         foreach (int i in this.rows.Keys)
         {
@@ -39,12 +38,11 @@ public class MovementActionsFile : IndexedMovementDataFile<MovementAction>
             }
             catch
             {
-                linesToRemove.Add(i);
+
             }
         }
 
         this.UpdateLargestID();
-        if (linesToRemove.Count > 0) this.RemoveLines(linesToRemove.ToArray());
 
         if (this.modified) this.WriteAll();
     }

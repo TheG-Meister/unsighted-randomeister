@@ -11,15 +11,21 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementState : IndexedMovementData
 {
 
-    public static readonly List<string> FIELDS = new() { "id", "scene", "name" };
+    public static readonly List<string> FIELDS = new() { nameof(id), nameof(scene), nameof(name) };
 
     public string scene;
     public string name;
 
     public MovementState(int id, string name, string scene) : base(id)
     {
-        this.name = name;
         this.scene = scene;
+        this.name = name;
+    }
+
+    public MovementState(Dictionary<string, string> fields) : base(fields)
+    {
+        this.scene = fields[GetColName(nameof(scene))];
+        this.name = fields[GetColName(nameof(name))];
     }
 
     public string GetStringID()
@@ -31,9 +37,20 @@ public class MovementState : IndexedMovementData
     {
         return new Dictionary<string, string>
         {
-            { nameof(id), this.id.ToString() },
-            { nameof(scene), this.scene },
-            { nameof(name), this.name },
+            { GetColName(nameof(id)), this.id.ToString() },
+            { GetColName(nameof(scene)), this.scene },
+            { GetColName(nameof(name)), this.name },
         };
     }
+
+    public static string GetColName(string field)
+    {
+        ColNamesDict ??= MovementDataHelpers.GetFieldToColNameDict(typeof(MovementState));
+
+        if (!ColNamesDict.ContainsKey(field)) throw new ArgumentException($"{field} is not a valid field.");
+        return ColNamesDict[field];
+    }
+
+    public static Dictionary<string, string> ColNamesDict = null;
+
 }

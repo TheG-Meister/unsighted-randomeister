@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,7 +11,7 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementAction : IndexedMovementData
 {
 
-    public static readonly List<string> FIELDS = new() { nameof(id), nameof(action) };
+    public static readonly List<string> FIELDS = new() { FieldToColName(nameof(id)), FieldToColName(nameof(action)) };
 
     public PlayerAction action;
 
@@ -24,24 +25,28 @@ public class MovementAction : IndexedMovementData
         this.action = (PlayerAction) Enum.Parse(typeof(PlayerAction), action, false);
     }
 
-    public MovementAction(Dictionary<string, string> fields) : this(fields[nameof(id)], fields[nameof(action)])
+    public MovementAction(Dictionary<string, string> fields) : this(fields[FieldToColName(nameof(id))], fields[FieldToColName(nameof(action))])
     {
-    }
-
-    public override bool SetField(string field, string value)
-    {
-        if (field == nameof(action)) return Enum.TryParse(value, out PlayerAction _);
-        else return base.SetField(field, value);
     }
 
     public override Dictionary<string, string> ToDictionary()
     {
         return new Dictionary<string, string>
         {
-            { nameof(this.id), this.id.ToString() },
-            { nameof(this.action), this.action.ToString() },
+            { FieldToColName(nameof(this.id)), this.id.ToString() },
+            { FieldToColName(nameof(this.action)), this.action.ToString() },
         };
     }
+
+    public static string FieldToColName(string field)
+    {
+        fieldToColName ??= MovementDataHelpers.GetFieldToColNameDict(typeof(MovementAction));
+
+        if (!fieldToColName.ContainsKey(field)) throw new ArgumentException($"{field} is not a valid field");
+        return fieldToColName[field];
+    }
+
+    public static Dictionary<string, string> fieldToColName = null;
 
     public override bool Equals(object obj)
     {

@@ -10,6 +10,7 @@ public class MovementLoggerFiles
 {
 
     public string path;
+    public string backupsPath;
     public IndexedMovementDataFile<MovementAction> actionsFile;
     public IndexedMovementDataFile<MovementState> statesFile;
     public IndexedMovementDataFile<MovementNode> nodesFile;
@@ -21,6 +22,9 @@ public class MovementLoggerFiles
     public MovementLoggerFiles(string path)
     {
         this.path = path;
+
+        this.actionsFile = new(Path.Combine(path, "actions.tsv"), );
+
     }
 
 
