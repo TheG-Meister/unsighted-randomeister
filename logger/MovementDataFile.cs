@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public abstract class MovementDataFile<T> : DelimitedFile where T : IMovementData
+public class MovementDataFile<T> : DelimitedFile where T : IMovementData
 {
 
     public List<string> fieldNames;
@@ -21,8 +21,6 @@ public abstract class MovementDataFile<T> : DelimitedFile where T : IMovementDat
 
     public List<string> GetMissingFieldNames()
     {
-        if (this.colNames == null || this.colNames.Count > 0) this.ReadColNames();
-
         List<string> missingFieldNames = new(this.fieldNames);
         foreach (string colName in this.colNames) if (missingFieldNames.Contains(colName)) missingFieldNames.Remove(colName);
 

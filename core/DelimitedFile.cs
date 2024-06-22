@@ -8,12 +8,15 @@ namespace dev.gmeister.unsighted.randomeister.core;
 
 public class DelimitedFile
 {
-    public const string MISSING_COL_NAME = "";
+    public const string MISSING_COL_NAME = null;
     public const string BLANK_LINE = "";
-    public const string BLANK_FIELD = "";
+    public const string MISSING_FIELD = null;
 
     public readonly string path;
     public char delim;
+
+    public StreamWriter writer;
+    public bool modified;
 
     public int colNamesLine;
     public List<string> colNames;
@@ -21,69 +24,34 @@ public class DelimitedFile
     public Dictionary<int, List<string>> rows;
     public int lastLine;
 
-    public StreamWriter writer;
-    public bool modified;
-
     public Dictionary<string, Dictionary<string, string>> substitutions;
 
     public DelimitedFile(string path, char delim)
     {
         this.path = path;
         this.delim = delim;
+
+        this.writer = null;
         this.modified = false;
+
+        this.colNamesLine = -1;
+        this.colNames = null;
+        this.unusedLines = new();
+        this.rows = new();
+        this.lastLine = -1;
+
         this.substitutions = new();
     }
 
     public bool Exists() => File.Exists(path);
 
-    public void ReadColNames()
+    public void Create()
     {
-        IEnumerable<string> lines = File.ReadLines(path);
-        foreach (string line in lines)
-        {
-            if (!string.IsNullOrEmpty(line) && !line.StartsWith("#"))
-            {
-                this.colNames = new(line.Split(delim));
-                break;
-            }
-        }
+        this.writer = new StreamWriter(this.path, false);
+        this.lastLine = 0;
     }
 
-    public void Create(params string[] colNames)
-    {
-        this.writer = File.CreateText(this.path);
-
-        this.colNamesLine = 0;
-        this.colNames = new(colNames);
-
-        this.WriteAll();
-    }
-
-    public void Create(Dictionary<string, string> defaultValuesDict)
-    {
-        this.writer = File.CreateText(this.path);
-
-        this.colNamesLine = 0;
-        this.AddColumns(defaultValuesDict);
-
-        this.WriteAll();
-    }
-
-    public void AddColumns(params string[] colNames)
-    {
-        Dictionary<string, string> defaultValuesDict = new();
-        foreach (string colName in colNames) defaultValuesDict[colName] = BLANK_FIELD;
-
-        this.AddColumns(defaultValuesDict);
-    }
-
-    public virtual void AddColumns(Dictionary<string, string> defaultValuesDict)
-    {
-        this.colNames.AddRange(colNames);
-        foreach (List<string> fields in this.rows.Values) foreach (string header in defaultValuesDict.Keys) fields.Add(defaultValuesDict[header]);
-    }
-
-    public virtual void Read()
+    public virtual void ReadAll()
     {
         List<string> lines = new(File.ReadAllLines(path));
         bool colNamesFound = false;
@@ -94,7 +62,6 @@ public class DelimitedFile
         for (int lineNum = 0; lineNum < lines.Count; lineNum++)
         {
             string line = lines[lineNum];
-            this.lastLine = lineNum;
 
             if (line == null) this.unusedLines[lineNum] = BLANK_LINE;
             else if (string.IsNullOrEmpty(line) || line.StartsWith("#")) this.unusedLines[lineNum] = line;
@@ -107,40 +74,42 @@ public class DelimitedFile
                     this.colNamesLine = lineNum;
                     colNamesFound = true;
                 }
-                else
-                {
-
-                    while (this.colNames.Count < row.Count)
-                    {
-                        this.colNames.Add(MISSING_COL_NAME);
-                        this.modified = true;
-                    }
-
-                    while (row.Count < this.colNames.Count)
-                    {
-                        row.Add(BLANK_FIELD);
-                        this.modified = true;
-                    }
-
-                    this.rows[lineNum] = row;
-                }
+                else this.rows[lineNum] = row;
             }
         }
 
-        //Normalise row lengths
-        foreach (List<string> row in this.rows.Values)
+        this.lastLine = lines.Count - 1;
+    }
+
+    public List<int> GetRowLengths()
+    {
+        return this.rows.Values.Select(r => rows.Count).Distinct().ToList();
+    }
+
+    public Dictionary<int, string> GetComments()
+    {
+        Dictionary<int, string> result = new();
+
+        foreach (int key in this.unusedLines.Keys)
         {
-            if (row.Count > this.colNames.Count) throw new ApplicationException("row has more fields than columns");
-            else if (row.Count == this.colNames.Count) break;
-
-            while (row.Count < this.colNames.Count)
-            {
-                row.Add(BLANK_FIELD);
-                this.modified = true;
-            }
+            if (this.unusedLines[key].StartsWith("#")) result[key] = this.unusedLines[key].Substring(1);
         }
 
-        this.SubstituteAll();
+        return result;
+    }
+
+    public void AddColumns(params string[] colNames)
+    {
+        Dictionary<string, string> defaultValuesDict = new();
+        foreach (string colName in colNames) defaultValuesDict[colName] = MISSING_FIELD;
+
+        this.AddColumns(defaultValuesDict);
+    }
+
+    public virtual void AddColumns(Dictionary<string, string> defaultValuesDict)
+    {
+        this.colNames.AddRange(colNames);
+        foreach (List<string> fields in this.rows.Values) foreach (string header in defaultValuesDict.Keys) fields.Add(defaultValuesDict[header]);
     }
 
     public void RemoveLines(params int[] lines)
@@ -262,11 +231,21 @@ public class DelimitedFile
 
     public int AddComment(string comment)
     {
-        string line = "# " + comment;
+        string line = "#" + comment;
 
         this.lastLine++;
         this.unusedLines[this.lastLine] = line;
         this.WriteLine(line);
+
+        return this.lastLine;
+    }
+
+    public int AddColNamesLine(params string[] colNames)
+    {
+        this.lastLine++;
+        this.colNamesLine = lastLine;
+        this.colNames = new(colNames);
+        this.WriteLine(string.Join(this.delim.ToString(), this.colNames));
 
         return this.lastLine;
     }
