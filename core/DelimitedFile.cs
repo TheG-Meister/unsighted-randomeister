@@ -8,6 +8,7 @@ namespace dev.gmeister.unsighted.randomeister.core;
 
 public class DelimitedFile
 {
+    public const char COMMENT_CHAR = '#';
     public const string MISSING_COL_NAME = null;
     public const string BLANK_LINE = "";
     public const string MISSING_FIELD = null;
@@ -64,7 +65,7 @@ public class DelimitedFile
             string line = lines[lineNum];
 
             if (line == null) this.unusedLines[lineNum] = BLANK_LINE;
-            else if (string.IsNullOrEmpty(line) || line.StartsWith("#")) this.unusedLines[lineNum] = line;
+            else if (string.IsNullOrEmpty(line) || line.StartsWith(COMMENT_CHAR.ToString())) this.unusedLines[lineNum] = line;
             else
             {
                 List<string> row = new(line.Split(delim));
@@ -92,7 +93,7 @@ public class DelimitedFile
 
         foreach (int key in this.unusedLines.Keys)
         {
-            if (this.unusedLines[key].StartsWith("#")) result[key] = this.unusedLines[key].Substring(1);
+            if (this.unusedLines[key].StartsWith(COMMENT_CHAR.ToString())) result[key] = this.unusedLines[key].Substring(1);
         }
 
         return result;
@@ -126,7 +127,7 @@ public class DelimitedFile
 
     public void SetField(int row, string colName, string field)
     {
-        if (colName == this.colNames[0] && field.StartsWith("#")) throw new ArgumentException($"{nameof(field)} would comment out the line");
+        if (colName == this.colNames[0] && field.StartsWith(COMMENT_CHAR.ToString())) throw new ArgumentException($"{nameof(field)} would comment out the line");
         if (field.Contains(this.delim)) throw new ArgumentException($"{nameof(field)} contains the file delimiter.");
 
         this.rows[row][this.colNames.IndexOf(colName)] = field;
@@ -151,7 +152,7 @@ public class DelimitedFile
 
     public void AddSubstitution(string colName, string term, string substitution)
     {
-        if (colName == this.colNames[0] && substitution.StartsWith("#")) throw new ArgumentException($"{nameof(substitution)} would comment out the line");
+        if (colName == this.colNames[0] && substitution.StartsWith(COMMENT_CHAR.ToString())) throw new ArgumentException($"{nameof(substitution)} would comment out the line");
         if (substitution.Contains(this.delim)) throw new ArgumentException($"{nameof(substitution)} contains the file delimiter.");
 
         if (!this.substitutions.ContainsKey(colName)) this.substitutions[colName] = new();
@@ -179,7 +180,7 @@ public class DelimitedFile
 
     public void Substitute(string colName, string term, string substitution)
     {
-        if (colName == this.colNames[0] && substitution.StartsWith("#")) throw new ArgumentException($"{nameof(substitution)} would comment out the line");
+        if (colName == this.colNames[0] && substitution.StartsWith(COMMENT_CHAR.ToString())) throw new ArgumentException($"{nameof(substitution)} would comment out the line");
         if (substitution.Contains(this.delim)) throw new ArgumentException($"{nameof(substitution)} contains the file delimiter.");
 
         int colIndex = this.colNames.IndexOf(colName);
@@ -204,7 +205,7 @@ public class DelimitedFile
 
     public int Add(Dictionary<string, string> fields)
     {
-        if (fields.ContainsKey(this.colNames[0]) && fields[colNames[0]].StartsWith("#")) throw new ArgumentException($"The field for {this.colNames[0]} would comment out the line");
+        if (fields.ContainsKey(this.colNames[0]) && fields[colNames[0]].StartsWith(COMMENT_CHAR.ToString())) throw new ArgumentException($"The field for {this.colNames[0]} would comment out the line");
 
         List<string> fieldsList = new();
 
