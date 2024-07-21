@@ -9,13 +9,27 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementEdgeRun : IMovementData
 {
 
-    public static readonly List<string> FIELDS = new() { nameof(edge), nameof(version), nameof(timestamp), nameof(realTime), nameof(gameTime) };
+    public static readonly Dictionary<string, MovementDataFileVersion<MovementEdgeRun>> versions;
+    public static readonly string currentVersion;
 
     public MovementEdge edge;
     public string version;
     public long timestamp;
     public float realTime;
     public float gameTime;
+
+    static MovementEdgeRun()
+    {
+        versions = new();
+
+        string version = "1.0";
+        List<string> fields = new() { nameof(edge), nameof(version), nameof(timestamp), nameof(realTime), nameof(gameTime) };
+        Dictionary<string, string> colNameDict = new();
+        foreach (string field in fields) colNameDict[field] = field;
+        versions[version] = new(version, fields, colNameDict);
+
+        currentVersion = version;
+    }
 
     public MovementEdgeRun(MovementEdge edge, float realTime, float gameTime, long timestamp, string version)
     {
@@ -47,22 +61,6 @@ public class MovementEdgeRun : IMovementData
         };
     }
 
-    public static string GetColName(string field) => MovementDataHelpers.GetColName(GetColNameDict(), field);
-
-    public static List<string> GetColNames() => MovementDataHelpers.GetColNamesFromDict(FIELDS, GetColNameDict());
-
-    public static Dictionary<string, string> GetColNameDict()
-    {
-        if (ColNameDict == null)
-        {
-            ColNameDict = MovementDataHelpers.GetFieldToColNameDict(typeof(MovementEdgeRun));
-            ColNameDict[nameof(edge)] = "edge id";
-            ColNameDict[nameof(realTime)] = "real time";
-            ColNameDict[nameof(gameTime)] = "game time";
-        }
-        return ColNameDict;
-    }
-
-    private static Dictionary<string, string> ColNameDict = null;
+    public static string GetColName(string field) => versions[currentVersion].GetColName(field);
 
 }

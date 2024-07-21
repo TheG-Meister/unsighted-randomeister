@@ -10,27 +10,38 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementDataFile<T> : DelimitedFile where T : IMovementData
 {
 
-    public List<string> fieldNames;
+    public Dictionary<string, string> header;
     public Dictionary<int, T> parsedData;
 
-    public MovementDataFile(string path, List<string> fieldNames) : base(path, '\t')
-    {
-        this.fieldNames = fieldNames;
-        this.parsedData = new();
-    }
+    public MovementDataFile(string path) : base(path, '\t')
+    {}
 
-    public List<string> GetMissingFieldNames()
+    public override void ReadAll()
     {
-        List<string> missingFieldNames = new(this.fieldNames);
-        foreach (string colName in this.colNames) if (missingFieldNames.Contains(colName)) missingFieldNames.Remove(colName);
+        base.ReadAll();
 
-        return missingFieldNames;
+        List<string> headerLines = new();
+        foreach (KeyValuePair<int, string> kvp in this.unusedLines)
+        {
+            string line = kvp.Value;
+            if (line.StartsWith(COMMENT_CHAR.ToString()))
+            {
+                headerLines.Add(line.Substring(line.IndexOf(COMMENT_CHAR.ToString()) + 1));
+            }
+        }
+
+        this.header = MovementDataFileVersion<T>.ParseHeader(headerLines);
     }
 
     public virtual void Add(T obj)
     {
         int index = this.Add(obj.ToDictionary());
         this.parsedData[index] = obj;
+    }
+
+    public string GetVersionString()
+    {
+        return this.header[nameof(MovementDataFileVersion<T>.version)];
     }
 
 }

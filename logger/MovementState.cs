@@ -5,16 +5,31 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
 public class MovementState : IndexedMovementData
 {
 
-    public static readonly List<string> FIELDS = new() { nameof(id), nameof(scene), nameof(name) };
+    public static readonly Dictionary<string, MovementDataFileVersion<MovementState>> versions;
+    public static readonly string currentVersion;
 
     public string scene;
     public string name;
+
+    static MovementState()
+    {
+        versions = new();
+
+        string version = "1.0";
+        List<string> fields = new() { nameof(id), nameof(scene), nameof(name) };
+        Dictionary<string, string> colNameDict = new();
+        foreach (string field in fields) colNameDict[field] = field;
+        versions[version] = new(version, fields, colNameDict);
+
+        currentVersion = version;
+    }
 
     public MovementState(int id, string name, string scene) : base(id)
     {
@@ -43,16 +58,6 @@ public class MovementState : IndexedMovementData
         };
     }
 
-    public static string GetColName(string field) => MovementDataHelpers.GetColName(GetColNameDict(), field);
-
-    public static List<string> GetColNames() => MovementDataHelpers.GetColNamesFromDict(FIELDS, GetColNameDict());
-
-    public static Dictionary<string, string> GetColNameDict()
-    {
-        ColNameDict ??= MovementDataHelpers.GetFieldToColNameDict(typeof(MovementState));
-        return ColNameDict;
-    }
-
-    private static Dictionary<string, string> ColNameDict = null;
+    public static string GetColName(string field) => versions[currentVersion].GetColName(field);
 
 }

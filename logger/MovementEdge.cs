@@ -11,13 +11,28 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementEdge : IndexedMovementData
 {
 
-    public static readonly List<string> FIELDS = new() { nameof(id), nameof(source), nameof(target), nameof(sceneChange), nameof(actions), nameof(states) };
+    public static readonly Dictionary<string, MovementDataFileVersion<MovementEdge>> versions;
+    public static readonly string currentVersion;
 
     public MovementNode source;
     public MovementNode target;
     public bool sceneChange;
     public HashSet<MovementAction> actions;
     public HashSet<MovementState> states;
+
+    static MovementEdge()
+    {
+        versions = new();
+
+        string version = "1.0";
+        List<string> fields = new() { nameof(id), nameof(source), nameof(target), nameof(sceneChange), nameof(actions), nameof(states) };
+        Dictionary<string, string> colNameDict = new();
+        foreach (string field in fields) colNameDict[field] = field;
+        colNameDict[nameof(sceneChange)] = "scene change";
+        versions[version] = new(version, fields, colNameDict);
+
+        currentVersion = version;
+    }
 
     public MovementEdge(int id, MovementNode source, MovementNode target, bool sceneChange) : base(id)
     {
@@ -66,20 +81,6 @@ public class MovementEdge : IndexedMovementData
         };
     }
 
-    public static string GetColName(string field) => MovementDataHelpers.GetColName(GetColNameDict(), field);
-
-    public static List<string> GetColNames() => MovementDataHelpers.GetColNamesFromDict(FIELDS, GetColNameDict());
-
-    public static Dictionary<string, string> GetColNameDict()
-    {
-        if (ColNameDict == null)
-        {
-            ColNameDict = MovementDataHelpers.GetFieldToColNameDict(typeof(MovementEdge));
-            ColNameDict[nameof(sceneChange)] = "scene change";
-        }
-        return ColNameDict;
-    }
-
-    private static Dictionary<string, string> ColNameDict = null;
+    public static string GetColName(string field) => versions[currentVersion].GetColName(field);
 
 }

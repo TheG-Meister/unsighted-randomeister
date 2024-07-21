@@ -10,7 +10,8 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementObject : IMovementData
 {
 
-    public static readonly List<string> FIELDS = new() { nameof(type), nameof(scene), nameof(name), nameof(x), nameof(y), nameof(height) };
+    public static readonly Dictionary<string, MovementDataFileVersion<MovementObject>> versions;
+    public static readonly string currentVersion;
 
     public string type;
     public string scene;
@@ -18,6 +19,19 @@ public class MovementObject : IMovementData
     public float x;
     public float y;
     public float height;
+
+    static MovementObject()
+    {
+        versions = new();
+
+        string version = "1.0";
+        List<string> fields = new() { nameof(type), nameof(scene), nameof(name), nameof(x), nameof(y), nameof(height) };
+        Dictionary<string, string> colNameDict = new();
+        foreach (string field in fields) colNameDict[field] = field;
+        versions[version] = new(version, fields, colNameDict);
+
+        currentVersion = version;
+    }
 
     public MovementObject()
     {
@@ -56,17 +70,7 @@ public class MovementObject : IMovementData
         };
     }
 
-    public static string GetColName(string field) => MovementDataHelpers.GetColName(GetColNameDict(), field);
-
-    public static List<string> GetColNames() => MovementDataHelpers.GetColNamesFromDict(FIELDS, GetColNameDict());
-
-    public static Dictionary<string, string> GetColNameDict()
-    {
-        ColNameDict ??= MovementDataHelpers.GetFieldToColNameDict(typeof(MovementObject));
-        return ColNameDict;
-    }
-
-    private static Dictionary<string, string> ColNameDict = null;
+    public static string GetColName(string field) => versions[currentVersion].GetColName(field);
 
     public override bool Equals(object obj)
     {

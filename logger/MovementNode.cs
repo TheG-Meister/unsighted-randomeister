@@ -12,13 +12,27 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementNode : IndexedMovementData
 {
 
-    public static readonly List<string> FIELDS = new() { nameof(id), nameof(scene), nameof(location), nameof(x), nameof(y), nameof(height) };
+    public static readonly Dictionary<string, MovementDataFileVersion<MovementNode>> versions;
+    public static readonly string currentVersion;
 
     public string scene;
     public string location;
     public float x;
     public float y;
     public float height;
+
+    static MovementNode()
+    {
+        versions = new();
+
+        string version = "1.0";
+        List<string> fields = new() { nameof(id), nameof(scene), nameof(location), nameof(x), nameof(y), nameof(height) };
+        Dictionary<string, string> colNameDict = new();
+        foreach (string field in fields) colNameDict[field] = field;
+        versions[version] = new(version, fields, colNameDict);
+
+        currentVersion = version;
+    }
     
     public MovementNode(int id, string scene, string location, Vector3 position) : base(id)
     {
@@ -61,17 +75,7 @@ public class MovementNode : IndexedMovementData
         };
     }
 
-    public static string GetColName(string field) => MovementDataHelpers.GetColName(GetColNameDict(), field);
-
-    public static List<string> GetColNames() => MovementDataHelpers.GetColNamesFromDict(FIELDS, GetColNameDict());
-
-    public static Dictionary<string, string> GetColNameDict()
-    {
-        ColNameDict ??= MovementDataHelpers.GetFieldToColNameDict(typeof(MovementNode));
-        return ColNameDict;
-    }
-
-    private static Dictionary<string, string> ColNameDict = null;
+    public static string GetColName(string field) => versions[currentVersion].GetColName(field);
 
     public override bool Equals(object obj)
     {
