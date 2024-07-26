@@ -12,6 +12,7 @@ public class MovementDataFile<T> : DelimitedFile where T : IMovementData
 
     public Dictionary<string, string> header;
     public Dictionary<int, T> parsedData;
+    public MovementDataFileVersion<T> version;
 
     public MovementDataFile(string path) : base(path, '\t')
     {}
@@ -44,4 +45,13 @@ public class MovementDataFile<T> : DelimitedFile where T : IMovementData
         return this.header[nameof(MovementDataFileVersion<T>.version)];
     }
 
+    public void CreateAndWriteHeader(MovementDataFileVersion<T> version)
+    {
+        this.Create();
+        this.version = version;
+        this.header = version.ToDictionary();
+        List<string> headerLines = version.ToHeader();
+        foreach (string line in headerLines) this.AddComment(line);
+        this.AddColNamesLine(version.colNames.ToArray());
+    }
 }

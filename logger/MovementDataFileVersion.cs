@@ -35,12 +35,21 @@ public class MovementDataFileVersion<T> where T : IMovementData
         return colNameDict[field];
     }
 
-    public List<string> GetHeader()
+    public List<string> ToHeader()
     {
         return new()
         {
             string.Join(DELIM.ToString(), "type", typeof(T).FullName),
             string.Join(DELIM.ToString(), nameof(version), version),
+        };
+    }
+
+    public Dictionary<string, string> ToDictionary()
+    {
+        return new()
+        {
+            { "type", typeof(T).FullName },
+            { nameof(version), version },
         };
     }
 

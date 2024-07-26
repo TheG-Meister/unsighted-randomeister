@@ -60,4 +60,6 @@ public class MovementState : IndexedMovementData
 
     public static string GetColName(string field) => versions[currentVersion].GetColName(field);
 
+    public static MovementDataFileVersion<MovementState> GetCurrentVersion() => versions[currentVersion];
+
 }

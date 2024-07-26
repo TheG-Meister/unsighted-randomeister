@@ -72,6 +72,8 @@ public class MovementObject : IMovementData
 
     public static string GetColName(string field) => versions[currentVersion].GetColName(field);
 
+    public static MovementDataFileVersion<MovementObject> GetCurrentVersion() => versions[currentVersion];
+
     public override bool Equals(object obj)
     {
         return obj is MovementObject @object &&

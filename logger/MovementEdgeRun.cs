@@ -63,4 +63,6 @@ public class MovementEdgeRun : IMovementData
 
     public static string GetColName(string field) => versions[currentVersion].GetColName(field);
 
+    public static MovementDataFileVersion<MovementEdgeRun> GetCurrentVersion() => versions[currentVersion];
+
 }

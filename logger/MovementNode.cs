@@ -77,6 +77,8 @@ public class MovementNode : IndexedMovementData
 
     public static string GetColName(string field) => versions[currentVersion].GetColName(field);
 
+    public static MovementDataFileVersion<MovementNode> GetCurrentVersion() => versions[currentVersion];
+
     public override bool Equals(object obj)
     {
         return obj is MovementNode node &&

@@ -11,7 +11,7 @@ public class IndexedMovementDataFile<T> : MovementDataFile<T> where T : IndexedM
 
     public int largestID;
 
-    public IndexedMovementDataFile(string path, List<string> fieldNames) : base(path, fieldNames)
+    public IndexedMovementDataFile(string path) : base(path)
     {
         this.largestID = -1;
     }
