@@ -1,6 +1,7 @@
 ﻿using dev.gmeister.unsighted.randomeister.core;
 using System;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,6 +48,10 @@ public class MovementLoggerFiles
             if (!file.header.TryGetValue("version", out string version)) ; //backup and restore
             
         }
+
+        if (!this.CheckFile(this.actionsFile, MovementAction.versions));
+
+        
     }
 
     public bool CheckFile<T>(MovementDataFile<T> file, Dictionary<string, MovementDataFileVersion<T>> versions) where T : IMovementData
@@ -97,6 +102,26 @@ public class MovementLoggerFiles
         }
 
         return failedIDs;
+    }
+
+    public void CreateZip(List<string> files, string path)
+    {
+        string tempDir = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
+        Random random = new();
+        if (Directory.Exists(tempDir))
+        {
+            tempDir += "-temp-";
+            do
+            {
+                tempDir += Constants.ALPHANUMERIC_CHARS[random.Next(Constants.ALPHANUMERIC_CHARS.Length)];
+            }
+            while (Directory.Exists(tempDir));
+        }
+        Directory.CreateDirectory(tempDir);
+
+        foreach (string file in files) File.Copy(file, Path.Combine(tempDir, Path.GetFileName(file)));
+        ZipFile.CreateFromDirectory(tempDir, path);
+        Directory.Delete(tempDir, true);
     }
 
 }

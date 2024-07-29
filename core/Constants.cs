@@ -34,4 +34,6 @@ public class Constants
     public const char CHEST_ID_SEPARATOR = '_';
     public const char ID_SEPARATOR = '_';
 
+    public const string ALPHANUMERIC_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
 }
