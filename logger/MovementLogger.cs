@@ -1,21 +1,10 @@
 ﻿using dev.gmeister.unsighted.randomeister.core;
 using dev.gmeister.unsighted.randomeister.unsighted;
 using HarmonyLib;
-using System;
-using System.Drawing;
-using TMPro.Examples;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using static dev.gmeister.unsighted.randomeister.unsighted.PlayerAction;
-using System.Text;
-using System.Linq;
 using System.Collections;
-using System.Reflection.Emit;
-using static System.Runtime.CompilerServices.RuntimeHelpers;
-using static dev.gmeister.unsighted.randomeister.logger.MovementLogger;
-using static TopdownPhysics;
-using System.Runtime.CompilerServices;
-using System.Runtime.Remoting.Messaging;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
@@ -131,12 +120,14 @@ public class MovementLogger : IDisposable
 
         if (File.Exists(actionsPath))
         {
-            List<List<string>> parsedActionsFile = DelimitedFile.Read(actionsPath, '\t', out List<string> headers);
+            DelimitedFile actionsFile = new(actionsPath, '\t');
+            actionsFile.ReadAll();
+            List<string> headers = new(actionsFile.colNames);
 
             List<string> requiredHeaders = new() { "id", "action" };
             foreach (string header in requiredHeaders) if (!headers.Contains(header)) throw new ApplicationException();
 
-            foreach (List<string> parsedAction in parsedActionsFile)
+            foreach (List<string> parsedAction in actionsFile.rows.Values)
             {
                 if (int.TryParse(parsedAction[headers.IndexOf("id")], out int id) && Enum.TryParse(parsedAction[headers.IndexOf("action")], out PlayerAction action))
                 {
@@ -193,12 +184,14 @@ public class MovementLogger : IDisposable
 
         if (File.Exists(nodesPath))
         {
-            List<List<string>> parsedNodesFile = DelimitedFile.Read(nodesPath, '\t', out List<string> headers);
+            DelimitedFile nodesFile = new(nodesPath, '\t');
+            nodesFile.ReadAll();
+            List<string> headers = new(nodesFile.colNames);
 
             List<string> requiredHeaders = new() { "id", "scene", "location", "x", "y", "height", "actions", "states" };
             foreach (string header in requiredHeaders) if (!headers.Contains(header)) throw new ApplicationException();
 
-            foreach (List<string> parsedNode in parsedNodesFile)
+            foreach (List<string> parsedNode in nodesFile.rows.Values)
             {
                 int id = int.Parse(parsedNode[headers.IndexOf("id")]);
 
@@ -237,19 +230,20 @@ public class MovementLogger : IDisposable
 
         if (File.Exists(objectsPath))
         {
-            List<List<string>> parsedObjectsFile = DelimitedFile.Read(objectsPath, '\t', out List<string> headers);
+            DelimitedFile objectsFile = new(objectsPath, '\t');
+            objectsFile.ReadAll();
+            List<string> headers = new(objectsFile.colNames);
 
             List<string> requiredHeaders = new() { "type", "scene", "name", "x", "y", "height" };
             foreach (string header in requiredHeaders) if (!headers.Contains(header)) throw new ApplicationException();
 
-            foreach (List<string> parsedObject in parsedObjectsFile)
+            foreach (List<string> parsedObject in objectsFile.rows.Values)
             {
-                MovementObject obj = new(parsedObject[headers.IndexOf("type")], parsedObject[headers.IndexOf("scene")], parsedObject[headers.IndexOf("name")]);
-
                 if (!float.TryParse(parsedObject[headers.IndexOf("x")], out float x)) x = -3E38f;
                 if (!float.TryParse(parsedObject[headers.IndexOf("y")], out float y)) y = -3E38f;
                 if (!float.TryParse(parsedObject[headers.IndexOf("height")], out float height)) height = -3E38f;
-                obj.position = new Vector3(x, y, height);
+
+                MovementObject obj = new(parsedObject[headers.IndexOf("type")], parsedObject[headers.IndexOf("scene")], parsedObject[headers.IndexOf("name")], new Vector3(x, y, height));
 
                 this.objects.Add(obj);
             }
@@ -280,7 +274,7 @@ public class MovementLogger : IDisposable
             while (this.nodes.Count <= node.id) this.nodes.Add(null);
             this.nodes[node.id] = node;
 
-            this.nodeLogger.stream.WriteLine(string.Join("\t", node.id, node.scene, node.location, node.position.x, node.position.y, node.position.z, actionsString, statesString));
+            this.nodeLogger.stream.WriteLine(string.Join("\t", node.id, node.scene, node.location, node.x, node.y, node.height, actionsString, statesString));
             this.nodeLogger.stream.Flush();
         }
 
@@ -337,7 +331,7 @@ public class MovementLogger : IDisposable
             this.objects.Add(obj);
             if (this.log)
             {
-                this.objectLogger.stream.WriteLine(string.Join("\t", obj.type, obj.scene, obj.name, obj.position.x, obj.position.y, obj.position.z));
+                this.objectLogger.stream.WriteLine(string.Join("\t", obj.type, obj.scene, obj.name, obj.x, obj.y, obj.height));
                 this.objectLogger.stream.Flush();
             }
         }
