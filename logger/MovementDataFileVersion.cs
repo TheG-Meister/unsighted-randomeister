@@ -8,26 +8,25 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class MovementDataFileVersion<T> where T : IMovementData
+public class MovementDataFileVersion<T> : IMovementDataFileVersion<T> where T : IMovementData
 {
 
     public const char DELIM = ':';
     public const string TYPE_KEY = "type";
-    public const string VERSION_KEY = "version";
 
-    public readonly string version;
-    public readonly List<string> fields;
-    public readonly List<string> colNames;
+    public string Version { get; }
+    public List<string> Fields { get; }
+    public List<string> ColNames { get; }
     private readonly Dictionary<string, string> colNameDict;
 
     public MovementDataFileVersion(string version, List<string> fields, Dictionary<string, string> colNameDict)
     {
-        this.version = version;
-        this.fields = new(fields);
+        this.Version = version;
+        this.Fields = new(fields);
         this.colNameDict = new(colNameDict);
 
-        this.colNames = new();
-        foreach (string field in this.fields) colNames.Add(this.colNameDict[field]);
+        this.ColNames = new();
+        foreach (string field in this.Fields) ColNames.Add(this.colNameDict[field]);
     }
 
     public string GetColName(string field)
@@ -40,7 +39,7 @@ public class MovementDataFileVersion<T> where T : IMovementData
         return new()
         {
             string.Join(DELIM.ToString(), "type", typeof(T).FullName),
-            string.Join(DELIM.ToString(), nameof(version), version),
+            string.Join(DELIM.ToString(), nameof(Version).ToLower(), Version),
         };
     }
 
@@ -49,23 +48,25 @@ public class MovementDataFileVersion<T> where T : IMovementData
         return new()
         {
             { "type", typeof(T).FullName },
-            { nameof(version), version },
+            { nameof(Version).ToLower(), Version },
         };
     }
 
     public bool VerifyHeader(Dictionary<string, string> header)
     {
         if (!header.ContainsKey("type") || header["type"] != typeof(T).FullName) return false;
-        if (!header.ContainsKey(nameof(version)) || header[nameof(version)] != this.version) return false;
+        if (!header.ContainsKey(nameof(Version).ToLower()) || header[nameof(Version).ToLower()] != this.Version) return false;
         return true;
     }
 
     public bool VerifyColNames(List<string> colNames)
     {
-        if (this.colNames.Except(colNames).Any()) return false;
-        if (colNames.Except(this.colNames).Any()) return false;
+        if (this.ColNames.Except(colNames).Any()) return false;
+        if (colNames.Except(this.ColNames).Any()) return false;
         return true;
     }
+
+
 
     public static Dictionary<string, string> ParseHeader(List<string> lines)
     {

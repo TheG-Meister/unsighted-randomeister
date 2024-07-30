@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.core;
 
-public class DelimitedFile
+public class DelimitedFile :IDelimitedFile
 {
     public const char COMMENT_CHAR = '#';
     public const string MISSING_COL_NAME = null;

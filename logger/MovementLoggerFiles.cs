@@ -40,6 +40,11 @@ public class MovementLoggerFiles
         this.edgeRunsFile = new(Path.Combine(this.path, "edge-runs.tsv"));
         this.haileeEdgeRunsFile = new(Path.Combine(this.path, "hailee-edge-runs.tsv"));
 
+        List<IMovementDataFile<IMovementData>> files = new();
+        files.Add(actionsFile);
+
+        IMovementDataFile<IMovementData> file = files[0];
+
         if (!this.actionsFile.Exists()) this.actionsFile.CreateAndWriteHeader(MovementAction.GetCurrentVersion());
         else
         {

@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public interface IMovementDataFile<in T> : IDelimitedFile where T : IMovementData
+public interface IMovementDataFile<out T> : IDelimitedFile where T : IMovementData
 {
 
-    public void Add(T obj);
+    //public void Add(T obj);
 
     public string GetVersionString();
 
-    public void CreateAndWriteHeader(MovementDataFileVersion<T> version);
+    //public void CreateAndWriteHeader(IMovementDataFileVersion<T> version);
 
 }

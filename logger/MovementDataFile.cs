@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class MovementDataFile<T> : DelimitedFile where T : IMovementData
+public class MovementDataFile<T> : DelimitedFile, IMovementDataFile<T> where T : IMovementData
 {
 
     public Dictionary<string, string> header;
     public Dictionary<int, T> parsedData;
-    public MovementDataFileVersion<T> version;
+    public IMovementDataFileVersion<T> version;
 
     public MovementDataFile(string path) : base(path, '\t')
     {}
@@ -42,16 +42,16 @@ public class MovementDataFile<T> : DelimitedFile where T : IMovementData
 
     public string GetVersionString()
     {
-        return this.header[nameof(MovementDataFileVersion<T>.version)];
+        return this.header[nameof(IMovementDataFileVersion<T>.Version)];
     }
 
-    public void CreateAndWriteHeader(MovementDataFileVersion<T> version)
+    public void CreateAndWriteHeader(IMovementDataFileVersion<T> version)
     {
         this.Create();
         this.version = version;
         this.header = version.ToDictionary();
         List<string> headerLines = version.ToHeader();
         foreach (string line in headerLines) this.AddComment(line);
-        this.AddColNamesLine(version.colNames.ToArray());
+        this.AddColNamesLine(version.ColNames.ToArray());
     }
 }
