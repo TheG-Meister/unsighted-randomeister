@@ -10,10 +10,6 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 
 public class MovementLoggerFiles
 {
-
-    public string path;
-    public string backupsPath;
-    public string completePath;
     public IndexedMovementDataFile<MovementAction> actionsFile;
     public IndexedMovementDataFile<MovementState> statesFile;
     public IndexedMovementDataFile<MovementNode> nodesFile;
@@ -24,26 +20,36 @@ public class MovementLoggerFiles
 
     public MovementLoggerFiles(string path)
     {
-        this.path = path;
-        this.backupsPath = Path.Combine(this.path, "backups");
-        this.completePath = Path.Combine(this.path, "complete");
+        this.actionsFile = new(Path.Combine(path, "actions.tsv"));
+        this.statesFile = new(Path.Combine(path, "states.tsv"));
+        this.nodesFile = new(Path.Combine(path, "nodes.tsv"));
+        this.objectsFile = new(Path.Combine(path, "objects.tsv"));
+        this.edgesFile = new(Path.Combine(path, "edges.tsv"));
+        this.edgeRunsFile = new(Path.Combine(path, "edge-runs.tsv"));
+        this.haileeEdgeRunsFile = new(Path.Combine(path, "hailee-edge-runs.tsv"));
 
-        Directory.CreateDirectory(this.path);
-        Directory.CreateDirectory(this.backupsPath);
-        Directory.CreateDirectory(this.completePath);
+        List<IMovementDataFile<IMovementData>> files = new() { actionsFile, statesFile, nodesFile, objectsFile, edgesFile, edgeRunsFile, haileeEdgeRunsFile };
+        List<bool> checks = new();
 
-        this.actionsFile = new(Path.Combine(this.path, "actions.tsv"));
-        this.statesFile = new(Path.Combine(this.path, "states.tsv"));
-        this.nodesFile = new(Path.Combine(this.path, "nodes.tsv"));
-        this.objectsFile = new(Path.Combine(this.path, "objects.tsv"));
-        this.edgesFile = new(Path.Combine(this.path, "edges.tsv"));
-        this.edgeRunsFile = new(Path.Combine(this.path, "edge-runs.tsv"));
-        this.haileeEdgeRunsFile = new(Path.Combine(this.path, "hailee-edge-runs.tsv"));
+        foreach (IMovementDataFile<IMovementData> file in files)
+        {
+            if (file.Exists()) checks.Add(this.CheckFile(file, MovementAction.versions));
+            else
+            {
+                file.CreateAndWriteHeader();
+                checks.Add(true);
+            }
+        }
 
-        List<IMovementDataFile<IMovementData>> files = new();
-        files.Add(actionsFile);
-
-        IMovementDataFile<IMovementData> file = files[0];
+        for (int i = 0; i < files.Count; i++)
+        {
+            IMovementDataFile<IMovementData> file = files[i];
+            bool check = checks[i];
+            if (check)
+            {
+                this.ParseFile(file, null);
+            }
+        }
 
         if (!this.actionsFile.Exists()) this.actionsFile.CreateAndWriteHeader(MovementAction.GetCurrentVersion());
         else
@@ -51,12 +57,32 @@ public class MovementLoggerFiles
             IndexedMovementDataFile<MovementAction> file = this.actionsFile;
             file.ReadAll();
             if (!file.header.TryGetValue("version", out string version)) ; //backup and restore
-            
+
         }
 
-        if (!this.CheckFile(this.actionsFile, MovementAction.versions));
+        if (!this.CheckFile(this.actionsFile, MovementAction.versions)) ;
 
-        
+
+    }
+
+    public void CreateZip(List<string> files, string path)
+    {
+        string tempDir = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
+        Random random = new();
+        if (Directory.Exists(tempDir))
+        {
+            tempDir += "-temp-";
+            do
+            {
+                tempDir += Constants.ALPHANUMERIC_CHARS[random.Next(Constants.ALPHANUMERIC_CHARS.Length)];
+            }
+            while (Directory.Exists(tempDir));
+        }
+        Directory.CreateDirectory(tempDir);
+
+        foreach (string file in files) File.Copy(file, Path.Combine(tempDir, Path.GetFileName(file)));
+        ZipFile.CreateFromDirectory(tempDir, path);
+        Directory.Delete(tempDir, true);
     }
 
     public bool CheckFile<T>(MovementDataFile<T> file, Dictionary<string, MovementDataFileVersion<T>> versions) where T : IMovementData
@@ -85,7 +111,7 @@ public class MovementLoggerFiles
                 file.parsedData[line] = factory.Invoke(fields);
             }
             catch
-            {}
+            { }
         }
     }
 
@@ -108,25 +134,4 @@ public class MovementLoggerFiles
 
         return failedIDs;
     }
-
-    public void CreateZip(List<string> files, string path)
-    {
-        string tempDir = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
-        Random random = new();
-        if (Directory.Exists(tempDir))
-        {
-            tempDir += "-temp-";
-            do
-            {
-                tempDir += Constants.ALPHANUMERIC_CHARS[random.Next(Constants.ALPHANUMERIC_CHARS.Length)];
-            }
-            while (Directory.Exists(tempDir));
-        }
-        Directory.CreateDirectory(tempDir);
-
-        foreach (string file in files) File.Copy(file, Path.Combine(tempDir, Path.GetFileName(file)));
-        ZipFile.CreateFromDirectory(tempDir, path);
-        Directory.Delete(tempDir, true);
-    }
-
 }

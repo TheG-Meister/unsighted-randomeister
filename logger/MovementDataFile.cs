@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine.Rendering;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
@@ -13,9 +14,12 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile<T> where T :
     public Dictionary<string, string> header;
     public Dictionary<int, T> parsedData;
     public IMovementDataFileVersion<T> version;
+    public Func<Dictionary<string, string>, T> factory;
 
     public MovementDataFile(string path) : base(path, '\t')
-    {}
+    {
+        
+    }
 
     public override void ReadAll()
     {
@@ -54,4 +58,20 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile<T> where T :
         foreach (string line in headerLines) this.AddComment(line);
         this.AddColNamesLine(version.ColNames.ToArray());
     }
+
+    public void Parse()
+    {
+        this.parsedData = new();
+        foreach (int key in this.rows.Keys)
+        {
+            Dictionary<string, string> entry = this.GetEntry(key);
+            try
+            {
+                this.parsedData[key] = this.factory.Invoke(entry);
+            }
+            catch (Exception)
+            { }
+        }
+    }
+
 }
