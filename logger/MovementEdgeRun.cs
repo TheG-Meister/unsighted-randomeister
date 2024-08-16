@@ -9,8 +9,7 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementEdgeRun : IMovementData
 {
 
-    public static readonly Dictionary<string, MovementDataFileVersion<MovementEdgeRun>> versions;
-    public static readonly string currentVersion;
+    public static readonly List<MovementDataFileVersion<MovementEdgeRun>> versions;
 
     public MovementEdge edge;
     public string version;
@@ -26,9 +25,7 @@ public class MovementEdgeRun : IMovementData
         List<string> fields = new() { nameof(edge), nameof(version), nameof(timestamp), nameof(realTime), nameof(gameTime) };
         Dictionary<string, string> colNameDict = new();
         foreach (string field in fields) colNameDict[field] = field;
-        versions[version] = new(version, fields, colNameDict);
-
-        currentVersion = version;
+        versions.Add(new(version, fields, colNameDict));
     }
 
     public MovementEdgeRun(MovementEdge edge, float realTime, float gameTime, long timestamp, string version)
@@ -61,8 +58,10 @@ public class MovementEdgeRun : IMovementData
         };
     }
 
-    public static string GetColName(string field) => versions[currentVersion].GetColName(field);
+    public static string GetColName(string field) => GetCurrentVersion().GetColName(field);
 
-    public static MovementDataFileVersion<MovementEdgeRun> GetCurrentVersion() => versions[currentVersion];
+    public static MovementDataFileVersion<MovementEdgeRun> GetCurrentVersion() => versions[versions.Count - 1];
+
+    public static MovementDataFileVersion<MovementEdgeRun> GetVersion(string version) => versions.Find(v => v.version == version);
 
 }
