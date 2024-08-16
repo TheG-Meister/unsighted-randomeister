@@ -11,8 +11,7 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementAction : IndexedMovementData
 {
 
-    public static readonly Dictionary<string, MovementDataFileVersion<MovementAction>> versions;
-    public static readonly string currentVersion;
+    public static readonly List<MovementDataFileVersion<MovementAction>> versions;
 
     public PlayerAction action;
 
@@ -24,9 +23,7 @@ public class MovementAction : IndexedMovementData
         List<string> fields = new() { nameof(id), nameof(action) };
         Dictionary<string, string> colNameDict = new();
         foreach (string field in fields) colNameDict[field] = field;
-        versions[version] = new(version, fields, colNameDict);
-
-        currentVersion = version;
+        versions.Add(new(version, fields, colNameDict));
     }
 
     public MovementAction(int id, PlayerAction action) : base(id)
@@ -52,9 +49,11 @@ public class MovementAction : IndexedMovementData
         };
     }
 
-    public static string GetColName(string field) => versions[currentVersion].GetColName(field);
+    public static string GetColName(string field) => GetCurrentVersion().GetColName(field);
 
-    public static MovementDataFileVersion<MovementAction> GetCurrentVersion() => versions[currentVersion];
+    public static MovementDataFileVersion<MovementAction> GetCurrentVersion() => versions[versions.Count - 1];
+
+    public static MovementDataFileVersion<MovementAction> GetVersion(string version) => versions.Find(v => v.version == version);
 
     public override bool Equals(object obj)
     {
