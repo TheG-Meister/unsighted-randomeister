@@ -10,6 +10,28 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 
 public class MovementLoggerFiles
 {
+
+    private interface IMovementLoggerFileData<out T> where T : IMovementData
+    {
+        IEnumerable<IMovementDataFileVersion<T>> Versions { get; }
+        Func<Dictionary<string, string>, T> Factory { get; }
+        bool Check { get; set; }
+    }
+
+    class MovementLoggerFileData<T> : IMovementLoggerFileData<T> where T : IMovementData
+    {
+        public IEnumerable<IMovementDataFileVersion<T>> Versions { get; }
+        public Func<Dictionary<string, string>, T> Factory { get; }
+        public bool Check { get; set; }
+
+        public MovementLoggerFileData(IEnumerable<IMovementDataFileVersion<T>> versions, Func<Dictionary<string, string>, T> factory)
+        {
+            Versions = versions;
+            Factory = factory;
+            Check = false;
+        }
+    }
+
     public IndexedMovementDataFile<MovementAction> actionsFile;
     public IndexedMovementDataFile<MovementState> statesFile;
     public IndexedMovementDataFile<MovementNode> nodesFile;
@@ -17,6 +39,8 @@ public class MovementLoggerFiles
     public IndexedMovementDataFile<MovementEdge> edgesFile;
     public MovementDataFile<MovementEdgeRun> edgeRunsFile;
     public MovementDataFile<MovementEdgeRun> haileeEdgeRunsFile;
+
+    private Dictionary<IMovementDataFile, IMovementLoggerFileData<IMovementData>> data;
 
     public MovementLoggerFiles(string path)
     {
@@ -28,40 +52,31 @@ public class MovementLoggerFiles
         this.edgeRunsFile = new(Path.Combine(path, "edge-runs.tsv"));
         this.haileeEdgeRunsFile = new(Path.Combine(path, "hailee-edge-runs.tsv"));
 
-        List<IMovementDataFile<IMovementData>> files = new() { actionsFile, statesFile, nodesFile, objectsFile, edgesFile, edgeRunsFile, haileeEdgeRunsFile };
-        List<bool> checks = new();
-
-        foreach (IMovementDataFile<IMovementData> file in files)
+        this.data = new()
         {
-            if (file.Exists()) checks.Add(this.CheckFile(file, MovementAction.versions));
+            { this.actionsFile, new MovementLoggerFileData<MovementAction>(MovementAction.versions, (d) => new MovementAction(d)) },
+            { this.statesFile, new MovementLoggerFileData<MovementState>(MovementState.versions, (d) => new MovementState(d)) },
+            { this.nodesFile, new MovementLoggerFileData<MovementNode>(MovementNode.versions, (d) => new MovementNode(d)) },
+            { this.objectsFile, new MovementLoggerFileData<MovementObject>(MovementObject.versions, (d) => new MovementObject(d)) },
+            { this.edgesFile, new MovementLoggerFileData<MovementEdge>(MovementEdge.versions, (d) => new MovementEdge(d, this.nodesFile.parsedData, this.actionsFile.parsedData, this.statesFile.parsedData)) },
+            { this.edgeRunsFile, new MovementLoggerFileData<MovementEdgeRun>(MovementEdgeRun.versions, (d) => new MovementEdgeRun(d, this.edgesFile.parsedData)) },
+            { this.haileeEdgeRunsFile, new MovementLoggerFileData<MovementEdgeRun>(MovementEdgeRun.versions, (d) => new MovementEdgeRun(d, this.edgesFile.parsedData)) },
+        };
+
+        foreach (IMovementDataFile file in this.data.Keys)
+        {
+            if (file.Exists()) this.data[file].Check = file.FindVersion();
             else
             {
                 file.CreateAndWriteHeader();
-                checks.Add(true);
+                this.data[file].Check = true;
             }
         }
 
-        for (int i = 0; i < files.Count; i++)
-        {
-            IMovementDataFile<IMovementData> file = files[i];
-            bool check = checks[i];
-            if (check)
+        foreach (IMovementDataFile file in this.data.Keys) if (this.data[file].Check)
             {
-                this.ParseFile(file, null);
+                Dictionary<int, bool> parses = file.Parse();
             }
-        }
-
-        if (!this.actionsFile.Exists()) this.actionsFile.CreateAndWriteHeader(MovementAction.GetCurrentVersion());
-        else
-        {
-            IndexedMovementDataFile<MovementAction> file = this.actionsFile;
-            file.ReadAll();
-            if (!file.header.TryGetValue("version", out string version)) ; //backup and restore
-
-        }
-
-        if (!this.CheckFile(this.actionsFile, MovementAction.versions)) ;
-
 
     }
 
@@ -85,53 +100,4 @@ public class MovementLoggerFiles
         Directory.Delete(tempDir, true);
     }
 
-    public bool CheckFile<T>(MovementDataFile<T> file, Dictionary<string, MovementDataFileVersion<T>> versions) where T : IMovementData
-    {
-        if (!file.Exists()) return false;
-
-        file.ReadAll();
-        if (!file.header.TryGetValue("version", out string versionString)) return false;
-        if (!versions.TryGetValue(versionString, out MovementDataFileVersion<T> version)) return false;
-        if (!version.VerifyHeader(file.header)) return false;
-        if (!version.VerifyColNames(file.colNames)) return false;
-
-        file.version = version;
-
-        return true;
-    }
-
-    public void ParseFile<T>(MovementDataFile<T> file, Func<Dictionary<string, string>, T> factory) where T : IMovementData
-    {
-        file.parsedData = new();
-        foreach (int line in file.rows.Keys)
-        {
-            Dictionary<string, string> fields = file.GetEntry(line);
-            try
-            {
-                file.parsedData[line] = factory.Invoke(fields);
-            }
-            catch
-            { }
-        }
-    }
-
-    public List<int> ParseFile<T>(IndexedMovementDataFile<T> file, Func<Dictionary<string, string>, T> factory) where T : IndexedMovementData
-    {
-        file.parsedData = new();
-        List<int> failedIDs = new();
-        foreach (int line in file.rows.Keys)
-        {
-            Dictionary<string, string> fields = file.GetEntry(line);
-            try
-            {
-                file.parsedData[line] = factory.Invoke(fields);
-            }
-            catch
-            {
-                if (fields.ContainsKey("id") && int.TryParse(fields["id"], out int id)) failedIDs.Add(id);
-            }
-        }
-
-        return failedIDs;
-    }
 }

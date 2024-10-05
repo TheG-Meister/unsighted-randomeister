@@ -22,4 +22,12 @@ public interface IMovementDataFileVersion<out T> where T : IMovementData
     public bool VerifyHeader(Dictionary<string, string> header);
 
     public bool VerifyColNames(List<string> colNames);
+
+    public string GetTypeKey();
+
+    public string GetTypeValue();
+
+    public string GetVersionKey();
+
+    public string GetVersionValue();
 }

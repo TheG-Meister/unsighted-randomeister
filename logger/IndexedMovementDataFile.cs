@@ -9,22 +9,39 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class IndexedMovementDataFile<T> : MovementDataFile<T> where T : IndexedMovementData
 {
 
-    public int largestID;
+    public int nextID;
 
     public IndexedMovementDataFile(string path) : base(path)
     {
-        this.largestID = -1;
+        this.nextID = -1;
     }
 
-    public void UpdateLargestID()
+    public void ResetNextID()
     {
-        foreach (T obj in this.parsedData.Values) if (obj != null && obj.id > this.largestID) this.largestID = obj.id; 
+        foreach (T obj in this.parsedData.Values) if (obj != null && obj.id >= this.nextID) this.nextID = obj.id + 1; 
     }
 
     public override void Add(T obj)
     {
         base.Add(obj);
-        if (obj.id > this.largestID) this.largestID = obj.id;
+        if (obj.id >= this.nextID) this.nextID = obj.id + 1;
+    }
+
+    public override Dictionary<int, bool> Parse()
+    {
+        Dictionary<int, bool> parses = base.Parse();
+        this.nextID = -1;
+        foreach (int key in this.parsedData.Keys)
+        {
+            if (this.parsedData[key].id >= this.nextID) this.nextID = this.parsedData[key].id + 1;
+        }
+
+        return parses;
+    }
+
+    public int GetNextID()
+    {
+        return this.nextID++;
     }
 
 }

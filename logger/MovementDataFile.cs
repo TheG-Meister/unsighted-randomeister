@@ -8,12 +8,13 @@ using UnityEngine.Rendering;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class MovementDataFile<T> : DelimitedFile, IMovementDataFile<T> where T : IMovementData
+public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IMovementData
 {
 
     public Dictionary<string, string> header;
-    public Dictionary<int, T> parsedData;
-    public IMovementDataFileVersion<T> version;
+    public Dictionary<int, T> parsedData { get; set; }
+    public List<MovementDataFileVersion<T>> versions;
+    public MovementDataFileVersion<T> version;
     public Func<Dictionary<string, string>, T> factory;
 
     public MovementDataFile(string path) : base(path, '\t')
@@ -44,34 +45,51 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile<T> where T :
         this.parsedData[index] = obj;
     }
 
-    public string GetVersionString()
+    public bool FindVersion()
     {
-        return this.header[nameof(IMovementDataFileVersion<T>.Version)];
+        if (!this.Exists()) return false;
+        if (!this.header.TryGetValue("version", out string versionString)) return false;
+        MovementDataFileVersion<T> version = this.versions.Find(v => v.Version == versionString);
+        if (version == null) return false;
+        if (!version.VerifyHeader(this.header)) return false;
+        if (!version.VerifyColNames(this.colNames)) return false;
+
+        this.version = version;
+
+        return true;
     }
 
-    public void CreateAndWriteHeader(IMovementDataFileVersion<T> version)
+    public void CreateAndWriteHeader()
     {
         this.Create();
-        this.version = version;
+        this.version = this.versions[this.versions.Count];
         this.header = version.ToDictionary();
         List<string> headerLines = version.ToHeader();
         foreach (string line in headerLines) this.AddComment(line);
         this.AddColNamesLine(version.ColNames.ToArray());
     }
 
-    public void Parse()
+    public virtual Dictionary<int, bool> Parse()
     {
         this.parsedData = new();
+        Dictionary<int, bool> result = new();
         foreach (int key in this.rows.Keys)
         {
             Dictionary<string, string> entry = this.GetEntry(key);
             try
             {
                 this.parsedData[key] = this.factory.Invoke(entry);
+                result[key] = true;
             }
             catch (Exception)
-            { }
+            {
+                result[key] = false;
+            }
         }
+
+        return result;
     }
+
+
 
 }

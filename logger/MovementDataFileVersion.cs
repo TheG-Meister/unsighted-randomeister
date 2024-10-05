@@ -38,8 +38,8 @@ public class MovementDataFileVersion<T> : IMovementDataFileVersion<T> where T : 
     {
         return new()
         {
-            string.Join(DELIM.ToString(), "type", typeof(T).FullName),
-            string.Join(DELIM.ToString(), nameof(Version).ToLower(), Version),
+            string.Join(DELIM.ToString(), GetTypeKey(), GetTypeValue()),
+            string.Join(DELIM.ToString(), GetVersionKey(), GetVersionValue()),
         };
     }
 
@@ -47,15 +47,15 @@ public class MovementDataFileVersion<T> : IMovementDataFileVersion<T> where T : 
     {
         return new()
         {
-            { "type", typeof(T).FullName },
-            { nameof(Version).ToLower(), Version },
+            { GetTypeKey(), GetTypeValue() },
+            { GetVersionKey(), GetVersionValue() },
         };
     }
 
     public bool VerifyHeader(Dictionary<string, string> header)
     {
-        if (!header.ContainsKey("type") || header["type"] != typeof(T).FullName) return false;
-        if (!header.ContainsKey(nameof(Version).ToLower()) || header[nameof(Version).ToLower()] != this.Version) return false;
+        if (!header.ContainsKey(GetTypeKey()) || header[GetTypeKey()] != GetTypeValue()) return false;
+        if (!header.ContainsKey(GetVersionKey()) || header[GetVersionKey()] != GetVersionValue()) return false;
         return true;
     }
 
@@ -66,7 +66,10 @@ public class MovementDataFileVersion<T> : IMovementDataFileVersion<T> where T : 
         return true;
     }
 
-
+    public string GetTypeKey() => nameof(Type).ToLower();
+    public string GetTypeValue() => typeof(T).FullName;
+    public string GetVersionKey() => nameof(Version).ToLower();
+    public string GetVersionValue() => this.Version;
 
     public static Dictionary<string, string> ParseHeader(List<string> lines)
     {
