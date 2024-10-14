@@ -13,22 +13,22 @@ public class MovementLoggerFiles
 
     private interface IMovementLoggerFileData<out T> where T : IMovementData
     {
-        IEnumerable<IMovementDataFileVersion<T>> Versions { get; }
-        Func<Dictionary<string, string>, T> Factory { get; }
         bool Check { get; set; }
+        Dictionary<int, bool> Parses { get; set; }
+        IEnumerable<IMovementDataFile> Dependencies { get; set; }
     }
 
     class MovementLoggerFileData<T> : IMovementLoggerFileData<T> where T : IMovementData
     {
-        public IEnumerable<IMovementDataFileVersion<T>> Versions { get; }
-        public Func<Dictionary<string, string>, T> Factory { get; }
         public bool Check { get; set; }
+        public Dictionary<int, bool> Parses { get; set; }
+        public IEnumerable<IMovementDataFile> Dependencies { get; set; }
 
-        public MovementLoggerFileData(IEnumerable<IMovementDataFileVersion<T>> versions, Func<Dictionary<string, string>, T> factory)
+        public MovementLoggerFileData(params IMovementDataFile[] dependencies)
         {
-            Versions = versions;
-            Factory = factory;
             Check = false;
+            Parses = new();
+            Dependencies = new List<IMovementDataFile>(dependencies);
         }
     }
 
@@ -44,23 +44,23 @@ public class MovementLoggerFiles
 
     public MovementLoggerFiles(string path)
     {
-        this.actionsFile = new(Path.Combine(path, "actions.tsv"));
-        this.statesFile = new(Path.Combine(path, "states.tsv"));
-        this.nodesFile = new(Path.Combine(path, "nodes.tsv"));
-        this.objectsFile = new(Path.Combine(path, "objects.tsv"));
-        this.edgesFile = new(Path.Combine(path, "edges.tsv"));
-        this.edgeRunsFile = new(Path.Combine(path, "edge-runs.tsv"));
-        this.haileeEdgeRunsFile = new(Path.Combine(path, "hailee-edge-runs.tsv"));
+        this.actionsFile = new(Path.Combine(path, "actions.tsv"), (d) => new MovementAction(d), MovementAction.versions);
+        this.statesFile = new(Path.Combine(path, "states.tsv"), (d) => new MovementState(d), MovementState.versions);
+        this.nodesFile = new(Path.Combine(path, "nodes.tsv"), (d) => new MovementNode(d), MovementNode.versions);
+        this.objectsFile = new(Path.Combine(path, "objects.tsv"), (d) => new MovementObject(d), MovementObject.versions);
+        this.edgesFile = new(Path.Combine(path, "edges.tsv"), (d) => new MovementEdge(d, this.nodesFile.parsedData, this.actionsFile.parsedData, this.statesFile.parsedData), MovementEdge.versions);
+        this.edgeRunsFile = new(Path.Combine(path, "edge-runs.tsv"), (d) => new MovementEdgeRun(d, this.edgesFile.parsedData), MovementEdgeRun.versions);
+        this.haileeEdgeRunsFile = new(Path.Combine(path, "hailee-edge-runs.tsv"), (d) => new MovementEdgeRun(d, this.edgesFile.parsedData), MovementEdgeRun.versions);
 
         this.data = new()
         {
-            { this.actionsFile, new MovementLoggerFileData<MovementAction>(MovementAction.versions, (d) => new MovementAction(d)) },
-            { this.statesFile, new MovementLoggerFileData<MovementState>(MovementState.versions, (d) => new MovementState(d)) },
-            { this.nodesFile, new MovementLoggerFileData<MovementNode>(MovementNode.versions, (d) => new MovementNode(d)) },
-            { this.objectsFile, new MovementLoggerFileData<MovementObject>(MovementObject.versions, (d) => new MovementObject(d)) },
-            { this.edgesFile, new MovementLoggerFileData<MovementEdge>(MovementEdge.versions, (d) => new MovementEdge(d, this.nodesFile.parsedData, this.actionsFile.parsedData, this.statesFile.parsedData)) },
-            { this.edgeRunsFile, new MovementLoggerFileData<MovementEdgeRun>(MovementEdgeRun.versions, (d) => new MovementEdgeRun(d, this.edgesFile.parsedData)) },
-            { this.haileeEdgeRunsFile, new MovementLoggerFileData<MovementEdgeRun>(MovementEdgeRun.versions, (d) => new MovementEdgeRun(d, this.edgesFile.parsedData)) },
+            { this.actionsFile, new MovementLoggerFileData<MovementAction>() },
+            { this.statesFile, new MovementLoggerFileData<MovementState>() },
+            { this.nodesFile, new MovementLoggerFileData<MovementNode>() },
+            { this.objectsFile, new MovementLoggerFileData<MovementObject>() },
+            { this.edgesFile, new MovementLoggerFileData<MovementEdge>(this.nodesFile, this.actionsFile, this.statesFile) },
+            { this.edgeRunsFile, new MovementLoggerFileData<MovementEdgeRun>(this.edgesFile) },
+            { this.haileeEdgeRunsFile, new MovementLoggerFileData<MovementEdgeRun>(this.edgesFile) },
         };
 
         foreach (IMovementDataFile file in this.data.Keys)
@@ -75,7 +75,7 @@ public class MovementLoggerFiles
 
         foreach (IMovementDataFile file in this.data.Keys) if (this.data[file].Check)
             {
-                Dictionary<int, bool> parses = file.Parse();
+                this.data[file].Parses = file.Parse();
             }
 
     }

@@ -11,7 +11,7 @@ public class IndexedMovementDataFile<T> : MovementDataFile<T> where T : IndexedM
 
     public int nextID;
 
-    public IndexedMovementDataFile(string path) : base(path)
+    public IndexedMovementDataFile(string path, Func<Dictionary<string, string>, T> factory, List<MovementDataFileVersion<T>> versions) : base(path, factory, versions)
     {
         this.nextID = -1;
     }

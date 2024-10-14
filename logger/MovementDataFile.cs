@@ -17,9 +17,10 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
     public MovementDataFileVersion<T> version;
     public Func<Dictionary<string, string>, T> factory;
 
-    public MovementDataFile(string path) : base(path, '\t')
+    public MovementDataFile(string path, Func<Dictionary<string, string>, T> factory, List<MovementDataFileVersion<T>> versions) : base(path, '\t')
     {
-        
+        this.factory = factory;
+        this.versions = versions;
     }
 
     public override void ReadAll()
