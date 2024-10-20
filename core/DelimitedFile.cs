@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.core;
 
-public class DelimitedFile :IDelimitedFile
+public class DelimitedFile : IDelimitedFile
 {
     public const char COMMENT_CHAR = '#';
     public const string MISSING_COL_NAME = null;
     public const string BLANK_LINE = "";
     public const string MISSING_FIELD = null;
 
-    public readonly string path;
     public char delim;
 
-    public StreamWriter writer;
+    public Stream stream;
     public bool modified;
 
     public int colNamesLine;
@@ -27,12 +27,19 @@ public class DelimitedFile :IDelimitedFile
 
     public Dictionary<string, Dictionary<string, string>> substitutions;
 
-    public DelimitedFile(string path, char delim)
+    public DelimitedFile(string path, char delim) : this(new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite), delim)
     {
-        this.path = path;
+    }
+
+    public DelimitedFile(Stream stream, char delim)
+    {
+        if (!stream.CanRead) throw new ArgumentException("stream does not support reading");
+        if (!stream.CanWrite) throw new ArgumentException("stream does not support writing");
+        if (!stream.CanSeek) throw new ArgumentException("stream does not support seeking");
+
         this.delim = delim;
 
-        this.writer = null;
+        this.stream = stream;
         this.modified = false;
 
         this.colNamesLine = -1;
@@ -44,17 +51,15 @@ public class DelimitedFile :IDelimitedFile
         this.substitutions = new();
     }
 
-    public bool Exists() => File.Exists(path);
-
-    public void Create()
-    {
-        this.writer = new StreamWriter(this.path, false);
-        this.lastLine = 0;
-    }
-
     public virtual void ReadAll()
     {
-        List<string> lines = new(File.ReadAllLines(path));
+        List<string> lines = new();
+        this.stream.Seek(0, SeekOrigin.Begin);
+        using (StreamReader reader = new(this.stream, Encoding.UTF8, false, 1024, true))
+        {
+            while (!reader.EndOfStream) lines.Add(reader.ReadLine());
+        }
+
         bool colNamesFound = false;
 
         this.unusedLines = new();
@@ -253,16 +258,19 @@ public class DelimitedFile :IDelimitedFile
 
     private void WriteLine(string line)
     {
-        this.writer ??= new StreamWriter(this.path, true);
-        this.writer.WriteLine(line);
-        this.writer.Flush();
+        this.stream.Seek(0, SeekOrigin.End);
+        using StreamWriter writer = new(this.stream, Encoding.UTF8, 1024, true);
+
+        writer.WriteLine(line);
+        writer.Flush();
     }
 
     public void WriteAll()
     {
         if (this.HasLineErrors()) this.FixLineErrors();
 
-        this.writer = new StreamWriter(this.path, false);
+        this.stream.Seek(0, SeekOrigin.End);
+        using StreamWriter writer = new(this.stream, Encoding.UTF8, 1024, true);
 
         int max = Math.Max(this.unusedLines.Keys.Max(), this.rows.Keys.Max());
         max = Math.Max(max, this.colNamesLine);
@@ -270,17 +278,17 @@ public class DelimitedFile :IDelimitedFile
 
         for (int i = 0; i < max; i++)
         {
-            if (this.colNamesLine == i) this.writer.WriteLine(string.Join(this.delim.ToString(), this.colNames));
-            else if (this.rows.ContainsKey(i)) this.writer.WriteLine(string.Join(this.delim.ToString(), this.rows[i]));
-            else if (this.unusedLines.ContainsKey(i)) this.writer.WriteLine(this.unusedLines[i]);
+            if (this.colNamesLine == i) writer.WriteLine(string.Join(this.delim.ToString(), this.colNames));
+            else if (this.rows.ContainsKey(i)) writer.WriteLine(string.Join(this.delim.ToString(), this.rows[i]));
+            else if (this.unusedLines.ContainsKey(i)) writer.WriteLine(this.unusedLines[i]);
             else
             {
-                this.writer.WriteLine(BLANK_LINE);
+                writer.WriteLine(BLANK_LINE);
                 this.unusedLines.Add(i, BLANK_LINE);
             }
         }
 
-        this.writer.Flush();
+        writer.Flush();
         this.modified = false;
     }
 
@@ -323,7 +331,6 @@ public class DelimitedFile :IDelimitedFile
                 unusedLines[line] = this.unusedLines[i];
                 this.unusedLines.Remove(i);
                 line++;
-                this.lastLine = line;
             }
 
             if (row)
@@ -338,13 +345,17 @@ public class DelimitedFile :IDelimitedFile
                 rows[line] = this.rows[i];
                 this.rows.Remove(i);
                 line++;
-                this.lastLine = line;
             }
         }
+        this.lastLine = line;
 
         this.unusedLines = unusedLines;
         this.rows = rows;
         this.modified = true;
     }
 
+    public void Dispose()
+    {
+        this.stream.Dispose();
+    }
 }

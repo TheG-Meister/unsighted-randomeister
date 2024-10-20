@@ -7,12 +7,8 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.core;
 
-public interface IDelimitedFile
+public interface IDelimitedFile : IDisposable
 {
-
-    public bool Exists();
-
-    public void Create();
 
     public void ReadAll();
 
