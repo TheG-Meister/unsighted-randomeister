@@ -51,6 +51,13 @@ public class DelimitedFile : IDelimitedFile
         this.substitutions = new();
     }
 
+    public void Reset()
+    {
+        this.stream.Seek(0, SeekOrigin.Begin);
+        this.stream.SetLength(0);
+        this.lastLine = 0;
+    }
+
     public virtual void ReadAll()
     {
         List<string> lines = new();

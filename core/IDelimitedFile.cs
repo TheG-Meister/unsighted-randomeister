@@ -10,6 +10,8 @@ namespace dev.gmeister.unsighted.randomeister.core;
 public interface IDelimitedFile : IDisposable
 {
 
+    public void Reset();
+
     public void ReadAll();
 
     public List<int> GetRowLengths();
