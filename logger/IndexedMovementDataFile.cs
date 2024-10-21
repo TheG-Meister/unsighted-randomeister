@@ -16,6 +16,11 @@ public class IndexedMovementDataFile<T> : MovementDataFile<T> where T : IndexedM
         this.nextID = -1;
     }
 
+    public IndexedMovementDataFile(Stream stream, Func<Dictionary<string, string>, T> factory, List<MovementDataFileVersion<T>> versions) : base(stream, factory, versions)
+    {
+        this.nextID = -1;
+    }
+
     public void ResetNextID()
     {
         foreach (T obj in this.parsedData.Values) if (obj != null && obj.id >= this.nextID) this.nextID = obj.id + 1; 

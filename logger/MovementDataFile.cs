@@ -23,6 +23,12 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
         this.versions = versions;
     }
 
+    public MovementDataFile(Stream stream, Func<Dictionary<string, string>, T> factory, List<MovementDataFileVersion<T>> versions) : base(stream, '\t')
+    {
+        this.factory = factory;
+        this.versions = versions;
+    }
+
     public override void ReadAll()
     {
         base.ReadAll();
@@ -48,7 +54,6 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
 
     public bool FindVersion()
     {
-        if (!this.Exists()) return false;
         if (!this.header.TryGetValue("version", out string versionString)) return false;
         MovementDataFileVersion<T> version = this.versions.Find(v => v.Version == versionString);
         if (version == null) return false;
@@ -62,7 +67,7 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
 
     public void CreateAndWriteHeader()
     {
-        this.Create();
+        this.Reset();
         this.version = this.versions[this.versions.Count];
         this.header = version.ToDictionary();
         List<string> headerLines = version.ToHeader();
