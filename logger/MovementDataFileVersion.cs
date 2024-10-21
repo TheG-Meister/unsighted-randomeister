@@ -88,7 +88,7 @@ public class MovementDataFileVersion<T> : IMovementDataFileVersion<T> where T : 
     {
         Dictionary<string, string> result = new();
         FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-        foreach (FieldInfo field in fields) result[field.Name] = field.Name;
+        foreach (FieldInfo field in fields) result[field.Name] = field.Name.ToLower();
         return result;
     }
 
