@@ -71,7 +71,7 @@ public class MovementObject : IMovementData
 
     public static MovementDataFileVersion<MovementObject> GetCurrentVersion() => versions[versions.Count - 1];
 
-    public static MovementDataFileVersion<MovementObject> GetVersion(string version) => versions.Find(v => v.version == version);
+    public static MovementDataFileVersion<MovementObject> GetVersion(string version) => versions.Find(v => v.Version == version);
 
     public override bool Equals(object obj)
     {

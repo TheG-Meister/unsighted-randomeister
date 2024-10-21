@@ -62,6 +62,6 @@ public class MovementEdgeRun : IMovementData
 
     public static MovementDataFileVersion<MovementEdgeRun> GetCurrentVersion() => versions[versions.Count - 1];
 
-    public static MovementDataFileVersion<MovementEdgeRun> GetVersion(string version) => versions.Find(v => v.version == version);
+    public static MovementDataFileVersion<MovementEdgeRun> GetVersion(string version) => versions.Find(v => v.Version == version);
 
 }

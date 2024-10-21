@@ -53,7 +53,7 @@ public class MovementAction : IndexedMovementData
 
     public static MovementDataFileVersion<MovementAction> GetCurrentVersion() => versions[versions.Count - 1];
 
-    public static MovementDataFileVersion<MovementAction> GetVersion(string version) => versions.Find(v => v.version == version);
+    public static MovementDataFileVersion<MovementAction> GetVersion(string version) => versions.Find(v => v.Version == version);
 
     public override bool Equals(object obj)
     {

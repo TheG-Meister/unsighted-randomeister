@@ -59,6 +59,6 @@ public class MovementState : IndexedMovementData
 
     public static MovementDataFileVersion<MovementState> GetCurrentVersion() => versions[versions.Count - 1];
 
-    public static MovementDataFileVersion<MovementState> GetVersion(string version) => versions.Find(v => v.version == version);
+    public static MovementDataFileVersion<MovementState> GetVersion(string version) => versions.Find(v => v.Version == version);
 
 }
