@@ -1,6 +1,7 @@
 ﻿using dev.gmeister.unsighted.randomeister.core;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
@@ -42,15 +43,22 @@ public class MovementLoggerFiles
 
     private Dictionary<IMovementDataFile, IMovementLoggerFileData<IMovementData>> data;
 
-    public MovementLoggerFiles(string path)
+    public MovementLoggerFiles(string directory) : this(GetStream(directory, "actions"), GetStream(directory, "states"), GetStream(directory, "nodes"), GetStream(directory, "objects"), GetStream(directory, "edges"), GetStream(directory, "edge-runs"), GetStream(directory, "hailee-edge-runs"))
     {
-        this.actionsFile = new(Path.Combine(path, "actions.tsv"), (d) => new MovementAction(d), MovementAction.versions);
-        this.statesFile = new(Path.Combine(path, "states.tsv"), (d) => new MovementState(d), MovementState.versions);
-        this.nodesFile = new(Path.Combine(path, "nodes.tsv"), (d) => new MovementNode(d), MovementNode.versions);
-        this.objectsFile = new(Path.Combine(path, "objects.tsv"), (d) => new MovementObject(d), MovementObject.versions);
-        this.edgesFile = new(Path.Combine(path, "edges.tsv"), (d) => new MovementEdge(d, this.nodesFile.parsedData, this.actionsFile.parsedData, this.statesFile.parsedData), MovementEdge.versions);
-        this.edgeRunsFile = new(Path.Combine(path, "edge-runs.tsv"), (d) => new MovementEdgeRun(d, this.edgesFile.parsedData), MovementEdgeRun.versions);
-        this.haileeEdgeRunsFile = new(Path.Combine(path, "hailee-edge-runs.tsv"), (d) => new MovementEdgeRun(d, this.edgesFile.parsedData), MovementEdgeRun.versions);
+
+    }
+
+    private static Stream GetStream(string directory, string file) => new FileStream(Path.Combine(directory, file + ".tsv"), FileMode.Open);
+
+    public MovementLoggerFiles(Stream actionsFileStream, Stream statesFileStream, Stream nodesFileStream, Stream objectsFileStream, Stream edgesFileStream, Stream edgeRunsFileStream, Stream haileeEdgeRunsFileStream)
+    {
+        this.actionsFile = new(actionsFileStream, (d) => new MovementAction(d), MovementAction.versions);
+        this.statesFile = new(statesFileStream, (d) => new MovementState(d), MovementState.versions);
+        this.nodesFile = new(nodesFileStream, (d) => new MovementNode(d), MovementNode.versions);
+        this.objectsFile = new(objectsFileStream, (d) => new MovementObject(d), MovementObject.versions);
+        this.edgesFile = new(edgesFileStream, (d) => new MovementEdge(d, this.nodesFile.parsedData, this.actionsFile.parsedData, this.statesFile.parsedData), MovementEdge.versions);
+        this.edgeRunsFile = new(edgeRunsFileStream, (d) => new MovementEdgeRun(d, this.edgesFile.parsedData), MovementEdgeRun.versions);
+        this.haileeEdgeRunsFile = new(haileeEdgeRunsFileStream, (d) => new MovementEdgeRun(d, this.edgesFile.parsedData), MovementEdgeRun.versions);
 
         this.data = new()
         {
@@ -65,19 +73,13 @@ public class MovementLoggerFiles
 
         foreach (IMovementDataFile file in this.data.Keys)
         {
-            if (file.Exists()) this.data[file].Check = file.FindVersion();
-            else
-            {
-                file.CreateAndWriteHeader();
-                this.data[file].Check = true;
-            }
+            this.data[file].Check = file.FindVersion();
         }
 
         foreach (IMovementDataFile file in this.data.Keys) if (this.data[file].Check)
             {
                 this.data[file].Parses = file.Parse();
             }
-
     }
 
     public void CreateZip(List<string> files, string path)
