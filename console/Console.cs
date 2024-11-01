@@ -23,10 +23,6 @@ public class Console : ILogListener
     public List<ConsoleMessage> messages;
     private float lastMessageLabelsHeight;
 
-    private int padding = 0;
-    private int margin = 0;
-    private float scrollPane = 0;
-
     private ConfigEntry<bool> enable;
 
     public Console(ConfigFile config)
@@ -97,8 +93,6 @@ public class Console : ILogListener
             //enable auto-scrolling if the panel is scolled to the bottom
             if (Input.mouseScrollDelta.y <= 0 && this.scroll.y > this.lastMessageLabelsHeight - scrollPaneHeight - 1)
                 this.scroll.y = Math.Max(0, messageLabelsHeight - scrollPaneHeight);
-            this.lastMessageLabelsHeight = messageLabelsHeight;
-            this.scrollPane = scrollPaneHeight;
         }
     }
 
