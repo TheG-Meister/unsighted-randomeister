@@ -23,6 +23,10 @@ public class Console : ILogListener
     public List<ConsoleMessage> messages;
     private float lastMessageLabelsHeight;
 
+    private int padding = 0;
+    private int margin = 0;
+    private float scrollPane = 0;
+
     private ConfigEntry<bool> enable;
 
     public Console(ConfigFile config)
@@ -49,9 +53,6 @@ public class Console : ILogListener
     {
         GUIStyle style = new(GUI.skin.label)
         {
-            alignment = TextAnchor.MiddleLeft,
-            margin = new RectOffset(),
-            padding = new RectOffset(),
             font = this.font,
             fontStyle = FontStyle.Bold,
             fontSize = 20,
@@ -62,7 +63,8 @@ public class Console : ILogListener
 
         bool repaint = true;
 
-        float messageLabelsHeight = 0;
+        float messageLabelsHeight = Math.Min(style.margin.top, style.margin.bottom);
+        int maxMargin = Math.Max(style.margin.top, style.margin.bottom);
 
         List<ConsoleMessage> removedMessages = new();
         if (this.messages.Count > this.limit)
@@ -77,7 +79,7 @@ public class Console : ILogListener
             GUILayout.Label(message.message, style);
             if (repaint && Event.current.type == EventType.Repaint)
             {
-                messageLabelsHeight += GUILayoutUtility.GetLastRect().height;
+                messageLabelsHeight += GUILayoutUtility.GetLastRect().height + maxMargin;
             }
             else repaint = false;
         }
@@ -94,8 +96,9 @@ public class Console : ILogListener
         {
             //enable auto-scrolling if the panel is scolled to the bottom
             if (Input.mouseScrollDelta.y <= 0 && this.scroll.y > this.lastMessageLabelsHeight - scrollPaneHeight - 1)
-                this.scroll.y = Math.Max(0, messageLabelsHeight - scrollPaneHeight + 500);
+                this.scroll.y = Math.Max(0, messageLabelsHeight - scrollPaneHeight);
             this.lastMessageLabelsHeight = messageLabelsHeight;
+            this.scrollPane = scrollPaneHeight;
         }
     }
 
