@@ -93,6 +93,7 @@ public class Console : ILogListener
             //enable auto-scrolling if the panel is scolled to the bottom
             if (Input.mouseScrollDelta.y <= 0 && this.scroll.y > this.lastMessageLabelsHeight - scrollPaneHeight - 1)
                 this.scroll.y = Math.Max(0, messageLabelsHeight - scrollPaneHeight);
+            this.lastMessageLabelsHeight = messageLabelsHeight;
         }
     }
 
