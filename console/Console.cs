@@ -15,13 +15,27 @@ namespace dev.gmeister.unsighted.randomeister.console;
 public class Console : ILogListener
 {
 
+    public class ConsoleMessageData
+    {
+        public ConsoleMessage message;
+        public float height;
+
+        public ConsoleMessageData(ConsoleMessage message, float height)
+        {
+            this.message = message;
+            this.height = height;
+        }
+    }
+
     public Font font;
     private Vector2 scroll;
     private string command;
     private Rect window;
     public int limit;
-    public List<ConsoleMessage> messages;
+    public List<ConsoleMessageData> messages;
     private float lastMessageLabelsHeight;
+    private float totalRemovedMessagesHeight;
+    private bool autoScroll;
 
     private ConfigEntry<bool> enable;
 
@@ -36,12 +50,20 @@ public class Console : ILogListener
         this.messages = new();
         this.window = new Rect(20, 20, 1880, 1040);
         this.lastMessageLabelsHeight = 0;
+        this.autoScroll = true;
 
         Logger.Listeners.Add(this);
     }
 
     public void OnGUI()
     {
+        if (this.messages.Count > this.limit)
+        {
+            List<ConsoleMessageData> removedMessages = new(this.messages.GetRange(0, this.messages.Count - this.limit));
+            if (!this.autoScroll) foreach (ConsoleMessageData data in removedMessages) this.scroll.y -= data.height;
+            this.messages.RemoveRange(0, this.messages.Count - this.limit);
+        }
+
         if (this.enable.Value) this.window = GUILayout.Window(0, this.window, CreateWindow, "Console");
     }
 
@@ -62,22 +84,21 @@ public class Console : ILogListener
         float messageLabelsHeight = Math.Min(style.margin.top, style.margin.bottom);
         int maxMargin = Math.Max(style.margin.top, style.margin.bottom);
 
-        List<ConsoleMessage> removedMessages = new();
-        if (this.messages.Count > this.limit)
+        List<ConsoleMessageData> messagesClone = new(this.messages);
+        foreach (ConsoleMessageData data in messagesClone)
         {
-            removedMessages.AddRange(this.messages.GetRange(0, this.messages.Count - this.limit));
-            this.messages.RemoveRange(0, this.messages.Count - this.limit);
-        }
+            GUIStyle labelStyle = new(style);
+            labelStyle.normal.textColor = data.message.color;
 
-        List<ConsoleMessage> messagesClone = new(this.messages);
-        foreach (ConsoleMessage message in messagesClone)
-        {
-            GUILayout.Label(message.message, style);
-            if (repaint && Event.current.type == EventType.Repaint)
+            GUILayout.Label(data.message.message, labelStyle);
+
+            if (Event.current.type == EventType.Repaint)
             {
-                messageLabelsHeight += GUILayoutUtility.GetLastRect().height + maxMargin;
+                data.height = GUILayoutUtility.GetLastRect().height + maxMargin;
+
+                if (repaint) messageLabelsHeight += data.height;
+                else repaint = false;
             }
-            else repaint = false;
         }
         GUILayout.EndScrollView();
         float scrollPaneHeight = 0f;
@@ -92,19 +113,46 @@ public class Console : ILogListener
         {
             //enable auto-scrolling if the panel is scolled to the bottom
             if (Input.mouseScrollDelta.y <= 0 && this.scroll.y > this.lastMessageLabelsHeight - scrollPaneHeight - 1)
+            {
                 this.scroll.y = Math.Max(0, messageLabelsHeight - scrollPaneHeight);
+                this.autoScroll = true;
+            }
+            else this.autoScroll = false;
             this.lastMessageLabelsHeight = messageLabelsHeight;
         }
     }
 
     public void AddMessage(ConsoleMessage message)
     {
-        this.messages.Add(message);
+        this.messages.Add(new(message, 0));
     }
 
     public void LogEvent(object sender, LogEventArgs eventArgs)
     {
-        this.AddMessage(new(eventArgs.ToString(), Color.white, sender, eventArgs.Level));
+        Color color;
+        switch (eventArgs.Level)
+        {
+            case LogLevel.Fatal:
+                color = new(0.66f, 0f, 0f);
+                break;
+            case LogLevel.Error:
+                color = Color.red;
+                break;
+            case LogLevel.Warning:
+                color = Color.yellow;
+                break;
+            case LogLevel.Debug:
+                color = Color.green;
+                break;
+            case LogLevel.Info:
+                color = new(0.66f, 0.66f, 0.66f);
+                break;
+            default:
+                color = Color.white;
+                break;
+        }
+
+        this.AddMessage(new(eventArgs.ToString(), color, sender, eventArgs.Level));
     }
 
     public void Dispose()
