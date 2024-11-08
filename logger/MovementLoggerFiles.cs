@@ -17,6 +17,7 @@ public class MovementLoggerFiles
         bool Check { get; set; }
         Dictionary<int, bool> Parses { get; set; }
         IEnumerable<IMovementDataFile> Dependencies { get; set; }
+        Exception Exception { get; set; }
     }
 
     class MovementLoggerFileData<T> : IMovementLoggerFileData<T> where T : IMovementData
@@ -24,12 +25,14 @@ public class MovementLoggerFiles
         public bool Check { get; set; }
         public Dictionary<int, bool> Parses { get; set; }
         public IEnumerable<IMovementDataFile> Dependencies { get; set; }
+        public Exception Exception { get; set; }
 
         public MovementLoggerFileData(params IMovementDataFile[] dependencies)
         {
             Check = false;
             Parses = new();
             Dependencies = new List<IMovementDataFile>(dependencies);
+            this.Exception = null;
         }
     }
 
@@ -41,24 +44,43 @@ public class MovementLoggerFiles
     public MovementDataFile<MovementEdgeRun> edgeRunsFile;
     public MovementDataFile<MovementEdgeRun> haileeEdgeRunsFile;
 
+    public bool parsed;
+
     private Dictionary<IMovementDataFile, IMovementLoggerFileData<IMovementData>> data;
 
-    public MovementLoggerFiles(string directory) : this(GetStream(directory, "actions"), GetStream(directory, "states"), GetStream(directory, "nodes"), GetStream(directory, "objects"), GetStream(directory, "edges"), GetStream(directory, "edge-runs"), GetStream(directory, "hailee-edge-runs"))
+    public MovementLoggerFiles(string directory)
     {
-
+        List<string> files = new() { "actions", "states", "nodes", "objects", "edges", "edge-runs", "hailee-edge-runs" };
+        List<FileStream> streams = files.Select(f => new FileStream(Path.Combine(directory, f + ".tsv"), FileMode.Open)).ToList();
+        Initialise(streams.Cast<Stream>().ToList());
     }
 
-    private static Stream GetStream(string directory, string file) => new FileStream(Path.Combine(directory, file + ".tsv"), FileMode.Open);
-
-    public MovementLoggerFiles(Stream actionsFileStream, Stream statesFileStream, Stream nodesFileStream, Stream objectsFileStream, Stream edgesFileStream, Stream edgeRunsFileStream, Stream haileeEdgeRunsFileStream)
+    public MovementLoggerFiles(ZipArchive zip)
     {
-        this.actionsFile = new(actionsFileStream, (d) => new MovementAction(d), MovementAction.versions);
-        this.statesFile = new(statesFileStream, (d) => new MovementState(d), MovementState.versions);
-        this.nodesFile = new(nodesFileStream, (d) => new MovementNode(d), MovementNode.versions);
-        this.objectsFile = new(objectsFileStream, (d) => new MovementObject(d), MovementObject.versions);
-        this.edgesFile = new(edgesFileStream, (d) => new MovementEdge(d, this.nodesFile.parsedData, this.actionsFile.parsedData, this.statesFile.parsedData), MovementEdge.versions);
-        this.edgeRunsFile = new(edgeRunsFileStream, (d) => new MovementEdgeRun(d, this.edgesFile.parsedData), MovementEdgeRun.versions);
-        this.haileeEdgeRunsFile = new(haileeEdgeRunsFileStream, (d) => new MovementEdgeRun(d, this.edgesFile.parsedData), MovementEdgeRun.versions);
+        List<string> files = new() { "actions", "states", "nodes", "objects", "edges", "edge-runs", "hailee-edge-runs" };
+        List<Stream> streams = files.Select(f => zip.GetEntry(f + ".tsv").Open()).ToList();
+        Initialise(streams);
+    }
+
+    public MovementLoggerFiles(Stream actions, Stream states, Stream nodes, Stream objects, Stream edges, Stream edgeRuns, Stream haileeEdgeRuns)
+    {
+        Initialise(actions, states, nodes, objects, edges, edgeRuns, haileeEdgeRuns);
+    }
+
+    protected void Initialise(List<Stream> streams)
+    {
+        Initialise(streams[0], streams[1], streams[2], streams[3], streams[4], streams[5], streams[6]);
+    }
+
+    public void Initialise(Stream actions, Stream states, Stream nodes, Stream objects, Stream edges, Stream edgeRuns, Stream haileeEdgeRuns)
+    {
+        this.actionsFile = new(actions, (d) => new MovementAction(d), MovementAction.versions);
+        this.statesFile = new(states, (d) => new MovementState(d), MovementState.versions);
+        this.nodesFile = new(nodes, (d) => new MovementNode(d), MovementNode.versions);
+        this.objectsFile = new(objects, (d) => new MovementObject(d), MovementObject.versions);
+        this.edgesFile = new(edges, (d) => new MovementEdge(d, this.nodesFile.parsedData, this.actionsFile.parsedData, this.statesFile.parsedData), MovementEdge.versions);
+        this.edgeRunsFile = new(edgeRuns, (d) => new MovementEdgeRun(d, this.edgesFile.parsedData), MovementEdgeRun.versions);
+        this.haileeEdgeRunsFile = new(haileeEdgeRuns, (d) => new MovementEdgeRun(d, this.edgesFile.parsedData), MovementEdgeRun.versions);
 
         this.data = new()
         {
@@ -73,33 +95,48 @@ public class MovementLoggerFiles
 
         foreach (IMovementDataFile file in this.data.Keys)
         {
-            this.data[file].Check = file.FindVersion();
+            try
+            {
+                file.ReadAll();
+                this.data[file].Check = file.FindVersion();
+                if (!this.data[file].Check) this.parsed = false;
+            }
+            catch (Exception e)
+            {
+                this.data[file].Exception = e;
+                this.data[file].Check = false;
+                this.parsed = false;
+            }
         }
 
-        foreach (IMovementDataFile file in this.data.Keys) if (this.data[file].Check)
-            {
-                this.data[file].Parses = file.Parse();
-            }
-    }
-
-    public void CreateZip(List<string> files, string path)
-    {
-        string tempDir = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
-        Random random = new();
-        if (Directory.Exists(tempDir))
+        foreach (IMovementDataFile file in this.data.Keys)
         {
-            tempDir += "-temp-";
-            do
+            bool parse = this.data[file].Check;
+            List<IMovementDataFile> dependencies = new(this.data[file].Dependencies);
+            for (int i = 0; i < dependencies.Count; i++)
             {
-                tempDir += Constants.ALPHANUMERIC_CHARS[random.Next(Constants.ALPHANUMERIC_CHARS.Length)];
-            }
-            while (Directory.Exists(tempDir));
-        }
-        Directory.CreateDirectory(tempDir);
+                IMovementDataFile dependency = dependencies[i];
+                if (!this.data[dependency].Check)
+                {
+                    parse = false;
+                    break;
+                }
 
-        foreach (string file in files) File.Copy(file, Path.Combine(tempDir, Path.GetFileName(file)));
-        ZipFile.CreateFromDirectory(tempDir, path);
-        Directory.Delete(tempDir, true);
+                foreach (IMovementDataFile d2 in this.data[dependency].Dependencies) if (!dependencies.Contains(d2)) dependencies.Add(d2);
+            }
+
+            if (parse)
+            {
+                try
+                {
+                    this.data[file].Parses = file.Parse();
+                }
+                catch (Exception e)
+                {
+                    this.data[file].Exception = e;
+                }
+            }
+        }
     }
 
 }

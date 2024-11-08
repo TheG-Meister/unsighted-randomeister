@@ -1,11 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net481</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <LangVersion>10.0</LangVersion>
     <RootNamespace>dev.gmeister.unsighted.randomeister</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>warnings</Nullable>
+    <Nullable>disable</Nullable>
     <BaseOutputPath>bin</BaseOutputPath>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
     <SignAssembly>False</SignAssembly>
@@ -59,7 +60,7 @@
       <HintPath>libraries\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Physics2DModule">
-      <HintPath>..\..\..\libraries\UnityEngine.Physics2DModule.dll</HintPath>
+      <HintPath>libraries\UnityEngine.Physics2DModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>libraries\UnityEngine.UI.dll</HintPath>
