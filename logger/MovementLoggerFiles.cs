@@ -12,7 +12,7 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementLoggerFiles
 {
 
-    private interface IMovementLoggerFileData<out T> where T : IMovementData
+    public interface IMovementLoggerFileData<out T> where T : IMovementData
     {
         bool Check { get; set; }
         Dictionary<int, bool> Parses { get; set; }
@@ -20,7 +20,7 @@ public class MovementLoggerFiles
         Exception Exception { get; set; }
     }
 
-    class MovementLoggerFileData<T> : IMovementLoggerFileData<T> where T : IMovementData
+    public class MovementLoggerFileData<T> : IMovementLoggerFileData<T> where T : IMovementData
     {
         public bool Check { get; set; }
         public Dictionary<int, bool> Parses { get; set; }
@@ -46,30 +46,25 @@ public class MovementLoggerFiles
 
     public bool parsed;
 
-    private Dictionary<IMovementDataFile, IMovementLoggerFileData<IMovementData>> data;
+    public Dictionary<IMovementDataFile, IMovementLoggerFileData<IMovementData>> data;
 
     public MovementLoggerFiles(string directory)
     {
         List<string> files = new() { "actions", "states", "nodes", "objects", "edges", "edge-runs", "hailee-edge-runs" };
-        List<FileStream> streams = files.Select(f => new FileStream(Path.Combine(directory, f + ".tsv"), FileMode.Open)).ToList();
-        Initialise(streams.Cast<Stream>().ToList());
+        List<Stream> streams = files.Select(f => new FileStream(Path.Combine(directory, f + ".tsv"), FileMode.Open)).Cast<Stream>().ToList();
+        Initialise(streams[0], streams[1], streams[2], streams[3], streams[4], streams[5], streams[6]);
     }
 
     public MovementLoggerFiles(ZipArchive zip)
     {
         List<string> files = new() { "actions", "states", "nodes", "objects", "edges", "edge-runs", "hailee-edge-runs" };
         List<Stream> streams = files.Select(f => zip.GetEntry(f + ".tsv").Open()).ToList();
-        Initialise(streams);
+        Initialise(streams[0], streams[1], streams[2], streams[3], streams[4], streams[5], streams[6]);
     }
 
     public MovementLoggerFiles(Stream actions, Stream states, Stream nodes, Stream objects, Stream edges, Stream edgeRuns, Stream haileeEdgeRuns)
     {
         Initialise(actions, states, nodes, objects, edges, edgeRuns, haileeEdgeRuns);
-    }
-
-    protected void Initialise(List<Stream> streams)
-    {
-        Initialise(streams[0], streams[1], streams[2], streams[3], streams[4], streams[5], streams[6]);
     }
 
     public void Initialise(Stream actions, Stream states, Stream nodes, Stream objects, Stream edges, Stream edgeRuns, Stream haileeEdgeRuns)
@@ -98,8 +93,8 @@ public class MovementLoggerFiles
             try
             {
                 file.ReadAll();
-                this.data[file].Check = file.FindVersion();
-                if (!this.data[file].Check) this.parsed = false;
+                file.FindVersion();
+                this.data[file].Check = true;
             }
             catch (Exception e)
             {

@@ -12,7 +12,7 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
 {
 
     public Dictionary<string, string> header;
-    public Dictionary<int, T> parsedData { get; set; }
+    public Dictionary<int, T> parsedData;
     public List<MovementDataFileVersion<T>> versions;
     public MovementDataFileVersion<T> version;
     public Func<Dictionary<string, string>, T> factory;
@@ -52,17 +52,20 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
         this.parsedData[index] = obj;
     }
 
-    public bool FindVersion()
+    public void FindVersion()
     {
-        if (!this.header.TryGetValue("version", out string versionString)) return false;
+        if (this.header == null) throw new ApplicationException("file has not been read");
+        if (this.header.Count < 1) throw new IOException("file header is empty");
+
+        if (!this.header.TryGetValue(MovementDataFileVersion<T>.GetTypeKey(), out string type)) throw new IOException("file header does not contain a type key");
+        if (type != typeof(T).FullName) throw new IOException("file has the wrong type of data");
+
+        if (!this.header.TryGetValue(MovementDataFileVersion<T>.GetVersionKey(), out string versionString)) throw new IOException("file header does not contain a version key");
         MovementDataFileVersion<T> version = this.versions.Find(v => v.Version == versionString);
-        if (version == null) return false;
-        if (!version.VerifyHeader(this.header)) return false;
-        if (!version.VerifyColNames(this.colNames)) return false;
+        if (version == null) throw new IOException("could not find version data for this file's version string");
 
+        version.VerifyColNames(this.colNames);
         this.version = version;
-
-        return true;
     }
 
     public void CreateAndWriteHeader()
@@ -95,7 +98,5 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
 
         return result;
     }
-
-
 
 }

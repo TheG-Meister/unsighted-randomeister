@@ -14,7 +14,7 @@ public interface IMovementDataFile : IDelimitedFile
 
     public Dictionary<int, bool> Parse();
 
-    public bool FindVersion();
+    public void FindVersion();
 
     //public IReadOnlyDictionary<int, T> ParsedData { get; }
 

@@ -52,23 +52,27 @@ public class MovementDataFileVersion<T> : IMovementDataFileVersion<T> where T : 
         };
     }
 
-    public bool VerifyHeader(Dictionary<string, string> header)
+    public void VerifyHeader(Dictionary<string, string> header)
     {
-        if (!header.ContainsKey(GetTypeKey()) || header[GetTypeKey()] != GetTypeValue()) return false;
-        if (!header.ContainsKey(GetVersionKey()) || header[GetVersionKey()] != GetVersionValue()) return false;
-        return true;
+        if (header == null) throw new ArgumentException("header is null");
+        if (header.Count < 1) throw new IOException("header is empty");
+
+        if (!header.TryGetValue(GetTypeKey(), out string type)) throw new IOException("header does not contain a type key");
+        if (type != GetTypeValue()) throw new IOException("header has the wrong type");
+
+        if (!header.TryGetValue(GetVersionKey(), out string versionString)) throw new IOException("header does not contain a version key");
+        if (versionString != GetVersionValue()) throw new IOException("header has the wrong version");
     }
 
-    public bool VerifyColNames(List<string> colNames)
+    public void VerifyColNames(List<string> colNames)
     {
-        if (this.ColNames.Except(colNames).Any()) return false;
-        if (colNames.Except(this.ColNames).Any()) return false;
-        return true;
+        if (this.ColNames.Except(colNames).Any()) throw new IOException("file is missing columns");
+        if (colNames.Except(this.ColNames).Any()) throw new IOException("file has too many columns");
     }
 
-    public string GetTypeKey() => nameof(Type).ToLower();
+    public static string GetTypeKey() => nameof(Type).ToLower();
     public string GetTypeValue() => typeof(T).FullName;
-    public string GetVersionKey() => nameof(Version).ToLower();
+    public static string GetVersionKey() => nameof(Version).ToLower();
     public string GetVersionValue() => this.Version;
 
     public static Dictionary<string, string> ParseHeader(List<string> lines)

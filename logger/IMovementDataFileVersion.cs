@@ -19,15 +19,15 @@ public interface IMovementDataFileVersion<out T> where T : IMovementData
 
     public Dictionary<string, string> ToDictionary();
 
-    public bool VerifyHeader(Dictionary<string, string> header);
+    public void VerifyHeader(Dictionary<string, string> header);
 
-    public bool VerifyColNames(List<string> colNames);
+    public void VerifyColNames(List<string> colNames);
 
-    public string GetTypeKey();
+    public static string GetTypeKey() => nameof(Type).ToLower();
 
     public string GetTypeValue();
 
-    public string GetVersionKey();
+    public static string GetVersionKey() => nameof(Version).ToLower();
 
     public string GetVersionValue();
 }
