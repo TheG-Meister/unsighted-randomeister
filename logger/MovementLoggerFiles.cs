@@ -15,7 +15,7 @@ public class MovementLoggerFiles
     public interface IMovementLoggerFileData<out T> where T : IMovementData
     {
         bool Check { get; set; }
-        Dictionary<int, bool> Parses { get; set; }
+        Dictionary<int, Exception> Parses { get; set; }
         IEnumerable<IMovementDataFile> Dependencies { get; set; }
         Exception Exception { get; set; }
     }
@@ -23,7 +23,7 @@ public class MovementLoggerFiles
     public class MovementLoggerFileData<T> : IMovementLoggerFileData<T> where T : IMovementData
     {
         public bool Check { get; set; }
-        public Dictionary<int, bool> Parses { get; set; }
+        public Dictionary<int, Exception> Parses { get; set; }
         public IEnumerable<IMovementDataFile> Dependencies { get; set; }
         public Exception Exception { get; set; }
 
@@ -107,6 +107,8 @@ public class MovementLoggerFiles
         foreach (IMovementDataFile file in this.data.Keys)
         {
             bool parse = this.data[file].Check;
+            if (!parse) continue;
+
             List<IMovementDataFile> dependencies = new(this.data[file].Dependencies);
             for (int i = 0; i < dependencies.Count; i++)
             {
@@ -114,11 +116,13 @@ public class MovementLoggerFiles
                 if (!this.data[dependency].Check)
                 {
                     parse = false;
+                    this.data[file].Exception = new IOException("one or more of this file's dependencies did not parse");
                     break;
                 }
 
                 foreach (IMovementDataFile d2 in this.data[dependency].Dependencies) if (!dependencies.Contains(d2)) dependencies.Add(d2);
             }
+            if (!parse) continue;
 
             if (parse)
             {

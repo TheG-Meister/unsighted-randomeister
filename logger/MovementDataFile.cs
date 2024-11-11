@@ -36,6 +36,8 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
         List<string> headerLines = new();
         foreach (KeyValuePair<int, string> kvp in this.unusedLines)
         {
+            if (kvp.Key >= this.colNamesLine) break;
+
             string line = kvp.Value;
             if (line.StartsWith(COMMENT_CHAR.ToString()))
             {
@@ -78,21 +80,21 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
         this.AddColNamesLine(version.ColNames.ToArray());
     }
 
-    public virtual Dictionary<int, bool> Parse()
+    public virtual Dictionary<int, Exception> Parse()
     {
         this.parsedData = new();
-        Dictionary<int, bool> result = new();
+        Dictionary<int, Exception> result = new();
         foreach (int key in this.rows.Keys)
         {
             Dictionary<string, string> entry = this.GetEntry(key);
             try
             {
                 this.parsedData[key] = this.factory.Invoke(entry);
-                result[key] = true;
+                result[key] = null;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                result[key] = false;
+                result[key] = e;
             }
         }
 

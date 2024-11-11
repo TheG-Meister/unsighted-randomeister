@@ -12,7 +12,7 @@ public interface IMovementDataFile : IDelimitedFile
 
     public void CreateAndWriteHeader();
 
-    public Dictionary<int, bool> Parse();
+    public Dictionary<int, Exception> Parse();
 
     public void FindVersion();
 
