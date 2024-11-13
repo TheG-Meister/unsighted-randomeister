@@ -14,25 +14,22 @@ public class MovementLoggerFiles
 
     public interface IMovementLoggerFileData<out T> where T : IMovementData
     {
-        bool Check { get; set; }
-        Dictionary<int, Exception> Parses { get; set; }
-        IEnumerable<IMovementDataFile> Dependencies { get; set; }
-        Exception Exception { get; set; }
+        public Dictionary<int, Exception> Parses { get; set; }
+        public IEnumerable<IMovementDataFile> Dependencies { get; }
+        public List<Exception> Exceptions { get; set; }
     }
 
     public class MovementLoggerFileData<T> : IMovementLoggerFileData<T> where T : IMovementData
     {
-        public bool Check { get; set; }
         public Dictionary<int, Exception> Parses { get; set; }
         public IEnumerable<IMovementDataFile> Dependencies { get; set; }
-        public Exception Exception { get; set; }
+        public List<Exception> Exceptions { get; set; }
 
         public MovementLoggerFileData(params IMovementDataFile[] dependencies)
         {
-            Check = false;
             Parses = new();
             Dependencies = new List<IMovementDataFile>(dependencies);
-            this.Exception = null;
+            this.Exceptions = new();
         }
     }
 
@@ -94,37 +91,29 @@ public class MovementLoggerFiles
             {
                 file.ReadAll();
                 file.FindVersion();
-                this.data[file].Check = true;
             }
             catch (Exception e)
             {
-                this.data[file].Exception = e;
-                this.data[file].Check = false;
-                this.parsed = false;
+                this.data[file].Exceptions.Add(e);
             }
         }
 
         foreach (IMovementDataFile file in this.data.Keys)
         {
-            bool parse = this.data[file].Check;
-            if (!parse) continue;
-
             List<IMovementDataFile> dependencies = new(this.data[file].Dependencies);
             for (int i = 0; i < dependencies.Count; i++)
             {
                 IMovementDataFile dependency = dependencies[i];
-                if (!this.data[dependency].Check)
+                if (!this.data[dependency].Exceptions.Any())
                 {
-                    parse = false;
-                    this.data[file].Exception = new IOException("one or more of this file's dependencies did not parse");
+                    this.data[file].Exceptions.Add(new IOException("one or more of this file's dependencies did not parse"));
                     break;
                 }
 
                 foreach (IMovementDataFile d2 in this.data[dependency].Dependencies) if (!dependencies.Contains(d2)) dependencies.Add(d2);
             }
-            if (!parse) continue;
 
-            if (parse)
+            if (!this.data[file].Exceptions.Any())
             {
                 try
                 {
@@ -132,10 +121,13 @@ public class MovementLoggerFiles
                 }
                 catch (Exception e)
                 {
-                    this.data[file].Exception = e;
+                    this.data[file].Exceptions.Add(e);
                 }
+                if (this.data[file].Parses.Values.Any(e => e != null)) this.data[file].Exceptions.Add(new IOException("not all lines were parsed successfully"));
             }
         }
+
+        this.parsed = !this.data.Values.SelectMany(d => d.Exceptions).Any();
     }
 
 }
