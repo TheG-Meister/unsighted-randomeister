@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class MovementLoggerFiles
+public class MovementLoggerFiles : IDisposable
 {
 
     public interface IMovementLoggerFileData<out T> where T : IMovementData
@@ -130,4 +130,15 @@ public class MovementLoggerFiles
         this.parsed = !this.data.Values.SelectMany(d => d.Exceptions).Any();
     }
 
+    public void Dispose()
+    {
+        this.actionsFile?.Dispose();
+        this.statesFile?.Dispose();
+        this.nodesFile?.Dispose();
+        this.objectsFile?.Dispose();
+        this.edgesFile?.Dispose();
+        this.edgeRunsFile?.Dispose();
+        this.haileeEdgeRunsFile?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }
