@@ -6,11 +6,13 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.WebRequestMethods;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
 public class MovementLoggerFiles : IDisposable
 {
+    public static readonly List<string> files = new() { "actions.tsv", "states.tsv", "nodes.tsv", "objects.tsv", "edges.tsv", "edge-runs.tsv", "hailee-edge-runs.tsv" };
 
     public interface IMovementLoggerFileData<out T> where T : IMovementData
     {
@@ -45,18 +47,8 @@ public class MovementLoggerFiles : IDisposable
 
     public Dictionary<IMovementDataFile, IMovementLoggerFileData<IMovementData>> data;
 
-    public MovementLoggerFiles(string directory)
+    public MovementLoggerFiles()
     {
-        List<string> files = new() { "actions", "states", "nodes", "objects", "edges", "edge-runs", "hailee-edge-runs" };
-        List<Stream> streams = files.Select(f => new FileStream(Path.Combine(directory, f + ".tsv"), FileMode.Open)).Cast<Stream>().ToList();
-        Initialise(streams[0], streams[1], streams[2], streams[3], streams[4], streams[5], streams[6]);
-    }
-
-    public MovementLoggerFiles(ZipArchive zip)
-    {
-        List<string> files = new() { "actions", "states", "nodes", "objects", "edges", "edge-runs", "hailee-edge-runs" };
-        List<Stream> streams = files.Select(f => zip.GetEntry(f + ".tsv").Open()).ToList();
-        Initialise(streams[0], streams[1], streams[2], streams[3], streams[4], streams[5], streams[6]);
     }
 
     public MovementLoggerFiles(Stream actions, Stream states, Stream nodes, Stream objects, Stream edges, Stream edgeRuns, Stream haileeEdgeRuns)
@@ -130,7 +122,7 @@ public class MovementLoggerFiles : IDisposable
         this.parsed = !this.data.Values.SelectMany(d => d.Exceptions).Any();
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         this.actionsFile?.Dispose();
         this.statesFile?.Dispose();
