@@ -6,11 +6,10 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static System.Net.WebRequestMethods;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class MovementLoggerFiles : IDisposable
+public abstract class MovementLoggerFiles : IDisposable
 {
     public static readonly List<string> files = new() { "actions.tsv", "states.tsv", "nodes.tsv", "objects.tsv", "edges.tsv", "edge-runs.tsv", "hailee-edge-runs.tsv" };
 
@@ -43,6 +42,7 @@ public class MovementLoggerFiles : IDisposable
     public MovementDataFile<MovementEdgeRun> edgeRunsFile;
     public MovementDataFile<MovementEdgeRun> haileeEdgeRunsFile;
 
+    public bool exists;
     public bool parsed;
 
     public Dictionary<IMovementDataFile, IMovementLoggerFileData<IMovementData>> data;
@@ -51,12 +51,7 @@ public class MovementLoggerFiles : IDisposable
     {
     }
 
-    public MovementLoggerFiles(Stream actions, Stream states, Stream nodes, Stream objects, Stream edges, Stream edgeRuns, Stream haileeEdgeRuns)
-    {
-        Initialise(actions, states, nodes, objects, edges, edgeRuns, haileeEdgeRuns);
-    }
-
-    public void Initialise(Stream actions, Stream states, Stream nodes, Stream objects, Stream edges, Stream edgeRuns, Stream haileeEdgeRuns)
+    protected void Open(Stream actions, Stream states, Stream nodes, Stream objects, Stream edges, Stream edgeRuns, Stream haileeEdgeRuns)
     {
         this.actionsFile = new(actions, (d) => new MovementAction(d), MovementAction.versions);
         this.statesFile = new(states, (d) => new MovementState(d), MovementState.versions);
@@ -76,7 +71,12 @@ public class MovementLoggerFiles : IDisposable
             { this.edgeRunsFile, new MovementLoggerFileData<MovementEdgeRun>(this.edgesFile) },
             { this.haileeEdgeRunsFile, new MovementLoggerFileData<MovementEdgeRun>(this.edgesFile) },
         };
+    }
 
+    public abstract void CreateAll();
+
+    public virtual void ReadAll()
+    {
         foreach (IMovementDataFile file in this.data.Keys)
         {
             try
@@ -89,14 +89,17 @@ public class MovementLoggerFiles : IDisposable
                 this.data[file].Exceptions.Add(e);
             }
         }
+    }
 
+    public virtual void ParseAll()
+    {
         foreach (IMovementDataFile file in this.data.Keys)
         {
             List<IMovementDataFile> dependencies = new(this.data[file].Dependencies);
             for (int i = 0; i < dependencies.Count; i++)
             {
                 IMovementDataFile dependency = dependencies[i];
-                if (!this.data[dependency].Exceptions.Any())
+                if (this.data[dependency].Exceptions.Count < 0)
                 {
                     this.data[file].Exceptions.Add(new IOException("one or more of this file's dependencies did not parse"));
                     break;
@@ -105,7 +108,7 @@ public class MovementLoggerFiles : IDisposable
                 foreach (IMovementDataFile d2 in this.data[dependency].Dependencies) if (!dependencies.Contains(d2)) dependencies.Add(d2);
             }
 
-            if (!this.data[file].Exceptions.Any())
+            if (this.data[file].Exceptions.Count < 1)
             {
                 try
                 {
@@ -122,15 +125,17 @@ public class MovementLoggerFiles : IDisposable
         this.parsed = !this.data.Values.SelectMany(d => d.Exceptions).Any();
     }
 
+    public virtual void CloseAll()
+    {
+        List<IMovementDataFile> files = new() { this.actionsFile, this.statesFile, this.nodesFile, this.objectsFile, this.edgesFile, this.edgeRunsFile, this.haileeEdgeRunsFile };
+        this.data.Clear();
+        foreach (IMovementDataFile file in files) file?.Dispose();
+    }
+
     public virtual void Dispose()
     {
-        this.actionsFile?.Dispose();
-        this.statesFile?.Dispose();
-        this.nodesFile?.Dispose();
-        this.objectsFile?.Dispose();
-        this.edgesFile?.Dispose();
-        this.edgeRunsFile?.Dispose();
-        this.haileeEdgeRunsFile?.Dispose();
+        this.CloseAll();
         GC.SuppressFinalize(this);
     }
+
 }
