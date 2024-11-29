@@ -30,6 +30,8 @@ public class MovementLogger : IDisposable
         }
     }
 
+    public string version = "0.0.1";
+
     public bool announce;
     public bool uniqueAnnouncements;
     public bool log;
@@ -42,20 +44,22 @@ public class MovementLogger : IDisposable
     public float cameraPadding;
     public List<Announcement> announcements;
 
-    public Logger actionLogger;
-    public Logger stateLogger;
-    public Logger nodeLogger;
-    public Logger edgeLogger;
-    public Logger objectLogger;
+    public MovementLoggerFileManager fileManager;
 
-    public Dictionary<PlayerAction, int> actionIDs;
-    public List<MovementState> states;
-    public List<MovementNode> nodes;
-    public List<MovementEdge> edges;
-    public HashSet<MovementObject> objects;
-    public int largestActionID;
-    public int largestStateID;
-    public int largestNodeID;
+    //public Logger actionLogger;
+    //public Logger stateLogger;
+    //public Logger nodeLogger;
+    //public Logger edgeLogger;
+    //public Logger objectLogger;
+
+    //public Dictionary<PlayerAction, int> actionIDs;
+    //public List<MovementState> states;
+    //public List<MovementNode> nodes;
+    //public List<MovementEdge> edges;
+    //public HashSet<MovementObject> objects;
+    //public int largestActionID;
+    //public int largestStateID;
+    //public int largestNodeID;
     public MovementNode currentNode;
 
     private readonly HashSet<PlayerAction> currentActions;
@@ -90,16 +94,18 @@ public class MovementLogger : IDisposable
         this.currentNode = null;
         this.jumpVector = Vector3.zero;
 
-        this.InitLoggers(dir);
+        this.fileManager = new(dir);
+
+        //this.InitLoggers(dir);
     }
 
     public void Dispose()
     {
-        this.nodeLogger.Dispose();
-        this.edgeLogger.Dispose();
-        this.stateLogger.Dispose();
+        this.fileManager.Dispose();
+        GC.SuppressFinalize(this);
     }
 
+    /*
     public void InitLoggers(string dir)
     {
         string actionsPath = Path.Combine(dir, "actions.tsv");
@@ -260,62 +266,72 @@ public class MovementLogger : IDisposable
         }
 
     }
+    */
 
     public MovementNode GetNode(string scene, string location, Vector3 position)
     {
-        MovementNode node = this.nodes.ToList().Find(n => n.scene == scene && n.location == location);
-        if (node == null)
+        IndexedMovementDataFile<MovementNode> nodesFile = this.fileManager.currentBatch.nodesFile;
+        foreach (MovementNode n in nodesFile.parsedData.Values)
         {
-            this.largestNodeID++;
-            node = new MovementNode(this.largestNodeID, scene, location, position);
-            string actionsString = "";
-            string statesString = "";
-
-            while (this.nodes.Count <= node.id) this.nodes.Add(null);
-            this.nodes[node.id] = node;
-
-            this.nodeLogger.stream.WriteLine(string.Join("\t", node.id, node.scene, node.location, node.x, node.y, node.height, actionsString, statesString));
-            this.nodeLogger.stream.Flush();
+            if (n.scene == scene && n.location == location) return n;
         }
 
+        MovementNode node = new(nodesFile.GetNextID(), scene, location, position);
+        nodesFile.Add(node);
         return node;
     }
 
     public MovementState GetState(string name, string scene = "")
     {
-        MovementState state = this.states.ToList().Find(s => s.name == name && s.scene == scene);
-        if (state == null)
+        IndexedMovementDataFile<MovementState> statesFile = this.fileManager.currentBatch.statesFile;
+        foreach (MovementState s in statesFile.parsedData.Values)
         {
-            this.largestStateID++;
-            state = new MovementState(this.largestStateID, name, scene);
-
-            while (this.states.Count <= state.id) this.states.Add(null);
-            this.states[this.largestStateID] = state;
-
-            this.stateLogger.stream.WriteLine(string.Join("\t", state.id, state.name, state.scene));
-            this.stateLogger.stream.Flush();
+            if (s.name == name && s.scene == scene) return s;
         }
 
+        MovementState state = new(statesFile.GetNextID(), name, scene);
+        statesFile.Add(state);
         return state;
     }
 
-    public int GetActionID(PlayerAction action)
+    public MovementEdge GetEdge(MovementNode source, MovementNode target, bool sceneChange, HashSet<PlayerAction> actions, HashSet<MovementState> states)
     {
-        if (!this.actionIDs.ContainsKey(action))
+        IndexedMovementDataFile<MovementEdge> file = this.fileManager.currentBatch.edgesFile;
+        HashSet<MovementAction> actionObjs = new();
+        foreach (PlayerAction action in actions) actionObjs.Add(this.GetAction(action));
+
+        foreach (MovementEdge e in file.parsedData.Values)
         {
-            this.largestActionID++;
-            this.actionIDs[action] = this.largestActionID;
-            this.actionLogger.stream.WriteLine(string.Join("\t", this.largestActionID, action));
-            this.actionLogger.stream.Flush();
-            return this.largestActionID;
+            if (e.source == source && e.target == target && e.actions.SetEquals(actionObjs) && e.states.SetEquals(states)) return e;
         }
-        else return this.actionIDs[action];
+
+        MovementEdge edge = new(file.GetNextID(), source, target, sceneChange);
+        if (!sceneChange)
+        {
+            foreach (PlayerAction action in actions) edge.actions.Add(this.GetAction(action));
+            foreach (MovementState state in states) edge.states.Add(state);
+        }
+
+        file.Add(edge);
+        return edge;
     }
 
-    public PlayerAction GetAction(int id)
+    public MovementAction GetAction(PlayerAction action)
     {
-        if (!this.actionIDs.ContainsValue(id)) throw new Exception("There is no action corresponding to this ID");
-        return this.actionIDs.First(k => k.Value == id).Key;
+        IndexedMovementDataFile<MovementAction> file = this.fileManager.currentBatch.actionsFile;
+        foreach (MovementAction a in file.parsedData.Values) if (a.action == action) return a;
+
+        MovementAction actionObj = new(file.GetNextID(), action);
+        file.Add(actionObj);
+        return actionObj;
+    }
+
+    public MovementAction GetAction(int id)
+    {
+        IndexedMovementDataFile<MovementAction> file = this.fileManager.currentBatch.actionsFile;
+        MovementAction action = file.parsedData.Values.First(a => a.id == id);
+        if (action == null) throw new Exception("There is no action corresponding to this ID");
+        return action;
     }
 
     public void LogObject(GameObject obj, string name)
@@ -326,15 +342,9 @@ public class MovementLogger : IDisposable
     public void LogObject(string type, string scene, string name, Vector3 position)
     {
         MovementObject obj = new(type, scene, name, position);
-        if (!this.objects.Contains(obj))
-        {
-            this.objects.Add(obj);
-            if (this.log)
-            {
-                this.objectLogger.stream.WriteLine(string.Join("\t", obj.type, obj.scene, obj.name, obj.x, obj.y, obj.height));
-                this.objectLogger.stream.Flush();
-            }
-        }
+        MovementDataFile<MovementObject> file = this.fileManager.currentBatch.objectsFile;
+        foreach (MovementObject o in file.parsedData.Values) if (obj.Equals(o)) return;
+        if (this.log) file.Add(obj);
     }
 
     public void Announce()
@@ -372,21 +382,11 @@ public class MovementLogger : IDisposable
             colour = ColorNames.Green;
             if (this.log)
             {
-                MovementEdge edge = new(this.currentNode.id, node.id, sceneChange, (realTime - this.realTime), (gameTime - this.gameTime), timestamp);
-                this.edges.Add(edge);
-                if (!sceneChange)
-                {
-                    foreach (PlayerAction action in this.currentActions) edge.actions.Add(action);
-                    foreach (MovementState state in this.currentStates) edge.states.Add(state);
-                }
+                IndexedMovementDataFile<MovementEdge> edgesFile = this.fileManager.currentBatch.edgesFile;
+                MovementEdge edge = this.GetEdge(this.currentNode, node, sceneChange, this.currentActions, this.currentStates);
 
-                string states = string.Join(",", edge.states.Select(s => s.id));
-                string actions = string.Join(",", edge.actions.Select(a => this.GetActionID(a)));
-                string realTimeDuration = (realTime - this.realTime).ToString();
-                string gameTimeDuration = (gameTime - this.gameTime).ToString();
-
-                this.edgeLogger.stream.WriteLine(string.Join("\t", edge.source, edge.target, actions, states, edge.sceneChange ? "1" : "0", edge.realTime, edge.gameTime, edge.timestamp));
-                this.edgeLogger.stream.Flush();
+                MovementEdgeRun run = new(edge, (realTime - this.realTime), (gameTime - this.gameTime), timestamp, this.version);
+                this.fileManager.currentBatch.edgeRunsFile.Add(run);
             }
         }
 

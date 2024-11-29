@@ -32,9 +32,9 @@ public class IndexedMovementDataFile<T> : MovementDataFile<T> where T : IndexedM
         if (obj.id >= this.nextID) this.nextID = obj.id + 1;
     }
 
-    public override Dictionary<int, bool> Parse()
+    public override Dictionary<int, Exception> Parse()
     {
-        Dictionary<int, bool> parses = base.Parse();
+        Dictionary<int, Exception> parses = base.Parse();
         this.nextID = -1;
         foreach (int key in this.parsedData.Keys)
         {
@@ -46,7 +46,7 @@ public class IndexedMovementDataFile<T> : MovementDataFile<T> where T : IndexedM
 
     public int GetNextID()
     {
-        return this.nextID++;
+        return this.nextID;
     }
 
 }

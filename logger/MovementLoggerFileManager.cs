@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class MovementLoggerFileManager
+public class MovementLoggerFileManager : IDisposable
 {
 
     public string path;
@@ -85,4 +85,10 @@ public class MovementLoggerFileManager
         Directory.Delete(tempDir, true);
     }
 
+    public void Dispose()
+    {
+        this.currentBatch?.Dispose();
+        this.currentCommandBatch?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }
