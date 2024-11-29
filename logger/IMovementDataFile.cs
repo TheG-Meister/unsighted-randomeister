@@ -10,8 +10,6 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public interface IMovementDataFile : IDelimitedFile
 {
 
-    public void CreateAndWriteHeader();
-
     public Dictionary<int, Exception> Parse();
 
     public void FindVersion();

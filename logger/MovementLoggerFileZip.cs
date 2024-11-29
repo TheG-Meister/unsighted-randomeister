@@ -26,6 +26,8 @@ public class MovementLoggerFileZip : MovementLoggerFiles
         this.archive = archive;
     }
 
+    public override bool ContainsAll() => !files.Except(this.archive.Entries.Select(e => e.FullName)).Any();
+
     public void CreateAll(string path) => this.CreateAll(ZipFile.Open(path, ZipArchiveMode.Update));
 
     public void CreateAll(ZipArchive archive)

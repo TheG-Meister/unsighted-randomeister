@@ -75,6 +75,13 @@ public abstract class MovementLoggerFiles : IDisposable
 
     public abstract void CreateAll();
 
+    public abstract bool ContainsAll();
+
+    public void ResetAll()
+    {
+        foreach (IMovementDataFile file in this.data.Keys) file.Reset();
+    }
+
     public virtual void ReadAll()
     {
         foreach (IMovementDataFile file in this.data.Keys)

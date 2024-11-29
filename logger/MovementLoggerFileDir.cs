@@ -26,6 +26,8 @@ public class MovementLoggerFileDir : MovementLoggerFiles
         this.mode = mode;
     }
 
+    public override bool ContainsAll() => !files.Any(f => !File.Exists(Path.Combine(this.directory, f)));
+
     public void CreateAll(string directory)
     {
         this.directory = directory;

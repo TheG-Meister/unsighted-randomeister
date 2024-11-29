@@ -70,9 +70,9 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
         this.version = version;
     }
 
-    public void CreateAndWriteHeader()
+    public override void Reset()
     {
-        this.Reset();
+        base.Reset();
         this.version = this.versions[this.versions.Count];
         this.header = version.ToDictionary();
         List<string> headerLines = version.ToHeader();
