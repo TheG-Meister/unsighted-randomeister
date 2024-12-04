@@ -94,7 +94,7 @@ public class MovementLogger : IDisposable
         this.currentNode = null;
         this.jumpVector = Vector3.zero;
 
-        this.fileManager = new(dir);
+        this.fileManager = new(dir, true);
 
         //this.InitLoggers(dir);
     }
@@ -326,14 +326,6 @@ public class MovementLogger : IDisposable
         return actionObj;
     }
 
-    public MovementAction GetAction(int id)
-    {
-        IndexedMovementDataFile<MovementAction> file = this.fileManager.currentBatch.actionsFile;
-        MovementAction action = file.parsedData.Values.First(a => a.id == id);
-        if (action == null) throw new Exception("There is no action corresponding to this ID");
-        return action;
-    }
-
     public void LogObject(GameObject obj, string name)
     {
         this.LogObject(obj.GetType().Name, obj.scene.name, name, this.Get3DObjectPosition(obj));
@@ -382,7 +374,6 @@ public class MovementLogger : IDisposable
             colour = ColorNames.Green;
             if (this.log)
             {
-                IndexedMovementDataFile<MovementEdge> edgesFile = this.fileManager.currentBatch.edgesFile;
                 MovementEdge edge = this.GetEdge(this.currentNode, node, sceneChange, this.currentActions, this.currentStates);
 
                 MovementEdgeRun run = new(edge, (realTime - this.realTime), (gameTime - this.gameTime), timestamp, this.version);

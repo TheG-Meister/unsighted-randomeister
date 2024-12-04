@@ -11,61 +11,91 @@ namespace dev.gmeister.unsighted.randomeister.logger;
 public class MovementLoggerFileManager : IDisposable
 {
 
-    public string path;
-    public string backupsDir;
-    public string completeDir;
-    public string brokenDir;
-    public string currentZip;
-    public MovementLoggerFileZip currentBatch;
-    public MovementLoggerFileZip currentCommandBatch;
+    public const string BACKUPS_DIR = "backups";
+    public const string COMPLETE_DIR = "complete";
+    public const string BROKEN_DIR = "broken";
+    public const string CURRENT_DIR = "current";
+    public const string CURRENT_ZIP = "current.zip";
 
-    public MovementLoggerFileManager(string path)
+    public readonly string path;
+    public readonly string backupsDirPath;
+    public readonly string completeDirPath;
+    public readonly string brokenDirPath;
+    public readonly string currentDirPath;
+    public readonly string currentZipPath;
+    public MovementLoggerFiles currentBatch;
+    public MovementLoggerFileZip currentZip;
+    public MovementLoggerFileDir currentDir;
+    public MovementLoggerFiles currentCommandBatch;
+
+    public bool debug;
+
+    public MovementLoggerFileManager(string path, bool debug)
     {
         this.path = path;
-        this.backupsDir = Path.Combine(this.path, "backups");
-        this.completeDir = Path.Combine(this.path, "complete");
-        this.brokenDir = Path.Combine(this.path, "broken");
-        this.currentZip = Path.Combine(this.path, "current.zip");
+        this.debug = debug;
+
+        this.backupsDirPath = Path.Combine(this.path, BACKUPS_DIR);
+        this.completeDirPath = Path.Combine(this.path, COMPLETE_DIR);
+        this.brokenDirPath = Path.Combine(this.path, BROKEN_DIR);
+        this.currentDirPath = Path.Combine(this.path, CURRENT_DIR);
+        this.currentZipPath = Path.Combine(this.path, CURRENT_ZIP);
 
         Directory.CreateDirectory(this.path);
-        Directory.CreateDirectory(this.backupsDir);
-        Directory.CreateDirectory(this.completeDir);
-        Directory.CreateDirectory(this.brokenDir);
+        Directory.CreateDirectory(Path.Combine(this.path, BACKUPS_DIR));
+        Directory.CreateDirectory(Path.Combine(this.path, COMPLETE_DIR));
+        Directory.CreateDirectory(Path.Combine(this.path, BROKEN_DIR));
 
-        if (!Path.Exists(this.currentZip))
+        bool zipExists = File.Exists(this.currentZipPath);
+        bool dirExists = Directory.Exists(this.currentDirPath);
+        bool read = false;
+
+        if (this.debug)
         {
-            this.CreateCurrentZip();
-            this.currentBatch = new(this.currentZip);
-            this.currentBatch.CreateAll();
-            this.currentBatch.ResetAll();
+            if (zipExists)
+            {
+                if (dirExists) Directory.Delete(this.currentDirPath, true);
+                Directory.CreateDirectory(this.currentDirPath);
+                ZipFile.ExtractToDirectory(this.currentZipPath, this.currentDirPath);
+
+                read = true;
+            }
+            if (dirExists) read = true;
+            this.currentBatch = new MovementLoggerFileDir(this.currentDirPath);
         }
         else
         {
-            this.currentBatch = new(this.currentZip);
-            this.currentBatch.Open();
-        }
-    }
-
-    private void CreateCurrentZip()
-    {
-        string tempDir = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
-        Random random = new();
-        if (Directory.Exists(tempDir))
-        {
-            tempDir += "-temp-";
-            do
+            if (zipExists) read = true;
+            else
             {
-                tempDir += Constants.ALPHANUMERIC_CHARS[random.Next(Constants.ALPHANUMERIC_CHARS.Length)];
+                if (dirExists)
+                {
+                    ZipFile.CreateFromDirectory(this.currentDirPath, this.currentZipPath);
+                    read = true;
+                }
+                else this.CreateZip(this.currentZipPath);
             }
-            while (Directory.Exists(tempDir));
+
+            Directory.Delete(this.currentDirPath, true);
+            this.currentBatch = new MovementLoggerFileZip(this.currentZipPath);
         }
 
-        Directory.CreateDirectory(tempDir);
-        ZipFile.CreateFromDirectory(tempDir, path);
-        Directory.Delete(tempDir, true);
+        if (read)
+        {
+            this.currentBatch.Open();
+            this.currentBatch.ReadAll();
+            this.currentBatch.ParseAll();
+        }
+        else this.currentBatch.CreateAll();
+
     }
 
-    public void CreateZip(List<string> files, string path)
+    public void BackupDir()
+    {
+        if (File.Exists(this.currentDirPath)) ZipFile.CreateFromDirectory(this.currentDirPath, this.currentZipPath);
+    }
+
+    public void CreateZip(string path, params string[] files)
     {
         string tempDir = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
         Random random = new();

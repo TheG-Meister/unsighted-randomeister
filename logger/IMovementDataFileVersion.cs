@@ -23,11 +23,11 @@ public interface IMovementDataFileVersion<out T> where T : IMovementData
 
     public void VerifyColNames(List<string> colNames);
 
-    public static string GetTypeKey() => nameof(Type).ToLower();
+    public string GetTypeKey();
 
     public string GetTypeValue();
 
-    public static string GetVersionKey() => nameof(Version).ToLower();
+    public string GetVersionKey();
 
     public string GetVersionValue();
 }

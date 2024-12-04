@@ -37,6 +37,7 @@ public class MovementLoggerFileDir : MovementLoggerFiles
     public override void CreateAll()
     {
         this.mode = FileMode.Create;
+        Directory.CreateDirectory(directory);
         this.Open();
     }
 
@@ -47,9 +48,9 @@ public class MovementLoggerFileDir : MovementLoggerFiles
         this.Open();
     }
 
-    public void Open()
+    public override void Open()
     {
-        List<Stream> streams = files.Select(f => new FileStream(Path.Combine(this.directory, f + ".tsv"), this.mode)).Cast<Stream>().ToList();
+        List<Stream> streams = files.Select(f => new FileStream(Path.Combine(this.directory, f), this.mode)).Cast<Stream>().ToList();
         this.Open(streams[0], streams[1], streams[2], streams[3], streams[4], streams[5], streams[6]);
     }
 

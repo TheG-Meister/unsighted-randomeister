@@ -30,7 +30,7 @@ public class Plugin : BaseUnityPlugin
 
     public Dictionary<string, List<string>> itemPools;
 
-    public bool enableLogging = false;
+    public bool enableLogging = true;
 
     public Plugin()
     {
@@ -43,30 +43,33 @@ public class Plugin : BaseUnityPlugin
             { ALMOST_ALL_ITEMS_POOL, new() { "Key", "JumpBoots", "DisposableSyringe", "Bolts1", "Bolts2", "Bolts3", "Bolts4", "AncientClockGear", "AncientClockPendulum", "AncientClockHands", "AncientClockFace", "AttackCogBlueprint", "DefenseCogBlueprint", "ReloadCogBlueprint", "StaminaCogBlueprint", "SpeedCogBlueprint", "SyringeCogBlueprint", "ReviveCogBlueprint", "HealthChip", "StaminaChip", "StrengthChip", "DefenseChip", "InvincibilityChip", "SpinnerChip", "SteadyChip", "ShurikenChip", "SwordChip", "AxeChip", "RiskChip", "PowerChip", "VirusChip", "FatigueChip", "SpinChipA", "SpinChipB", "JumperChip", "RunnerChip", "SpeedChipA", "ReloadChip", "BulletChip", "DrifterChip", "SpeedChipB", "BoltChip", "WalletChip", "FasterHealChip", "VigorChip", "VampireChip", "ComboChipA", "ComboChipB", "SyringeChip", "AutoSyringeChip", "DoubleBarrelChip", "OffenseChip", "DogChip", "MerchantChip", "ScavengerChip", "AnimaChip", "ParryMasterChip", "CogChip", "BigHeartChip", "GlitchChip", "Blaster", "DoctorsGun", "Spinner", "Hookshot1", "AutomaticBlaster", "Shotgun", "Flamethrower", "Icethrower", "GranadeLauncher", "IceGranade", "GranadeShotgun", "IronEdge", "ThunderEdge", "Frostbite", "Flameblade", "ElementalBlade", "WarAxe", "IceAxe", "FireAxe", "ThunderAxe", "RaquelAxe", "IronStar", "IceStar", "FireStar", "ThunderStar", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Key", "Hookshot1", "AttackCog", "DefenseCog", "ReloadCog", "StaminaCog", "SpeedCog", "SyringeCog", "ReviveCog", "HealthChip", "StaminaChip", "HealthChip", "StaminaChip", "HealthChip", "StaminaChip", "HealthChip", "StaminaChip", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust", "MeteorDust" } }
         };
 
-        this.movementLogger = new MovementLogger("unsighted-randomeister/logs/movement/")
-        {
-            log = this.options.movementLogging.Value && this.enableLogging,
-            announce = this.options.movementLoggingAnnouncements.Value,
-            uniqueAnnouncements = this.options.movementLoggingUniqueAnnouncements.Value,
-            announcementDelay = this.options.announcementDelay.Value,
-            cameraPadding = this.options.announcementCameraPadding.Value,
-            announcementTime = this.options.announcementTime.Value,
-
-            announceUnusedActions = this.options.announceUnusedActions.Value,
-            announceSimpleActions = this.options.announceSimpleActions.Value,
-            announceComplexActions = this.options.announceComplexActions.Value,
-        };
         this.chestLogger = new ChestLogger(Path.Combine(Constants.PATH_DEFAULT, PATH_LOGS, Constants.PATH_CHEST_LOGS));
 
         instance = this;
 
-        Logger.LogInfo($"Loading {GUID}");
         new Harmony(GUID).PatchAll();
     }
 
     public void Update()
     {
-        this.movementLogger.Announce();
+        if (this.movementLogger == null && UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.L))
+        {
+            this.movementLogger = new MovementLogger("unsighted-randomeister/logs/movement/")
+            {
+                log = this.options.movementLogging.Value && this.enableLogging,
+                announce = this.options.movementLoggingAnnouncements.Value,
+                uniqueAnnouncements = this.options.movementLoggingUniqueAnnouncements.Value,
+                announcementDelay = this.options.announcementDelay.Value,
+                cameraPadding = this.options.announcementCameraPadding.Value,
+                announcementTime = this.options.announcementTime.Value,
+
+                announceUnusedActions = this.options.announceUnusedActions.Value,
+                announceSimpleActions = this.options.announceSimpleActions.Value,
+                announceComplexActions = this.options.announceComplexActions.Value,
+            };
+        }
+
+        if (this.movementLogger != null) this.movementLogger.Announce();
     }
 
     public void OnDisable()

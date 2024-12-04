@@ -59,10 +59,10 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
         if (this.header == null) throw new ApplicationException("file has not been read");
         if (this.header.Count < 1) throw new IOException("file header is empty");
 
-        if (!this.header.TryGetValue(MovementDataFileVersion<T>.GetTypeKey(), out string type)) throw new IOException("file header does not contain a type key");
+        if (!this.header.TryGetValue(this.versions[0].GetTypeKey(), out string type)) throw new IOException("file header does not contain a type key");
         if (type != typeof(T).FullName) throw new IOException("file has the wrong type of data");
 
-        if (!this.header.TryGetValue(MovementDataFileVersion<T>.GetVersionKey(), out string versionString)) throw new IOException("file header does not contain a version key");
+        if (!this.header.TryGetValue(this.versions[0].GetVersionKey(), out string versionString)) throw new IOException("file header does not contain a version key");
         MovementDataFileVersion<T> version = this.versions.Find(v => v.Version == versionString);
         if (version == null) throw new IOException("could not find version data for this file's version string");
 
@@ -70,14 +70,16 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
         this.version = version;
     }
 
-    public override void Reset()
+    public void Create()
     {
         base.Reset();
-        this.version = this.versions[this.versions.Count];
+        this.version = this.versions[this.versions.Count - 1];
         this.header = version.ToDictionary();
         List<string> headerLines = version.ToHeader();
         foreach (string line in headerLines) this.AddComment(line);
         this.AddColNamesLine(version.ColNames.ToArray());
+
+        this.parsedData = new();
     }
 
     public virtual Dictionary<int, Exception> Parse()

@@ -70,9 +70,9 @@ public class MovementDataFileVersion<T> : IMovementDataFileVersion<T> where T : 
         if (colNames.Except(this.ColNames).Any()) throw new IOException("file has too many columns");
     }
 
-    public static string GetTypeKey() => nameof(Type).ToLower();
+    public string GetTypeKey() => nameof(Type).ToLower();
     public string GetTypeValue() => typeof(T).FullName;
-    public static string GetVersionKey() => nameof(Version).ToLower();
+    public string GetVersionKey() => nameof(Version).ToLower();
     public string GetVersionValue() => this.Version;
 
     public static Dictionary<string, string> ParseHeader(List<string> lines)

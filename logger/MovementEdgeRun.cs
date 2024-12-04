@@ -25,6 +25,8 @@ public class MovementEdgeRun : IMovementData
         List<string> fields = new() { nameof(edge), nameof(MovementEdgeRun.version), nameof(timestamp), nameof(realTime), nameof(gameTime) };
         Dictionary<string, string> colNameDict = new();
         foreach (string field in fields) colNameDict[field] = field;
+        colNameDict[nameof(realTime)] = "real time";
+        colNameDict[nameof(gameTime)] = "game time";
         versions.Add(new(version, fields, colNameDict));
     }
 

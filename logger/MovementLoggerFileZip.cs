@@ -40,8 +40,9 @@ public class MovementLoggerFileZip : MovementLoggerFiles
     public override void CreateAll()
     {
         this.Clear();
-        List<Stream> streams = files.Select(f => archive.CreateEntry(f).Open()).ToList();
+        List<Stream> streams = files.Select(f => this.archive.CreateEntry(f).Open()).ToList();
         this.Open(streams[0], streams[1], streams[2], streams[3], streams[4], streams[5], streams[6]);
+        base.CreateAllFiles();
     }
 
     public void Open(string path) => this.Open(ZipFile.Open(path, ZipArchiveMode.Update));
@@ -53,7 +54,7 @@ public class MovementLoggerFileZip : MovementLoggerFiles
         this.Open();
     }
 
-    public void Open()
+    public override void Open()
     {
         List<Stream> streams = files.Select(f => archive.GetEntry(f).Open()).ToList();
         this.Open(streams[0], streams[1], streams[2], streams[3], streams[4], streams[5], streams[6]);
