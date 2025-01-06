@@ -308,7 +308,7 @@ public class MovementLogger : IDisposable
         MovementEdge edge = new(file.GetNextID(), source, target, sceneChange);
         if (!sceneChange)
         {
-            foreach (PlayerAction action in actions) edge.actions.Add(this.GetAction(action));
+            foreach (MovementAction action in actionObjs) edge.actions.Add(action);
             foreach (MovementState state in states) edge.states.Add(state);
         }
 

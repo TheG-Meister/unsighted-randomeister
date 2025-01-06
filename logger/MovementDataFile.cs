@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IMovementData
+public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : class, IMovementData
 {
 
     public Dictionary<string, string> header;
@@ -48,10 +50,31 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : IM
         this.header = MovementDataFileVersion<T>.ParseHeader(headerLines);
     }
 
-    public virtual void Add(T obj)
+    public virtual bool Contains(T obj)
+    {
+        return this.Find(obj) != null;
+    }
+
+    public virtual T Find(T obj)
+    {
+        if (obj == null) throw new ArgumentNullException(nameof(obj));
+
+        foreach (T other in this.parsedData.Values)
+        {
+            if (obj.Equals(other)) return other;
+        }
+
+        return null;
+    }
+
+    /**
+     * <returns>the line number of the added object, or -1 if the object was not added</returns>
+     */
+    public virtual int Add(T obj)
     {
         int index = this.Add(obj.ToDictionary());
         this.parsedData[index] = obj;
+        return index;
     }
 
     public void FindVersion()

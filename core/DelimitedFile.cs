@@ -72,7 +72,8 @@ public class DelimitedFile : IDelimitedFile
         this.unusedLines = new();
         this.rows = new();
 
-        for (int lineNum = 0; lineNum < lines.Count; lineNum++)
+        int lineNum;
+        for (lineNum = 0; lineNum < lines.Count; lineNum++)
         {
             string line = lines[lineNum];
 
@@ -91,7 +92,7 @@ public class DelimitedFile : IDelimitedFile
             }
         }
 
-        this.lastLine = lines.Count - 1;
+        this.lastLine = lineNum;
     }
 
     public List<int> GetRowLengths()
@@ -274,7 +275,7 @@ public class DelimitedFile : IDelimitedFile
 
     public void WriteAll()
     {
-        if (this.HasLineErrors()) this.FixLineErrors();
+        if (this.HasLineErrors()) throw new ApplicationException("file generated line errors");
 
         this.stream.Seek(0, SeekOrigin.End);
         using StreamWriter writer = new(this.stream, Encoding.UTF8, 1024, true);
@@ -303,7 +304,6 @@ public class DelimitedFile : IDelimitedFile
     {
         int max = Math.Max(this.unusedLines.Keys.Max(), this.rows.Keys.Max());
         max = Math.Max(max, this.colNamesLine);
-        max++;
         return max;
     }
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace dev.gmeister.unsighted.randomeister.logger;
 
-public class IndexedMovementDataFile<T> : MovementDataFile<T> where T : IndexedMovementData
+public class IndexedMovementDataFile<T> : UniqueMovementDataFile<T> where T : IndexedMovementData
 {
 
     public int nextID;
@@ -26,10 +26,11 @@ public class IndexedMovementDataFile<T> : MovementDataFile<T> where T : IndexedM
         foreach (T obj in this.parsedData.Values) if (obj != null && obj.id >= this.nextID) this.nextID = obj.id + 1; 
     }
 
-    public override void Add(T obj)
+    public override int Add(T obj)
     {
-        base.Add(obj);
-        if (obj.id >= this.nextID) this.nextID = obj.id + 1;
+        int index = base.Add(obj);
+        if (index != -1) this.nextID = obj.id + 1;
+        return index;
     }
 
     public override Dictionary<int, Exception> Parse()
