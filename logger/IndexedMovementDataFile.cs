@@ -28,9 +28,11 @@ public class IndexedMovementDataFile<T> : UniqueMovementDataFile<T> where T : In
 
     public override int Add(T obj)
     {
-        int index = base.Add(obj);
-        if (index != -1) this.nextID = obj.id + 1;
-        return index;
+        if (this.Contains(obj)) return -1;
+
+        obj.id = this.nextID;
+        this.nextID++;
+        return this.ProtectedAdd(obj);
     }
 
     public override Dictionary<int, Exception> Parse()

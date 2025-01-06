@@ -19,7 +19,11 @@ public class UniqueMovementDataFile<T> : MovementDataFile<T> where T : class, IM
     public override int Add(T obj)
     {
         if (this.Contains(obj)) return -1;
+        return base.Add(obj);
+    }
 
+    protected int ProtectedAdd(T obj)
+    {
         return base.Add(obj);
     }
 
