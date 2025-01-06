@@ -93,7 +93,7 @@ public class MovementDataFile<T> : DelimitedFile, IMovementDataFile where T : cl
         this.version = version;
     }
 
-    public void Create()
+    public virtual void Create()
     {
         base.Reset();
         this.version = this.versions[this.versions.Count - 1];

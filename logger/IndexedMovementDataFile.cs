@@ -26,6 +26,12 @@ public class IndexedMovementDataFile<T> : UniqueMovementDataFile<T> where T : In
         foreach (T obj in this.parsedData.Values) if (obj != null && obj.id >= this.nextID) this.nextID = obj.id + 1; 
     }
 
+    public override void Create()
+    {
+        base.Create();
+        this.nextID = 0;
+    }
+
     public override int Add(T obj)
     {
         if (this.Contains(obj)) return -1;
