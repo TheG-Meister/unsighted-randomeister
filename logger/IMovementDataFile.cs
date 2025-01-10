@@ -16,6 +16,6 @@ public interface IMovementDataFile : IDelimitedFile
 
     //public IReadOnlyDictionary<int, T> ParsedData { get; }
 
-    public virtual void Create();
+    public void Create();
 
 }
