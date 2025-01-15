@@ -5,8 +5,10 @@ using dev.gmeister.unsighted.randomeister.io;
 using dev.gmeister.unsighted.randomeister.logger;
 using dev.gmeister.unsighted.randomeister.rando;
 using dev.gmeister.unsighted.randomeister.unsighted;
+using dev.gmeister.unsighted.randomeister.console;
 using HarmonyLib;
 using static dev.gmeister.unsighted.randomeister.core.Constants;
+using Console = dev.gmeister.unsighted.randomeister.console.Console;
 
 namespace dev.gmeister.unsighted.randomeister.core;
 
@@ -25,6 +27,7 @@ public class Plugin : BaseUnityPlugin
 
     public MovementLogger movementLogger;
     public ChestLogger chestLogger;
+    public Console console;
 
     public static Plugin instance;
 
@@ -44,6 +47,7 @@ public class Plugin : BaseUnityPlugin
         };
 
         this.chestLogger = new ChestLogger(Path.Combine(Constants.PATH_DEFAULT, PATH_LOGS, Constants.PATH_CHEST_LOGS));
+        this.console = new(this.Config);
 
         instance = this;
 
@@ -301,6 +305,11 @@ public class Plugin : BaseUnityPlugin
                     }
                 }
         }
+    }
+
+    public void OnGUI()
+    {
+        this.console.OnGUI();
     }
 
 }

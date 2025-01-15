@@ -41,6 +41,16 @@ internal class Hooks
         Plugin.instance.SetOriginalLists(__instance);
 
         //foreach (NPCObject npc in __instance.npcDatabase.npcList) Debug.Log($"{npc.npcName}\t{String.Join(",", npc.itemsOnSale)}");
+        /*
+        using StreamWriter writer = new("achievements.tsv");
+        writer.WriteLine(string.Join("\t", "internal name", "english name", "not available on explorer", "only show description if game beaten", "only shown once achieved", "english description"));
+        foreach (AchievementObject obj in __instance.achievementDatabase.achievementList)
+        {
+            string engName = TranslationSystem.FindTerm("AchievementNames", obj.achievementName, false);
+            string engDesc = TranslationSystem.FindTerm("AchievementDescriptions", obj.achievementName, false);
+            writer.WriteLine(string.Join("\t", obj.achievementName, engName, obj.notAvailableOnEasy, obj.onlyShowDescriptionIfGameBeaten, obj.onlyShowIfYouGet, engDesc));
+        }
+        writer.Flush();*/
     }
 
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.LoadGameCoroutine)), HarmonyPrefix]
