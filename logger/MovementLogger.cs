@@ -678,8 +678,12 @@ public class MovementLogger : IDisposable
 
     public bool LoggingIsRelevant()
     {
-        return PseudoSingleton<Helpers>.instance.GetPlayerData().gameType == GameType.MainStory &&
-            PseudoSingleton<GlobalInputManager>.instance.inputData.numberOfPlayers == 1;
+        Helpers helpers = PseudoSingleton<Helpers>.instance;
+        GlobalInputManager inputManager = PseudoSingleton<GlobalInputManager>.instance;
+        return helpers != null &&
+            helpers.GetPlayerData().gameType == GameType.MainStory &&
+            inputManager != null &&
+            inputManager.inputData.numberOfPlayers == 1;
     }
 
 }
