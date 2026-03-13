@@ -91,10 +91,21 @@ public class ShopRandomiser
         return result;
     }
 
-    public Dictionary<string, List<string>> RandomiseShopListings(Random random, Dictionary<string, List<string>> original)
+    public Dictionary<string, List<string>> RandomiseShopListings(Random random, Dictionary<string, List<string>> original, bool shuffle = false)
     {
         Dictionary<string, List<string>> result = new(original);
 
+        if (shuffle)
+        {
+            List<string> items = new(original.Values.SelectMany(i => i));
+            items.OrderBy(i => random.NextDouble());
+            foreach (string npc in original.Keys)
+            {
+                result[npc] = items.GetRange(0, original[npc].Count);
+                items.RemoveRange(0, original[npc].Count);
+            }
+            return result;
+        }
         foreach (NPCShop npc in npcShops)
         {
             Random npcRandom = new(random.Next());

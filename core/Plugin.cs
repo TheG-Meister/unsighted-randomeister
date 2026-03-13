@@ -141,6 +141,7 @@ public class Plugin : BaseUnityPlugin
         {
             randomSeed = options.randomSeed.Value,
             chestItemPool = options.chestItemPool.Value,
+            randomisationLogic = options.randomisationLogic.Value,
             randomiseChests = options.randomiseChests.Value,
             randomiseEnemyDrops = options.randomiseEnemyDrops.Value,
             randomiseItemPrices = options.randomiseItemPrices.Value,
@@ -159,7 +160,7 @@ public class Plugin : BaseUnityPlugin
             Random chestRandom = new(random.Next());
             if (settings.randomiseChests)
             {
-                settings.data.chestItems = new ChestRandomiser(chestRandom, this.originalChestList, GetItemPool(settings.chestItemPool)).Randomise();
+                settings.data.chestItems = new ChestRandomiser(chestRandom, this.originalChestList, GetItemPool(settings.chestItemPool), settings.randomisationLogic).Randomise();
             }
 
             Random enemyDropRandom = new(random.Next());
@@ -177,7 +178,7 @@ public class Plugin : BaseUnityPlugin
             Random shopListingsRandom = new(random.Next());
             if (settings.randomiseShopListings)
             {
-                settings.data.shopListings = new ShopRandomiser().RandomiseShopListings(shopListingsRandom, this.originalShopListings);
+                settings.data.shopListings = new ShopRandomiser().RandomiseShopListings(shopListingsRandom, this.originalShopListings, settings.chestItemPool == VANILLA_POOL);
             }
 
             Random crystalRandom = new(random.Next());

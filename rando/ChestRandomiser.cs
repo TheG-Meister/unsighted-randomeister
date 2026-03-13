@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using static UnityEngine.Debug;
 using static dev.gmeister.unsighted.randomeister.unsighted.Ability;
 using static dev.gmeister.unsighted.randomeister.unsighted.AbilityTools;
+using System.Runtime.CompilerServices;
 
 namespace dev.gmeister.unsighted.randomeister.rando;
 
@@ -16,6 +17,7 @@ public class ChestRandomiser
     private readonly Random random;
     private readonly ChestList chestList;
     private readonly List<string> itemPool;
+    private readonly bool logic;
 
     Dictionary<string, ChestObject> chestTable = new();
     List<ChestObject> chestPool = new();
@@ -27,11 +29,12 @@ public class ChestRandomiser
     Dictionary<HashSet<Ability>, List<ChestObject>> prologueAreas;
     Dictionary<HashSet<Ability>, List<ChestObject>> mainAreas;
 
-    public ChestRandomiser(Random random, ChestList chestList, List<string> itemPool)
+    public ChestRandomiser(Random random, ChestList chestList, List<string> itemPool, bool logic = true)
     {
         this.random = new(random.Next());
         this.chestList = Chests.CloneChestList(chestList);
         this.itemPool = new List<string>(itemPool).OrderBy(item => this.random.NextDouble()).ToList();
+        this.logic = logic;
 
         foreach (AreaChestList areaChestList in this.chestList.areas)
         {
@@ -74,6 +77,18 @@ public class ChestRandomiser
         //We then frontload all of progression items to save on much more complicated logic
         //That logic may be necessary for more complicated randomisers, such as those integrating a map randomiser, or those with more sophisticated options
         //It may be more helpful for customisers too
+
+        if (!this.logic)
+        {
+            Dictionary<string, string> resultNoLogic = new();
+            while (this.chestPool.Count > 0)
+            {
+                resultNoLogic.Add(Chests.GetChestID(this.chestPool[0]), this.itemPool[0]);
+                this.chestPool.RemoveAt(0);
+                this.itemPool.RemoveAt(0);
+            }
+            return resultNoLogic;
+        }
 
         Dictionary<ChestObject, string> results = new()
         {

@@ -39,6 +39,7 @@ public class PluginConfig
     public ConfigEntry<int> seed;
 
     public const string CATEGORY_RANDOMISATION = "Randomisation";
+    public ConfigEntry<bool> randomisationLogic;
     public ConfigEntry<bool> randomiseChests;
     public ConfigEntry<string> chestItemPool;
     public ConfigEntry<bool> randomiseEnemyDrops;
@@ -92,10 +93,11 @@ public class PluginConfig
         randomSeed = configFile.Bind(CATEGORY_SEED, "Use random seed", true, "Enabling this option will generate a random seed with which all other randomisation will be performed upon starting a new game. Turn this setting off to set the seed yourself.");
         seed = configFile.Bind(CATEGORY_SEED, "Seed", 0, "This value will be used to \"seed\" the randomisation of the next story file created. Two games created with the same settings, on the same randomiser version, that use the same seed will have all randomisation performed the same way. If \"Use random seed\" is enabled for this file, this number will itself be randomised when starting a new game.");
 
+        this.randomisationLogic = configFile.Bind(CATEGORY_RANDOMISATION, "Use logic", true, "Enable basic constraints to keep seeds completable. Currently the logic does not have enough data to output every completable seed, but this feature is in development. Disabling this option will place items entirely randomly with no regard for ensuring completion - play at your own risk.");
         randomiseChests = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise chests", true, "If this option is enabled, the items found in chests throughout Arcadia will be randomised upon the creation of a new story file. Items will be placed in chests according to the specified seed, or a random seed if \"Use random seed\" is enabled. Turn this option off to have chests contain their original items.");
-        chestItemPool = configFile.Bind(CATEGORY_RANDOMISATION, "Chest item pool", ALMOST_ALL_ITEMS_POOL, new ConfigDescription("The name of the item pool to use for randomisation. \"Vanilla\" uses the items found in the unrandomised game, while \"Almost every item\" uses one of almost every item, including a few pairs of jump boots, a collection of keys and a lot of meteor dust.", new AcceptableValueList<string>(ALMOST_ALL_ITEMS_POOL)));
+        chestItemPool = configFile.Bind(CATEGORY_RANDOMISATION, "Item pool", ALMOST_ALL_ITEMS_POOL, new ConfigDescription("The name of the item pool to use for randomisation. \"Vanilla\" uses the items found in the unrandomised game, while \"Almost every item\" uses one of almost every item, including a few pairs of jump boots, a collection of keys and a lot of meteor dust.", new AcceptableValueList<string>(ALMOST_ALL_ITEMS_POOL, VANILLA_POOL)));
         this.randomiseEnemyDrops = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise enemy drops", true, "Make each enemy time drop a single, random crafting material after a fixed number of kills");
-        this.randomiseShopItems = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise shop items", true, "Make each shopkeeper sell a random number of random items. All shopkeepers have an item theme.");
+        this.randomiseShopItems = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise shop items", true, "Make each shopkeeper sell random items. All shopkeepers have an item theme. If any item pool other than Vanilla is chosen, they will have a random number of items too.");
         this.randomiseItemPrices = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise item prices", true, "Make all items have random prices. Each item has a defined range of possible prices.");
         this.randomiseCrystalItems = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise material crystal items", true, "Make all material crystal drop random items. All crystals in the same area will drop the same material.");
     }

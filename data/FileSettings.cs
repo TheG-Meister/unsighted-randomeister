@@ -10,6 +10,7 @@ public class FileSettings
 {
     public bool useRandomeister;
     public bool randomSeed = true;
+    public bool randomisationLogic = true;
     public bool randomiseChests = true;
     public bool randomiseEnemyDrops = true;
     public bool randomiseItemPrices = true;
