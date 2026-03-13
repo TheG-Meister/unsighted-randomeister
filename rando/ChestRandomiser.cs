@@ -8,6 +8,7 @@ using static UnityEngine.Debug;
 using static dev.gmeister.unsighted.randomeister.unsighted.Ability;
 using static dev.gmeister.unsighted.randomeister.unsighted.AbilityTools;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace dev.gmeister.unsighted.randomeister.rando;
 
@@ -96,11 +97,25 @@ public class ChestRandomiser
             { GetAndRemove(chestPool, chestPool.Find(chest => prologueAreas[new() { Weapon }].Contains(chest))), GetAndRemove(itemPool, itemPool.Find(item => itemAbilities.ContainsKey(item) && itemAbilities[item].Contains(Gun))) },
         };
 
-        string startingItem = itemPool.Find(item => itemAbilities.ContainsKey(item) && (itemAbilities[item].Contains(Water) || itemAbilities[item].Contains(Jump)));
+        string startingItem = null;// = itemPool.Find(item => itemAbilities.ContainsKey(item) && (itemAbilities[item].Contains(Water) || itemAbilities[item].Contains(Jump)));
+        string startingCraftedItem = null;
+        foreach (string item in itemPool)
+        {
+            string craftedItem = GetCraftedItem(item);
+            if (itemAbilities.ContainsKey(craftedItem) && (itemAbilities[craftedItem].Contains(Water) || itemAbilities[craftedItem].Contains(Jump)))
+            {
+                startingItem = item;
+                startingCraftedItem = craftedItem;
+                break;
+            }
+        }
+
+        if (startingItem == null || startingCraftedItem == null) throw new ApplicationException("Could not find a starting item");
+
         results.Add(GetAndRemove(chestPool, chestPool.Find(chest => mainAreas[new() { Weapon }].Contains(chest))), GetAndRemove(itemPool, startingItem));
 
         HashSet<Ability> currentAbilities = new() { Weapon };
-        foreach (Ability ability in itemAbilities[startingItem]) if (!currentAbilities.Contains(ability)) currentAbilities.Add(ability);
+        foreach (Ability ability in itemAbilities[startingCraftedItem]) if (!currentAbilities.Contains(ability)) currentAbilities.Add(ability);
 
         HashSet<ChestObject> accessibleChests = new();
 
@@ -119,19 +134,37 @@ public class ChestRandomiser
             HashSet<Ability> neededAbilities = new(requiredAbilities.Except(currentAbilities).ToList());
             bool nextHookshotMakesDouble = !currentAbilities.Contains(DoubleHook) && currentAbilities.Contains(Hook);
 
-            string nextItem;
-            if (neededAbilities.Count < 1) nextItem = itemPool[0];
-            else nextItem = itemPool.Find(item => itemAbilities.ContainsKey(item) && (itemAbilities[item].Intersect(neededAbilities).Any() || (nextHookshotMakesDouble && item == "Hookshot1")));
+            string nextItem = null;
+            string nextCraftedItem = null;
+            if (neededAbilities.Count < 1)
+            {
+                nextItem = itemPool[0];
+                nextCraftedItem = GetCraftedItem(nextItem);
+            }
+            else
+            {
+                foreach (string item in itemPool)
+                {
+                    string craftedItem = GetCraftedItem(item);
+                    if (itemAbilities.ContainsKey(craftedItem) && (itemAbilities[craftedItem].Intersect(neededAbilities).Any() || (nextHookshotMakesDouble && craftedItem == "Hookshot1")))
+                    {
+                        nextItem = item;
+                        nextCraftedItem = craftedItem;
+                        break;
+                    }
+                }
+                if (nextItem == null || nextCraftedItem == null) throw new ApplicationException("The item pool cannot provide all abilities to the player");
+            }
 
-            if (itemAbilities.ContainsKey(nextItem) || (nextHookshotMakesDouble && nextItem == "Hookshot1"))
+            if (itemAbilities.ContainsKey(nextCraftedItem) || (nextHookshotMakesDouble && nextCraftedItem == "Hookshot1"))
             {
                 bool abilityAdded = false;
-                foreach (Ability ability in itemAbilities[nextItem]) if (!currentAbilities.Contains(ability))
+                foreach (Ability ability in itemAbilities[nextCraftedItem]) if (!currentAbilities.Contains(ability))
                     {
                         currentAbilities.Add(ability);
                         abilityAdded = true;
                     }
-                if (nextHookshotMakesDouble && nextItem == "Hookshot1")
+                if (nextHookshotMakesDouble && nextCraftedItem == "Hookshot1")
                 {
                     currentAbilities.Add(DoubleHook);
                     abilityAdded = true;
@@ -166,6 +199,12 @@ public class ChestRandomiser
     {
         list.Remove(element);
         return element;
+    }
+
+    private string GetCraftedItem(string item)
+    {
+        if (item == "HookshotBlueprint") return "Hookshot2";
+        else return item.Replace("Blueprint", "");
     }
 
     //===================================================================================================
