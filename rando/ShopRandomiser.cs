@@ -93,24 +93,40 @@ public class ShopRandomiser
 
     public Dictionary<string, List<string>> RandomiseShopListings(Random random, Dictionary<string, List<string>> original, bool shuffle = false)
     {
-        Dictionary<string, List<string>> result = new(original);
+        Dictionary<string, List<string>> result = new();
 
         if (shuffle)
         {
-            List<string> items = new(original.Values.SelectMany(i => i).OrderBy(i => random.NextDouble()).ToList());
+            List<string> items = new();
             foreach (string npc in original.Keys)
             {
-                result[npc] = items.GetRange(0, original[npc].Count);
-                items.RemoveRange(0, original[npc].Count);
+                if (npc == "HarpieNPC" || npc == "JoanaNPC" || npc == "GhoulWeaponNPC") continue;
+                items.AddRange(original[npc]);
+            }
+
+            items = new(items.OrderBy(i => random.NextDouble()));
+
+            foreach (string npc in original.Keys)
+            {
+                if (npc == "GhoulWeaponNPC") continue;
+                if (npc == "HarpieNPC" || npc == "JoanaNPC") result.Add(npc, new(original[npc]));
+                else
+                {
+                    result.Add(npc, items.GetRange(0, original[npc].Count));
+                    if (npc == "GabiNPC") result.Add("GhoulWeaponNPC", result[npc]);
+                    items.RemoveRange(0, original[npc].Count);
+                }
             }
             return result;
         }
         foreach (NPCShop npc in npcShops)
         {
+            if (npc.name == "GhoulWeaponNPC") continue;
             Random npcRandom = new(random.Next());
 
             int size = npc.minSize + random.Next(npc.maxSize - npc.minSize + 1);
-            result[npc.name] = npc.itemPool.OrderBy(s => npcRandom.NextDouble()).ToList().GetRange(0, size);
+            result.Add(npc.name, npc.itemPool.OrderBy(s => npcRandom.NextDouble()).ToList().GetRange(0, size));
+            if (npc.name == "GabiNPC") result.Add("GhoulWeaponNPC", result[npc.name]);
         }
 
         return result;
