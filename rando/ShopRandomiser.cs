@@ -97,8 +97,7 @@ public class ShopRandomiser
 
         if (shuffle)
         {
-            List<string> items = new(original.Values.SelectMany(i => i));
-            items.OrderBy(i => random.NextDouble());
+            List<string> items = new(original.Values.SelectMany(i => i).OrderBy(i => random.NextDouble()).ToList());
             foreach (string npc in original.Keys)
             {
                 result[npc] = items.GetRange(0, original[npc].Count);
