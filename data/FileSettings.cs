@@ -16,6 +16,7 @@ public class FileSettings
     public bool randomiseItemPrices = true;
     public bool randomiseShopListings = true;
     public bool randomiseCrystalItems = true;
+    public bool randomSceneFlipping = true;
     public string chestItemPool = "";
     public FileData data;
 

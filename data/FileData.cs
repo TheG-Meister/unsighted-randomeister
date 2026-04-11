@@ -25,6 +25,7 @@ public class FileData
     public Dictionary<string, float> itemPrices = null;
     public Dictionary<string, List<string>> shopListings = null;
     public Dictionary<string, string> crystalItems = null;
+    public Dictionary<string, bool> sceneFlips = null;
 
     public FileData(Dictionary<string, string> chestItems)
     {

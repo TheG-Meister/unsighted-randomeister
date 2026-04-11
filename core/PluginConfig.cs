@@ -46,6 +46,7 @@ public class PluginConfig
     public ConfigEntry<bool> randomiseShopItems;
     public ConfigEntry<bool> randomiseItemPrices;
     public ConfigEntry<bool> randomiseCrystalItems;
+    public ConfigEntry<bool> randomSceneFlipping;
 
     public const string CATEGORY_CUSTOMISER = "Customisation";
 
@@ -100,5 +101,6 @@ public class PluginConfig
         this.randomiseShopItems = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise shop items", true, "Make each shopkeeper sell random items. All shopkeepers have an item theme. If any item pool other than Vanilla is chosen, they will have a random number of items too.");
         this.randomiseItemPrices = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise item prices", true, "Make all items have random prices. Each item has a defined range of possible prices.");
         this.randomiseCrystalItems = configFile.Bind(CATEGORY_RANDOMISATION, "Randomise material crystal items", true, "Make all material crystal drop random items. All crystals in the same area will drop the same material.");
+        this.randomSceneFlipping = configFile.Bind(CATEGORY_RANDOMISATION, "Randomly flip scenes", false, "Randomly flip rooms horizontally if they have an equal number of left and right exits, unless they have any blocked exits in the prologue. This is not currently accounted for in logic, so it may produce incompletable seeds.");
     }
 }

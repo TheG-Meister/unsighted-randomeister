@@ -6,7 +6,9 @@ using dev.gmeister.unsighted.randomeister.logger;
 using dev.gmeister.unsighted.randomeister.rando;
 using dev.gmeister.unsighted.randomeister.unsighted;
 using HarmonyLib;
+using UnityEngine;
 using static dev.gmeister.unsighted.randomeister.core.Constants;
+using Random = System.Random;
 
 namespace dev.gmeister.unsighted.randomeister.core;
 
@@ -21,6 +23,7 @@ public class Plugin : BaseUnityPlugin
     private ChestList originalChestList;
     private Dictionary<string, float> originalItemPrices;
     private Dictionary<string, List<string>> originalShopListings;
+    private Dictionary<string, bool> originalSceneFlips;
     public Items items;
 
     public MovementLogger movementLogger;
@@ -87,12 +90,39 @@ public class Plugin : BaseUnityPlugin
 
         this.originalItemPrices ??= ItemDatabases.GetItemPrices(lists);
         this.originalShopListings ??= NPCDataTools.GetNPCShopListings(lists);
+
+        List<string> duplicateScenes = lists.areaDatabase.areas.SelectMany(a => a.roomsDatabase.availableRooms).GroupBy(r => r.sceneName).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+
+        if (this.originalSceneFlips == null)
+        {
+            this.originalSceneFlips = new();
+            foreach (AreaDescription area in lists.areaDatabase.areas)
+            {
+                foreach (RoomDescription room in area.roomsDatabase.availableRooms)
+                {
+                    if (duplicateScenes.Contains(room.sceneName)) this.GetLogger().LogDebug($"Duplicate scene {room.sceneName} found in area {area.areaName} at index {Array.FindIndex(area.roomsDatabase.availableRooms, r => r == room)} in RoomDescription {room.GetHashCode()}");
+                    if (!this.originalSceneFlips.ContainsKey(room.sceneName)) this.originalSceneFlips.Add(room.sceneName, room.flip);
+                }
+            }
+        }
     }
 
-    public void ResetChestItems()
+    public void SetSceneFlips(Dictionary<string, bool> sceneFlips)
     {
-        Logger.LogInfo("Unshuffling chests");
+        Lists lists = PseudoSingleton<Lists>.instance;
+        foreach (AreaDescription area in lists.areaDatabase.areas)
+        {
+            foreach (RoomDescription room in area.roomsDatabase.availableRooms)
+            {
+                if (sceneFlips.ContainsKey(room.sceneName)) room.flip = sceneFlips[room.sceneName];
+            }
+        }
+    }
+
+    public void ResetWorldData()
+    {
         PseudoSingleton<Lists>.instance.chestList = originalChestList;
+        this.SetSceneFlips(this.originalSceneFlips);
     }
 
     public List<string> GetItemPool(string name)
@@ -147,6 +177,7 @@ public class Plugin : BaseUnityPlugin
             randomiseItemPrices = options.randomiseItemPrices.Value,
             randomiseShopListings = options.randomiseShopItems.Value,
             randomiseCrystalItems = options.randomiseCrystalItems.Value,
+            randomSceneFlipping = options.randomSceneFlipping.Value,
         };
     }
 
@@ -191,6 +222,12 @@ public class Plugin : BaseUnityPlugin
 
                 settings.data.crystalItems = result;
             }
+
+            Random sceneFlipRandom = new(random.Next());
+            if (settings.randomSceneFlipping)
+            {
+                settings.data.sceneFlips = new SceneFlipRandomiser().RandomiseSceneFlips(sceneFlipRandom, this.originalSceneFlips);
+            }
         }
     }
 
@@ -219,6 +256,9 @@ public class Plugin : BaseUnityPlugin
         Dictionary<string, List<string>> shopListings = data.shopListings ?? this.originalShopListings;
         NPCDataTools.SetNPCShopListings(PseudoSingleton<Lists>.instance, shopListings);
 
+        Dictionary<string, bool> sceneFlips = data.sceneFlips ?? this.originalSceneFlips;
+        this.SetSceneFlips(sceneFlips);
+
         this.PrepareFileLoad();
     }
 
@@ -231,7 +271,7 @@ public class Plugin : BaseUnityPlugin
     public void LoadVanillaStoryFile()
     {
         currentData = null;
-        ResetChestItems();
+        this.ResetWorldData();
         ItemDatabases.SetItemPrices(PseudoSingleton<Lists>.instance, this.originalItemPrices);
         NPCDataTools.SetNPCShopListings(PseudoSingleton<Lists>.instance, this.originalShopListings);
         this.PrepareFileLoad();
