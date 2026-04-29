@@ -44,7 +44,7 @@ public class SceneFlipRandomiser
     public static void AfterDungeonRoomControllerEnable(DungeonRoomController __instance)
     {
         string scene = __instance.currentRoomDescription.sceneName;
-        if (Plugin.instance != null && Plugin.instance.currentData != null && Plugin.instance.currentData.sceneFlips[scene])
+        if (Plugin.instance != null && Plugin.instance.currentData != null && Plugin.instance.currentData.sceneFlips != null && Plugin.instance.currentData.sceneFlips[scene])
         {
             GameObject[] objects = SceneManager.GetSceneByName(scene).GetRootGameObjects();
             foreach (GameObject obj in objects)
@@ -54,6 +54,19 @@ public class SceneFlipRandomiser
                     obj.transform.localScale = new Vector3(-1, 1, 1);
                     obj.transform.position += 2 * Vector3.right * (__instance.roomGeometryParent.transform.position.x - obj.transform.position.x);
                 }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(ScreenTransition), nameof(ScreenTransition.Start)), HarmonyPrefix]
+    public static void BeforeScreenTransitionStart(ScreenTransition __instance)
+    {
+        if (Plugin.instance != null && Plugin.instance.currentData != null && Plugin.instance.currentData.sceneFlips != null && Plugin.instance.currentData.sceneFlips[__instance.gameObject.scene.name])
+        {
+            MapManager mapManager = PseudoSingleton<MapManager>.instance;
+            if (mapManager != null && mapManager.playerRoom != null)
+            {
+                //if (__instance.gameObject.name == "U")
             }
         }
     }
