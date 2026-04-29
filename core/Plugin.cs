@@ -119,12 +119,6 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    public void ResetWorldData()
-    {
-        PseudoSingleton<Lists>.instance.chestList = originalChestList;
-        this.SetSceneFlips(this.originalSceneFlips);
-    }
-
     public List<string> GetItemPool(string name)
     {
         if (itemPools.ContainsKey(name)) return itemPools[name];
@@ -226,7 +220,7 @@ public class Plugin : BaseUnityPlugin
             Random sceneFlipRandom = new(random.Next());
             if (settings.randomSceneFlipping)
             {
-                settings.data.sceneFlips = new SceneFlipRandomiser().RandomiseSceneFlips(sceneFlipRandom, this.originalSceneFlips);
+                settings.data.sceneFlips = new SceneFlipRandomiser().RandomiseSceneFlips(sceneFlipRandom);
             }
         }
     }
@@ -256,8 +250,13 @@ public class Plugin : BaseUnityPlugin
         Dictionary<string, List<string>> shopListings = data.shopListings ?? this.originalShopListings;
         NPCDataTools.SetNPCShopListings(PseudoSingleton<Lists>.instance, shopListings);
 
-        Dictionary<string, bool> sceneFlips = data.sceneFlips ?? this.originalSceneFlips;
-        this.SetSceneFlips(sceneFlips);
+        if (data.sceneFlips != null)
+        {
+            Dictionary<string, bool> xorFlips = new();
+            foreach (string scene in this.originalSceneFlips.Keys) xorFlips.Add(scene, this.originalSceneFlips[scene] ^ (data.sceneFlips.ContainsKey(scene) && data.sceneFlips[scene]));
+            this.SetSceneFlips(xorFlips);
+        }
+        else this.SetSceneFlips(this.originalSceneFlips);
 
         this.PrepareFileLoad();
     }
@@ -271,9 +270,10 @@ public class Plugin : BaseUnityPlugin
     public void LoadVanillaStoryFile()
     {
         currentData = null;
-        this.ResetWorldData();
+        PseudoSingleton<Lists>.instance.chestList = originalChestList;
         ItemDatabases.SetItemPrices(PseudoSingleton<Lists>.instance, this.originalItemPrices);
         NPCDataTools.SetNPCShopListings(PseudoSingleton<Lists>.instance, this.originalShopListings);
+        this.SetSceneFlips(this.originalSceneFlips);
         this.PrepareFileLoad();
     }
 
